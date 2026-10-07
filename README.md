@@ -70,7 +70,20 @@
 
 ### Installation
 
-Download the latest release `.jar` file and place it into your Lavalink `plugins` folder:
+#### Option 1: Automatic Download via `application.yml` (Recommended)
+
+Lavalink v4 can automatically download SolaceAudio at server boot! Simply add the plugin definition inside the `lavalink` block in your `application.yml`:
+
+```yaml
+lavalink:
+  plugins:
+    - dependency: "com.github.Nex-Devz:SolaceAudio:v1.0.0"
+      repository: "https://jitpack.io"
+```
+
+#### Option 2: Manual Download
+
+Download `solaceaudio-plugin.jar` from [Releases](https://github.com/Nex-Devz/SolaceAudio/releases/latest) and place it directly into your Lavalink `plugins` folder:
 
 ```
 plugins/
@@ -83,7 +96,7 @@ Or build directly from source using Gradle:
 ./gradlew clean build -x test
 ```
 
-The compiled jar will be located at `plugin/build/libs/solaceaudio-plugin-x.x.x.jar`.
+The compiled jar will be located at `plugin/build/libs/solaceaudio-plugin-dev.jar`.
 
 ---
 
@@ -92,6 +105,11 @@ The compiled jar will be located at `plugin/build/libs/solaceaudio-plugin-x.x.x.
 Add the following block to your `application.yml` file:
 
 ```yaml
+lavalink:
+  plugins:
+    - dependency: "com.github.Nex-Devz:SolaceAudio:v1.0.0"
+      repository: "https://jitpack.io"
+
 plugins:
   solaceaudio:
     sources:

@@ -1,13 +1,14 @@
 package com.solaceaudio.plugin;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
-import com.solaceaudio.plugin.amazonmusic.AmazonMusicAudioSourceManager;
+import com.solaceaudio.sources.amazon.AmazonMusicAudioSourceManager;
 import com.solaceaudio.plugin.config.*;
-import com.solaceaudio.plugin.gaana.GaanaAudioSourceManager;
-import com.solaceaudio.plugin.lastfm.LastFmSourceManager;
-import com.solaceaudio.plugin.pandora.PandoraAudioSourceManager;
-import com.solaceaudio.plugin.spotify.SpotifyAudioSourceManager;
-import com.solaceaudio.plugin.youtube.YouTubeSourceManager;
+import com.solaceaudio.sources.gaana.GaanaAudioSourceManager;
+import com.solaceaudio.sources.jiosaavn.JioSaavnAudioSourceManager;
+import com.solaceaudio.sources.lastfm.LastFmSourceManager;
+import com.solaceaudio.sources.pandora.PandoraAudioSourceManager;
+import com.solaceaudio.sources.spotify.SpotifyAudioSourceManager;
+import com.solaceaudio.sources.youtube.YouTubeSourceManager;
 import dev.arbjerg.lavalink.api.AudioPlayerManagerConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -30,7 +31,7 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
 
     private final SolaceAudioSourcesConfig sourcesConfig;
     private AudioPlayerManager manager;
-    private com.solaceaudio.plugin.jiosaavn.JioSaavnAudioSourceManager jioSaavn;
+    private JioSaavnAudioSourceManager jioSaavn;
     private GaanaAudioSourceManager gaana;
     private AmazonMusicAudioSourceManager amazonMusic;
     private SpotifyAudioSourceManager spotify;
@@ -53,7 +54,7 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
         this.sourcesConfig = sourcesConfig;
 
         if (sourcesConfig.isJiosaavn()) {
-            this.jioSaavn = new com.solaceaudio.plugin.jiosaavn.JioSaavnAudioSourceManager(jioSaavnConfig.getApiUrl());
+            this.jioSaavn = new JioSaavnAudioSourceManager(jioSaavnConfig.getApiUrl());
             if (jioSaavnConfig.getPlaylistLoadLimit() > 0) {
                 this.jioSaavn.setPlaylistLoadLimit(jioSaavnConfig.getPlaylistLoadLimit());
             }

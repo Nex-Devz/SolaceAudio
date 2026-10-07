@@ -3,6 +3,10 @@ server:
   address: 0.0.0.0
 
 lavalink:
+  plugins:
+    # SolaceAudio v4 Plugin Auto-Download
+    - dependency: "com.github.Nex-Devz:SolaceAudio:v1.0.0"
+      repository: "https://jitpack.io"
   server:
     password: "youshallnotpass"
     sources:
