@@ -1,144 +1,218 @@
-[![](https://img.shields.io/badge/Java-17+-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)](https://java.com)
-[![](https://img.shields.io/badge/Lavalink-4.0+-7289DA?style=for-the-badge)](https://github.com/lavalink-devs/Lavalink)
-[![](https://img.shields.io/badge/Discord-Join%20Community-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/devz)
-[![](https://img.shields.io/badge/License-Apache_2.0-764ba2?style=for-the-badge)](LICENSE)
-[![](https://img.shields.io/badge/Sources-6-667eea?style=for-the-badge)](#sources)
-[![](https://img.shields.io/badge/Recommendations-Smart-FF6F61?style=for-the-badge)](#recommendation-api)
+<div align="center">
 
 # SolaceAudio
 
-> [!NOTE]
-> High-throughput, zero-throttle multi-source audio engine for Lavalink v4 featuring Spotify, JioSaavn, Gaana, Amazon Music, Pandora, YouTube, and Last.fm with zero rate limits, zero credentials required, and built entirely using Java's native `HttpClient`.
-> 
-> Need support or have feature suggestions? Join our Discord: **[discord.gg/devz](https://discord.gg/devz)**
+### The High-Throughput, Zero-Throttle Multi-Source Audio Engine for Lavalink v4
 
-## Summary
+[![Java Version](https://img.shields.io/badge/Java-17+-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)](https://java.com)
+[![Lavalink Version](https://img.shields.io/badge/Lavalink-4.0+-7289DA?style=for-the-badge&logo=discord&logoColor=white)](https://github.com/lavalink-devs/Lavalink)
+[![JitPack](https://img.shields.io/badge/JitPack-v1.0.1-brightgreen?style=for-the-badge)](https://jitpack.io/#Nex-Devz/SolaceAudio)
+[![Discord Community](https://img.shields.io/badge/Discord-Join%20Community-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/devz)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg?style=for-the-badge)](LICENSE)
 
-* [Sources](#sources)
-    * [Features](#features)
-    * [What is Mirroring?](#what-is-mirroring)
-* [Lavalink Usage](#lavalink-usage)
-    * [Installation](#installation)
-    * [Configuration](#configuration)
-* [Recommendation API](#recommendation-api)
-* [Supported URLs and Queries](#supported-urls-and-queries)
-* [Credits](#credits)
-* [License](#license)
+<p align="center">
+  <b>SolaceAudio</b> is a modern, standalone audio plugin for <b>Lavalink v4</b> offering seamless, credential-free playback across Spotify, JioSaavn, Gaana, Amazon Music, Pandora, YouTube, and Last.fm. Engineered with native Java <code>HttpClient</code>, sub-millisecond LRU memory caching, and autonomous client rotation.
+</p>
+
+[Quick Start](#-quick-start) • [Supported Sources](#-supported-sources) • [Architecture](#-architecture) • [Configuration](#-configuration) • [Recommendation API](#-recommendation-api) • [Support](#-community--support)
 
 ---
 
-# Sources
+</div>
 
-| Source | Features | Playback |
-|---|---|---|
-| Spotify | tracks, albums, playlists, artists, recommendations | [Mirror](#what-is-mirroring) |
-| JioSaavn | songs, albums, playlists, artists, recommendations | Direct Stream (320kbps / MP4) |
-| Gaana | songs, albums, playlists, artists | Native Stream (HLS) |
-| Amazon Music | tracks, albums, playlists, artists | [Mirror](#what-is-mirroring) |
-| Pandora | tracks, albums, playlists, artists, stations | [Mirror](#what-is-mirroring) |
-| YouTube | tracks, searches, oEmbed, streams | Direct / [Mirror](#what-is-mirroring) |
-| Last.fm | scrobbler recommendations, similar tracks | [Mirror](#what-is-mirroring) |
+## Key Highlights
 
-### Features
-
-- **Mirror System** — ISRC-first resolution with automatic query fallback for mirrored sources.
-- **In-Memory LRU Search Cache** — Ultra-fast memory cache resolving repeated search requests in `< 1ms` without querying remote APIs.
-- **Automated Disk Quota Management** — Enforces hard disk caps (e.g. 10GB) with oldest-track LRU auto-eviction to prevent host storage saturation.
-- **Resilient Spotify Multi-Market Failover Ring** — Automatically cascades across secondary markets (`US` -> `GB` -> `DE` -> `IN`) when tracks are geo-restricted.
-- **YouTube Client Rotation** — Rotates between WEB, ANDROID, IOS, TVHTML5, and WEB_EMBEDDED clients with cooldown tracking.
-- **PoToken Session Warmer & Pool** — Autonomous visitor session pool with background renewal every 30 minutes.
-- **Adaptive Range Streaming** — Throttling mitigation using HTTP Range requests and multi-format audio fallback candidate stepping.
-- **ATV Counterpart Track Swapping** — Detects music videos and swaps in clean YouTube Music audio tracks (`MUSIC_VIDEO_TYPE_ATV`) to bypass video skits and intro chatter.
-- **Dual-Format Disk Cache & Sidecars** — Verifies cached WebM/M4A audio headers and maintains structured `<videoId>.json` metadata sidecars.
-- **Search Autocomplete Endpoint** — Provides real-time search query suggestions via `/v4/solaceaudio/youtube/suggest`.
-- **Bot & PoToken Protection** — Soft-fails blocked clients on 429s, 403s, and login/bot challenges, rotating to next available client.
-- **Region & Availability Bypass** — Retries unavailable or geo-blocked tracks with alternate region parameters before failing.
-- **Spotify Canvas Extraction** — Resolves animated canvas MP4 video URLs for tracks via `spclient.wg.spotify.com/canvaz-cache`.
-- **Multi-Seed Recommendations** — Supports `sprec:` queries with multiple track and artist seeds (`seed_tracks=`, `seed_artists=`).
-- **Gaana Native Streaming** — Fully persistent HLS chunk buffering directly from Akamai CDN.
-- **Native Lyrics** — Built-in integration with LavaLyrics for Spotify color lyrics.
-- **Smart Recommendations** — Source-aware recommendation engine using Spotify Radio, YouTube RD Mix, and Last.fm audioscrobbler.
-- **Spring Boot 3.2+ Compatible** — Explicit parameter name mappings for Lavalink REST controllers.
-- **Zero HTTP Dependencies** — Relies entirely on Java's native `HttpClient` for maximal performance.
-
-> [!IMPORTANT]
-> ### What is Mirroring?
->
-> Mirroring is the process of taking the metadata resolved from one source and using it to retrieve a playable `AudioTrack` from another provider.
+- **100% Standalone or Cooperative** — Runs natively without requiring external YouTube plugins, while also capable of wrapping and enhancing official plugins if present.
+- **Direct High-Fidelity Streaming** — Native 320kbps MP4 direct streaming for **JioSaavn** and chunk-buffered HLS streaming for **Gaana**.
+- **Zero API Keys Required** — Enjoy full metadata, playlists, albums, and artists from Spotify and Amazon Music without developer credentials or Spotify Premium accounts.
+- **ISRC-First Mirror Engine** — Matches audio using precise International Standard Recording Codes to guarantee original studio recordings (bypassing low-quality covers and live skits).
+- **Sub-Millisecond LRU Memory Cache** — Resolves repeat searches in `< 1ms` with automated expiration and memory bounding.
+- **Automated Disk Quota Management** — Local audio disk caching with configurable size limits (e.g. 10GB) and automatic LRU eviction.
+- **ATV Counterpart Swapping** — Detects noisy YouTube music videos with skits and automatically swaps them with clean YouTube Music audio versions (`MUSIC_VIDEO_TYPE_ATV`).
+- **Autonomous Multi-Client Rotation** — Automatically rotates between `WEB`, `ANDROID`, `IOS`, and `TVHTML5` InnerTube clients with cooldown tracking to bypass 429 rate limits.
+- **Spring Boot 3.2+ Native** — Fully compatible with modern Lavalink REST parameter reflection.
 
 ---
 
-# Lavalink Usage
+## Supported Sources
 
-### Installation
+| Source | Playback Type | Supported Content | Stream Quality | Auth Required |
+|:---|:---:|:---|:---:|:---:|
+| **Spotify** | ISRC Mirror / Preview | Tracks, Albums, Playlists, Artists, Recommendations | 320kbps / 160kbps | None |
+| **JioSaavn** | Direct Native Stream | Songs, Albums, Playlists, Artists, Recommendations | Direct 320kbps MP4 | None |
+| **Gaana** | Direct HLS Stream | Songs, Albums, Playlists, Artists | Native Akamai HLS | None |
+| **Amazon Music** | ISRC Mirror | Tracks, Albums, Playlists, Artists | High-Fidelity Mirror | None |
+| **Pandora** | Direct / Mirror | Tracks, Albums, Playlists, Artists, Stations | High-Fidelity Mirror | None |
+| **YouTube** | Standalone / Enhanced | Tracks, Playlists, Searches, ATV Audio, oEmbed | Native Opus / AAC | None |
+| **Last.fm** | Smart Recommendation | Scrobbler Tracks, Similar Music, Top Hits | Metadata Engine | Optional API Key |
 
-#### Option 1: Automatic Download via `application.yml` (Recommended)
+---
 
-Lavalink v4 can automatically download SolaceAudio at server boot! Simply add the plugin definition inside the `lavalink` block in your `application.yml`:
+## Architecture
+
+SolaceAudio decouples metadata extraction from audio playback, providing maximum resilience against throttling, geo-blocks, and platform restrictions:
+
+```mermaid
+flowchart TD
+    UserQuery["User Request / Play Query"] --> Router{"Source Router"}
+
+    Router -->|"spotify: / spsearch:"| SpEngine["Spotify GraphQL Engine"]
+    Router -->|"jiosaavn: / jssearch:"| SaavnEngine["JioSaavn Direct Engine"]
+    Router -->|"gaana: / gnsearch:"| GaanaEngine["Gaana Native HLS Engine"]
+    Router -->|"amsearch: / amazon:"| AmazonEngine["Amazon Music Engine"]
+    Router -->|"ytsearch: / youtube"| YtEngine["SolaceAudio InnerTube Engine"]
+
+    SaavnEngine --> DirectSaavn["Direct 320kbps Stream (Akamai/Saavn CDN)"]
+    GaanaEngine --> DirectGaana["Chunked HLS Stream (Akamai CDN)"]
+
+    SpEngine --> CacheCheck{"Memory LRU Cache"}
+    CacheCheck -- Hit --> CachedMeta["Cached Metadata & ISRC"]
+    CacheCheck -- Miss --> FetchMeta["Fetch GQL Track & ISRC"]
+    FetchMeta --> CachedMeta
+
+    CachedMeta --> MirrorResolver["TrackResolutionEngine"]
+    AmazonEngine --> MirrorResolver
+
+    MirrorResolver -->|"Step 1: ISRC Search"| YtEngine
+    MirrorResolver -->|"Step 2: Fallback Query"| YtEngine
+
+    YtEngine --> DiskCache{"Disk Cache Hit?"}
+    DiskCache -- Yes --> LocalPlay["Instant Local File Playback"]
+    DiskCache -- No --> ClientRotation["Rotate Client: WEB / ANDROID / IOS / TV"]
+    ClientRotation --> StreamOut["Playable Audio Stream"]
+```
+
+---
+
+## Quick Start
+
+### Option 1: Automatic Download via `application.yml` (Recommended)
+
+Lavalink v4 automatically downloads and initializes SolaceAudio on server boot when declared in your plugin dependencies.
+
+Add the following to your `application.yml`:
 
 ```yaml
 lavalink:
   plugins:
-    - dependency: "com.github.Nex-Devz:SolaceAudio:v1.0.0"
+    - dependency: "com.github.Nex-Devz:SolaceAudio:v1.0.1"
       repository: "https://jitpack.io"
 ```
 
-#### Option 2: Manual Download
+### Option 2: Manual Installation
 
-Download `solaceaudio-plugin.jar` from [Releases](https://github.com/Nex-Devz/SolaceAudio/releases/latest) and place it directly into your Lavalink `plugins` folder:
-
-```
-plugins/
-  └── solaceaudio-plugin.jar
-```
-
-Or build directly from source using Gradle:
-
-```bash
-./gradlew clean build -x test
-```
-
-The compiled jar will be located at `plugin/build/libs/solaceaudio-plugin-dev.jar`.
+1. Download the latest `solaceaudio-plugin.jar` from the [Releases](https://github.com/Nex-Devz/SolaceAudio/releases/latest) page.
+2. Place the jar into your Lavalink server's `plugins/` directory:
+   ```text
+   Lavalink/
+   ├── application.yml
+   ├── Lavalink.jar
+   └── plugins/
+       └── solaceaudio-plugin.jar
+   ```
+3. Restart Lavalink.
 
 ---
 
-### Configuration
+## Configuration
 
-Add the following block to your `application.yml` file:
+Place this configuration block inside your `application.yml`:
 
 ```yaml
+server:
+  port: 2333
+  address: 0.0.0.0
+
 lavalink:
   plugins:
-    - dependency: "com.github.Nex-Devz:SolaceAudio:v1.0.0"
+    # SolaceAudio Plugin Dependency
+    - dependency: "com.github.Nex-Devz:SolaceAudio:v1.0.1"
       repository: "https://jitpack.io"
+  server:
+    password: "youshallnotpass"
+    sources:
+      youtube: false # Disabled in core; handled natively by SolaceAudio
+      bandcamp: true
+      soundcloud: true
+      twitch: true
+      vimeo: true
+      http: true
+      local: false
 
 plugins:
   solaceaudio:
     sources:
-      spotify: true
-      jiosaavn: true
-      gaana: true
-      amazonmusic: true
-      pandora: true
-      youtube: true
+      spotify: true       # Enable Spotify playback & searches
+      jiosaavn: true      # Enable JioSaavn direct streaming
+      gaana: true         # Enable Gaana HLS streaming
+      amazonmusic: true   # Enable Amazon Music playback
+      pandora: true       # Enable Pandora playback
+      youtube: true       # Enable native standalone YouTube engine
     spotify:
       market: "US"
-      fallbackMarkets: ["GB", "DE", "IN"]
+      fallbackMarkets: ["GB", "DE", "IN"] # Auto failover for geo-restricted tracks
+      playlistLoadLimit: 6
+      albumLoadLimit: 6
+      resolveArtistsInSearch: true
+      localFiles: false
     jiosaavn:
-      apiUrl: "https://saavn.dev" # Optional custom JioSaavn API instance
+      apiUrl: "https://saavn.dev" # Custom API proxy instance (optional)
       playlistLoadLimit: 50
+    gaana:
+      apiUrl: "https://gaana.com/apiv2"
+      playlistLoadLimit: 6
+      albumLoadLimit: 6
+      artistLoadLimit: 6
+    amazonmusic:
+      apiUrl: ""
+      playlistLoadLimit: 6
+    pandora:
+      searchLimit: 10
     cache:
-      maxDiskCacheMb: 10240        # Maximum disk storage cap (in MB)
-      maxSearchMemoryEntries: 5000  # Number of in-memory search queries to cache
+      maxDiskCacheMb: 10240        # Local audio disk cache cap (in MB, default: 10GB)
+      maxSearchMemoryEntries: 5000  # Number of search queries to retain in memory
     lastfm:
       apiKey: ""                   # Optional Last.fm API Key for smart recommendations
 ```
 
 ---
 
-# Recommendation API
+## Supported Search Prefixes & URLs
 
-SolaceAudio exposes a REST endpoint to query intelligent track recommendations based on the currently playing track context:
+### Spotify
+- **Tracks / Albums / Playlists / Artists**: `https://open.spotify.com/...`
+- **Track Search**: `spsearch:<query>`
+- **Multi-Seed Recommendations**: `sprec:seed_tracks=<trackId>&seed_artists=<artistId>`
+- **Track Preview**: `spprev:<trackId>`
+
+### JioSaavn
+- **Direct URLs**: `https://www.jiosaavn.com/song/...`, `https://www.jiosaavn.com/album/...`
+- **Track Search**: `jssearch:<query>`
+- **Recommendations**: `jsrec:<songId>`
+
+### Gaana
+- **Direct URLs**: `https://gaana.com/song/...`, `https://gaana.com/album/...`
+- **Track Search**: `gnsearch:<query>` or `gaanasearch:<query>`
+- **Recommendations**: `gnrec:<seokey>`
+
+### Amazon Music
+- **Direct URLs**: `https://music.amazon.com/albums/...`, `https://music.amazon.com/tracks/...`
+- **Track Search**: `amsearch:<query>`
+
+### Pandora
+- **Direct URLs**: `https://www.pandora.com/artist/...`, `https://www.pandora.com/station/...`
+
+### YouTube
+- **Direct URLs**: `https://www.youtube.com/watch?v=...`, `https://youtu.be/...`, `https://music.youtube.com/...`
+- **Playlists**: `https://www.youtube.com/playlist?list=...`
+- **Track Search**: `ytsearch:<query>`
+- **Music Search**: `ytmsearch:<query>`
+
+---
+
+## Recommendation API
+
+SolaceAudio exposes a REST endpoint for intelligent autoplay suggestions based on the currently playing track context:
 
 ```http
 GET /v4/sessions/{sessionId}/players/{guildId}/recommendation?limit=10
@@ -146,79 +220,69 @@ GET /v4/sessions/{sessionId}/players/{guildId}/recommendation?limit=10
 
 ### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| `sessionId` | String | Active Lavalink session ID |
-| `guildId` | String | Guild / Player ID |
-| `track` | String | *(Optional)* Encoded track to recommend from (defaults to currently playing track) |
-| `limit` | Integer | *(Optional)* Number of recommendations to return (default: `10`) |
+| Parameter | Type | Required | Description |
+|:---|:---:|:---:|:---|
+| `sessionId` | `String` | Yes | Active Lavalink session ID |
+| `guildId` | `String` | Yes | Target Discord guild / player ID |
+| `limit` | `Integer` | No | Number of recommendations to retrieve (Default: `10`) |
+| `track` | `String` | No | Base64 encoded track to use as seed (defaults to currently playing track) |
+
+### Sample Response
+
+```json
+{
+  "source": "spotify",
+  "seed": "Blinding Lights - The Weeknd",
+  "total": 10,
+  "tracks": [
+    {
+      "encoded": "QAAAmAIACFNwb3RpZnkAAAA...",
+      "info": {
+        "identifier": "0VjIjW4GlUZAMYd2vXMi3b",
+        "author": "The Weeknd",
+        "length": 200040,
+        "isStream": false,
+        "title": "Save Your Tears",
+        "uri": "https://open.spotify.com/track/0VjIjW4GlUZAMYd2vXMi3b",
+        "sourceName": "spotify"
+      }
+    }
+  ]
+}
+```
 
 ---
 
-# Supported URLs and Queries
+## Building from Source
 
-### Spotify
-- `https://open.spotify.com/track/...`
-- `https://open.spotify.com/album/...`
-- `https://open.spotify.com/playlist/...`
-- `https://open.spotify.com/artist/...`
-- `spsearch:query`
-- `sprec:seed_tracks=...&seed_artists=...`
+To compile SolaceAudio locally:
 
-### JioSaavn
-- `https://www.jiosaavn.com/song/...`
-- `https://www.jiosaavn.com/album/...`
-- `https://www.jiosaavn.com/featured/...`
-- `https://www.jiosaavn.com/artist/...`
-- `jssearch:query`
-- `jsrec:songId`
+```bash
+# Clone the repository
+git clone https://github.com/Nex-Devz/SolaceAudio.git
+cd SolaceAudio
 
-### Gaana
-- `https://gaana.com/song/...`
-- `https://gaana.com/album/...`
-- `https://gaana.com/playlist/...`
-- `https://gaana.com/artist/...`
-- `gnsearch:query`
-- `gaanasearch:query`
-- `gnrec:seokey`
+# Build with Gradle wrapper
+./gradlew clean build -x test
+```
 
-### Amazon Music
-- `https://music.amazon.com/albums/...`
-- `https://music.amazon.com/tracks/...`
-- `https://music.amazon.com/playlists/...`
-- `amsearch:query`
-
-### Pandora
-- `https://www.pandora.com/artist/...`
-- `https://www.pandora.com/playlist/...`
-- `https://www.pandora.com/station/...`
-
-### YouTube
-- `https://www.youtube.com/watch?v=...`
-- `https://youtu.be/...`
-- `https://music.youtube.com/watch?v=...`
-- `ytsearch:query`
-- `ytmsearch:query`
+The compiled plugin jar will be generated at:
+`plugin/build/libs/solaceaudio-plugin-dev.jar`
 
 ---
 
-## Credits
+## Community & Support
 
-- **[lavalink-devs](https://github.com/lavalink-devs/lavalink-plugin-template)** — Official Lavalink plugin template.
-- **[SlugYZeon](https://github.com/xylen-py/SlugYZeon)** — Original source implementation and concepts.
-
----
-
-## License
-
-Licensed under the **Apache License 2.0**.
-
-See [LICENSE](LICENSE) for full details.
-
----
+Join our official Discord community for assistance, release notifications, and feature requests:
 
 <div align="center">
 
-<b>Maintained by <a href="https://github.com/nex-devz/solaceaudio">Nex Devz</a></b>
+[![Join Discord](https://img.shields.io/badge/Discord-Join%20Nex%20Devz-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/devz)
+
+<b>Support Server: <a href="https://discord.gg/devz">discord.gg/devz</a></b>
+
+---
+
+<sub>Built and maintained with care by <a href="https://github.com/Nex-Devz">Nex Devz</a> • Licensed under the <a href="LICENSE">Apache 2.0 License</a></sub>
 
 </div>
