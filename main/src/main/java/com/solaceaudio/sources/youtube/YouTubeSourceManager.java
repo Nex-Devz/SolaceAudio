@@ -34,6 +34,9 @@ public class YouTubeSourceManager implements AudioSourceManager {
     private static final java.util.regex.Pattern VIDEO_ID_PATTERN = java.util.regex.Pattern.compile(
             "(?i)(?:v=|vi=|v/|vi/|youtu\\.be/|embed/|shorts/)([a-zA-Z0-9_-]{11})"
     );
+    private static final java.util.regex.Pattern PLAYLIST_ID_PATTERN = java.util.regex.Pattern.compile(
+            "(?i)[?&]list=([a-zA-Z0-9_-]+)"
+    );
     private final Function<Void, AudioPlayerManager> audioPlayerManager;
     private AudioSourceManager originalYouTubeSource;
     private volatile boolean oembed;
@@ -364,6 +367,15 @@ public class YouTubeSourceManager implements AudioSourceManager {
         return null;
     }
 
+    public String extractPlaylistId(String url) {
+        if (url == null || url.isEmpty()) return null;
+        java.util.regex.Matcher matcher = PLAYLIST_ID_PATTERN.matcher(url);
+        if (matcher.find()) {
+            return matcher.group(1);
+        }
+        return null;
+    }
+
     private OembedData fetchOembedData(String url) throws Exception {
         HttpRequest req = HttpRequest.newBuilder()
                 .uri(URI.create(oembedUrl + url))
@@ -498,11 +510,35 @@ public class YouTubeSourceManager implements AudioSourceManager {
                 return new BasicAudioPlaylist("Search results for: " + query, tracks, null, true);
             }
         } else {
+            String playlistId = extractPlaylistId(id);
+            if (playlistId != null) {
+                YouTubeProxyHandler.PlaylistInfo playlist = proxyHandler.getPlaylist(playlistId);
+                if (playlist != null && !playlist.tracks.isEmpty()) {
+                    List<AudioTrack> tracks = new ArrayList<>();
+                    for (YouTubeProxyHandler.VideoInfo info : playlist.tracks) {
+                        tracks.add(buildProxyTrack(info));
+                    }
+                    return new BasicAudioPlaylist(playlist.title, tracks, null, false);
+                }
+            }
+
             String videoId = extractVideoId(id);
             if (videoId != null) {
                 YouTubeProxyHandler.VideoInfo info = proxyHandler.getVideoInfo(videoId);
                 if (info != null) {
                     return buildProxyTrack(info);
+                } else {
+                    AudioTrackInfo trackInfo = new AudioTrackInfo(
+                            "YouTube Track (" + videoId + ")",
+                            "YouTube",
+                            Long.MAX_VALUE,
+                            videoId,
+                            false,
+                            "https://www.youtube.com/watch?v=" + videoId,
+                            "https://img.youtube.com/vi/" + videoId + "/mqdefault.jpg",
+                            null
+                    );
+                    return new YouTubeTrack(trackInfo, videoId, null, this);
                 }
             }
         }

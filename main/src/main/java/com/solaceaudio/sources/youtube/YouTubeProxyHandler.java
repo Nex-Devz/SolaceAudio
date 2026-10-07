@@ -965,5 +965,114 @@ public class YouTubeProxyHandler {
             this.isrc = isrc;
         }
     }
+
+    public static class PlaylistInfo {
+        public final String title;
+        public final List<VideoInfo> tracks;
+
+        public PlaylistInfo(String title, List<VideoInfo> tracks) {
+            this.title = title != null ? title : "YouTube Playlist";
+            this.tracks = tracks != null ? tracks : Collections.emptyList();
+        }
+    }
+
+    public PlaylistInfo getPlaylist(String playlistId) {
+        if (playlistId == null || playlistId.isEmpty()) {
+            return null;
+        }
+        try {
+            InnerTubeClient tubeClient = new WebClient();
+
+            com.fasterxml.jackson.databind.node.ObjectNode clientNode = mapper.createObjectNode();
+            tubeClient.populateClientContext(clientNode);
+
+            com.fasterxml.jackson.databind.node.ObjectNode context = mapper.createObjectNode();
+            context.set("client", clientNode);
+
+            com.fasterxml.jackson.databind.node.ObjectNode body = mapper.createObjectNode();
+            body.set("context", context);
+            body.put("browseId", playlistId.startsWith("VL") ? playlistId : "VL" + playlistId);
+
+            String endpoint = tubeClient.getEndpointDomain() + "/youtubei/v1/browse?key=" + tubeClient.getApiKey()
+                    + "&prettyPrint=false";
+
+            HttpRequest request = HttpRequest.newBuilder().uri(URI.create(endpoint))
+                    .header("User-Agent", tubeClient.getUserAgent())
+                    .header("X-YouTube-Client-Name", tubeClient.getClientId())
+                    .header("X-YouTube-Client-Version", tubeClient.getClientVersion())
+                    .header("Content-Type", "application/json")
+                    .timeout(REQUEST_TIMEOUT)
+                    .POST(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(body))).build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() != 200 || response.body() == null) {
+                return null;
+            }
+
+            JsonNode json = mapper.readTree(response.body());
+            String title = "YouTube Playlist";
+            JsonNode headerTitle = json.path("header").path("playlistHeaderRenderer").path("title");
+            if (headerTitle.has("simpleText")) {
+                title = headerTitle.path("simpleText").asText(title);
+            } else if (headerTitle.path("runs").isArray() && !headerTitle.path("runs").isEmpty()) {
+                title = headerTitle.path("runs").path(0).path("text").asText(title);
+            }
+
+            JsonNode contents = json.path("contents").path("twoColumnBrowseResultsRenderer")
+                    .path("tabs").path(0).path("tabRenderer").path("content").path("sectionListRenderer")
+                    .path("contents").path(0).path("itemSectionRenderer").path("contents").path(0)
+                    .path("playlistVideoListRenderer").path("contents");
+
+            if (!contents.isArray() || contents.isEmpty()) {
+                return null;
+            }
+
+            List<VideoInfo> tracks = new ArrayList<>();
+            for (JsonNode item : contents) {
+                JsonNode renderer = item.path("playlistVideoRenderer");
+                if (renderer.isMissingNode()) continue;
+
+                String videoId = renderer.path("videoId").asText(null);
+                if (videoId == null) continue;
+
+                String trackTitle = "Unknown";
+                JsonNode titleNode = renderer.path("title");
+                if (titleNode.has("simpleText")) {
+                    trackTitle = titleNode.path("simpleText").asText("Unknown");
+                } else if (titleNode.path("runs").isArray() && !titleNode.path("runs").isEmpty()) {
+                    trackTitle = titleNode.path("runs").path(0).path("text").asText("Unknown");
+                }
+
+                String author = "Unknown";
+                JsonNode authorNode = renderer.path("shortBylineText").path("runs");
+                if (authorNode.isArray() && !authorNode.isEmpty()) {
+                    author = authorNode.path(0).path("text").asText("Unknown");
+                }
+
+                long durationMs = 0;
+                String lengthSeconds = renderer.path("lengthSeconds").asText(null);
+                if (lengthSeconds != null) {
+                    try {
+                        durationMs = Long.parseLong(lengthSeconds) * 1000L;
+                    } catch (NumberFormatException ignored) {}
+                }
+
+                tracks.add(new VideoInfo(
+                        videoId,
+                        trackTitle,
+                        author,
+                        durationMs > 0 ? durationMs : Long.MAX_VALUE,
+                        "https://img.youtube.com/vi/" + videoId + "/mqdefault.jpg",
+                        "https://www.youtube.com/watch?v=" + videoId,
+                        durationMs == 0,
+                        null
+                ));
+            }
+
+            return new PlaylistInfo(title, tracks);
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
 }
 

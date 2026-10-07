@@ -105,19 +105,20 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
             }
         }
         if (sourcesConfig.isYoutube()) {
+            this.youtube = new YouTubeSourceManager(
+                youtubeConfig.isOembed(),
+                youtubeConfig.isMirror(),
+                youtubeConfig.getMirrorProviders(),
+                youtubeConfig.isLocalDiskCache(),
+                youtubeConfig.getDiskCachePath(),
+                youtubeConfig.getCipherUrl(),
+                youtubeConfig.getMaxDiskCacheMb(),
+                unused -> manager
+            );
             if (hasNewYoutubeSource()) {
-                this.youtube = new YouTubeSourceManager(
-                    youtubeConfig.isOembed(),
-                    youtubeConfig.isMirror(),
-                    youtubeConfig.getMirrorProviders(),
-                    youtubeConfig.isLocalDiskCache(),
-                    youtubeConfig.getDiskCachePath(),
-                    youtubeConfig.getCipherUrl(),
-                    youtubeConfig.getMaxDiskCacheMb(),
-                    unused -> manager
-                );
+                log.info("Detected official Lavalink YouTube plugin. SolaceAudio will attach enhanced caching, ATV swap & fallback layer.");
             } else {
-                throw new IllegalStateException("SolaceAudio Youtube Source requires the new Youtube Source plugin to be enabled.");
+                log.info("No external YouTube plugin found. SolaceAudio will operate as the primary native YouTube audio source manager.");
             }
         }
 
@@ -179,13 +180,17 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
         if (this.lastFm != null) {
             log.info("Registering Last.fm recommendations manager...");
         }
+        if (this.youtube != null && this.sourcesConfig.isYoutube() && !hasNewYoutubeSource()) {
+            log.info("Registering SolaceAudio native standalone YouTube audio source manager...");
+            manager.registerSourceManager(this.youtube);
+        }
 
         return manager;
     }
 
     @org.springframework.context.event.EventListener(org.springframework.boot.context.event.ApplicationReadyEvent.class)
     public void onApplicationReady() {
-        if (this.youtube != null && this.manager != null && this.sourcesConfig.isYoutube()) {
+        if (this.youtube != null && this.manager != null && this.sourcesConfig.isYoutube() && hasNewYoutubeSource()) {
             log.info("Registering SolaceAudio YouTube source resolver...");
             this.youtube.attachToYouTube(this.manager);
         }
