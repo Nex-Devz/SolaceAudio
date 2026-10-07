@@ -1,0 +1,31 @@
+name: Feature Request
+description: Suggest an idea or source enhancement for SolaceAudio
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have an idea to make SolaceAudio better? Let us know below!
+
+  - type: textarea
+    id: feature_summary
+    attributes:
+      label: Feature Description
+      description: What feature or enhancement would you like to see added?
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or Motivation
+      description: What problem does this solve or why is this feature beneficial?
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Any alternative solutions or features you've considered?

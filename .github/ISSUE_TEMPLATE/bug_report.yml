@@ -1,0 +1,71 @@
+name: Bug Report
+description: File a bug report or error encountering during SolaceAudio playback
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting an issue! Please provide as much context as possible.
+
+  - type: input
+    id: lavalink_version
+    attributes:
+      label: Lavalink Version
+      description: What version of Lavalink are you running? (e.g., 4.0.8, 4.1.0)
+      placeholder: "4.0.8"
+    validations:
+      required: true
+
+  - type: input
+    id: plugin_version
+    attributes:
+      label: SolaceAudio Plugin Version
+      description: What version of SolaceAudio are you using? (e.g., v1.0.1)
+      placeholder: "v1.0.1"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: source
+    attributes:
+      label: Affected Audio Source
+      description: Which source encountered the issue?
+      options:
+        - Spotify
+        - JioSaavn
+        - Gaana
+        - Amazon Music
+        - Pandora
+        - YouTube
+        - Last.fm
+        - General / Server Engine
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the Bug
+      description: A clear description of what the bug is and what you expected to happen.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps To Reproduce
+      description: How can we reproduce this behavior?
+      placeholder: |
+        1. Query track: 'spsearch:song name'
+        2. Attempt playback in player
+        3. Observe error
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant Log Output
+      description: Paste relevant Lavalink console or file logs here.
+      render: shell
