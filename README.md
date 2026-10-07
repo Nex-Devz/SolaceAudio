@@ -1,14 +1,16 @@
 [![](https://img.shields.io/badge/Java-17+-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)](https://java.com)
 [![](https://img.shields.io/badge/Lavalink-4.0+-7289DA?style=for-the-badge)](https://github.com/lavalink-devs/Lavalink)
+[![](https://img.shields.io/badge/Discord-Join%20Community-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/devz)
 [![](https://img.shields.io/badge/License-Apache_2.0-764ba2?style=for-the-badge)](LICENSE)
 [![](https://img.shields.io/badge/Sources-6-667eea?style=for-the-badge)](#sources)
 [![](https://img.shields.io/badge/Recommendations-Smart-FF6F61?style=for-the-badge)](#recommendation-api)
-[![](https://img.shields.io/badge/HTTP_Deps-Zero-00C853?style=for-the-badge)](#features)
 
 # SolaceAudio
 
 > [!NOTE]
-> Multi-source Lavalink v4 plugin featuring Spotify, Gaana, Amazon Music, Pandora, YouTube, and Last.fm with zero rate limits, zero credentials required, and built entirely using Java's native `HttpClient`.
+> High-throughput, zero-throttle multi-source audio engine for Lavalink v4 featuring Spotify, JioSaavn, Gaana, Amazon Music, Pandora, YouTube, and Last.fm with zero rate limits, zero credentials required, and built entirely using Java's native `HttpClient`.
+> 
+> Need support or have feature suggestions? Join our Discord: **[discord.gg/devz](https://discord.gg/devz)**
 
 ## Summary
 
