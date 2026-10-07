@@ -1,0 +1,91 @@
+server:
+  port: 2333
+  address: 0.0.0.0
+
+lavalink:
+  server:
+    password: "youshallnotpass"
+    sources:
+      youtube: false
+      bandcamp: true
+      soundcloud: true
+      twitch: true
+      vimeo: true
+      http: true
+      local: false
+    bufferDurationMs: 400
+    frameBufferDurationMs: 5000
+    opusEncodingQuality: 10
+    resamplingQuality: HIGH
+    trackStuckThresholdMs: 10000
+    playerUpdateInterval: 5
+
+plugins:
+  solaceaudio:
+    sources:
+      spotify: true
+      jiosaavn: true
+      gaana: true
+      amazonmusic: true
+      pandora: true
+      youtube: true
+    spotify:
+      market: "US"
+      fallbackMarkets:
+        - "GB"
+        - "DE"
+        - "IN"
+      playlistLoadLimit: 6
+      albumLoadLimit: 6
+      resolveArtistsInSearch: true
+      localFiles: false
+    jiosaavn:
+      apiUrl: "https://saavn.dev"
+      playlistLoadLimit: 50
+    gaana:
+      apiUrl: "https://gaana.com/apiv2"
+      playlistLoadLimit: 6
+      albumLoadLimit: 6
+      artistLoadLimit: 6
+    amazonmusic:
+      apiUrl: ""
+      playlistLoadLimit: 6
+      albumLoadLimit: 6
+      artistLoadLimit: 6
+    pandora:
+      searchLimit: 10
+    cache:
+      maxDiskCacheMb: 10240
+      maxSearchMemoryEntries: 5000
+    lastfm:
+      apiKey: ""
+
+  youtube:
+    enabled: true
+    allowSearch: true
+    allowDirectVideoIds: true
+    allowDirectPlaylistIds: true
+    clients:
+      - MUSIC
+      - ANDROID_VR
+      - WEB
+      - TVHTML5EMBEDDED
+    proxy:
+      url: "socks5://127.0.0.1:40000"
+
+metrics:
+  prometheus:
+    enabled: false
+    endpoint: /metrics
+
+sentry:
+  dsn: ""
+  environment: ""
+
+logging:
+  file:
+    path: ./logs/
+  level:
+    root: INFO
+    lavalink: INFO
+    com.solaceaudio: INFO

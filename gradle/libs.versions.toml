@@ -1,0 +1,6 @@
+[versions]
+lavalink-api = "4.0.6"
+lavalink-server = "4.0.6"
+
+[plugins]
+lavalink = { id = "dev.arbjerg.lavalink.gradle-plugin", version = "1.0.15" }
