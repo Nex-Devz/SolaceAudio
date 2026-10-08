@@ -1,7 +1,6 @@
 jdk:
   - openjdk21
 before_install:
-  - sdk install gradle 8.10.2
-  - sdk use gradle 8.10.2
+  - chmod +x ./gradlew
 install:
-  - gradle clean build publishToMavenLocal -x test
+  - ./gradlew clean build publishToMavenLocal -x test --no-daemon
