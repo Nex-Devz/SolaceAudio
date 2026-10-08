@@ -93,8 +93,8 @@ plugins:
       diskCachePath: "youtube-cache"
       maxDiskCacheMb: 10240
       cipherUrl: "https://cipher.kikkia.dev"
-      # Optional: Auto-rotated PoToken generator URL (e.g. Vercel, Cloudflare, or local Docker)
-      potokenUrl: ""
+      # Free 24/7 Auto-rotated PoToken generator (hosted on Vercel)
+      potokenUrl: "https://potoken-generator.vercel.app/token"
       # Optional: Static manual PoToken & Visitor Data fallback
       potokenVisitorData: ""
       potoken: ""
