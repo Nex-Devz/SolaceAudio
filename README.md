@@ -89,7 +89,9 @@ plugins:
       diskCachePath: "youtube-cache"
       maxDiskCacheMb: 10240
       cipherUrl: "https://cipher.kikkia.dev"
-      # Free, hosted 24/7 PoToken auto-rotator:
+      # Option 1: Burner cookie file (recommended for datacenter IPs - bypasses PoToken requirements)
+      cookieFile: "ytburner.txt"
+      # Option 2: Free, hosted 24/7 PoToken auto-rotator:
       potokenUrl: "https://potoken-generator.vercel.app/token"
 
     spotify:
@@ -102,6 +104,14 @@ plugins:
       voice: "en-US-Standard-A"
       speed: 1.0
 ```
+
+---
+
+## 🔥 Burner Account Cookie Support (`cookieFile`)
+
+If your Lavalink node runs on datacenter IPs (Hetzner, OVH, DigitalOcean, Pterodactyl), provide your burner Google account cookies in `ytburner.txt` or configure `cookieFile: "ytburner.txt"`. 
+
+SolaceAudio dynamically computes real-time `SAPISIDHASH` authentication headers and signs every request to `WEB_REMIX`, providing direct stream extraction on cloud hosts without bot challenges or PoToken requirements.
 
 ---
 
