@@ -57,7 +57,7 @@ Add the plugin to your Lavalink `application.yml`:
 ```yaml
 lavalink:
   plugins:
-    - dependency: "com.github.Nex-Devz:SolaceAudio:v1.0.6"
+    - dependency: "com.github.Nex-Devz.SolaceAudio:solaceaudio-plugin:v1.0.12"
       repository: "https://jitpack.io"
 ```
 
