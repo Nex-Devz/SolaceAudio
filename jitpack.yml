@@ -1,4 +1,7 @@
 jdk:
   - openjdk21
+before_install:
+  - curl -sL https://services.gradle.org/distributions/gradle-8.10.2-bin.zip -o gradle.zip
+  - unzip -q gradle.zip
 install:
-  - java -cp gradle/wrapper/gradle-wrapper.jar org.gradle.wrapper.GradleWrapperMain clean build publishToMavenLocal -x test --no-daemon
+  - ./gradle-8.10.2/bin/gradle clean build publishToMavenLocal -x test
