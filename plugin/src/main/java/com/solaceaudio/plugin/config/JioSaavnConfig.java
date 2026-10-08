@@ -4,7 +4,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 @ConfigurationProperties(prefix = "plugins.solaceaudio.jiosaavn")
-@Component
+@Component("solaceAudioJioSaavnConfig")
 public class JioSaavnConfig {
 
     private String apiUrl = "https://saavn.dev";

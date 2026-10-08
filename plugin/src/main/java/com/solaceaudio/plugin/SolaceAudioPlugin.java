@@ -23,7 +23,7 @@ import java.util.Collections;
 import java.util.List;
 import com.solaceaudio.plugin.protocol.Config;
 
-@Service
+@Service("solaceAudioPlugin")
 @RestController
 public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
 

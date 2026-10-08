@@ -88,4 +88,11 @@ public abstract class AudioMirrorTrack extends SolaceAudioTrack {
 
         return future.join();
     }
+
+    @Override
+    public com.sedmelluq.discord.lavaplayer.source.AudioSourceManager getSourceManager() {
+        return (com.sedmelluq.discord.lavaplayer.source.AudioSourceManager) this.sourceManager;
+    }
 }
+
+

@@ -4,7 +4,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 @ConfigurationProperties(prefix = "plugins.solaceaudio.gaana")
-@Component
+@Component("solaceAudioGaanaConfig")
 public class GaanaConfig {
 
     private String apiUrl = "https://gaana-plugin-api.vercel.app/api";

@@ -4,7 +4,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 @ConfigurationProperties(prefix = "plugins.solaceaudio.spotify")
-@Component
+@Component("solaceAudioSpotifyConfig")
 public class SolaceAudioSpotifyConfig {
     private String countryCode = "US";
     private int playlistLoadLimit = 6;

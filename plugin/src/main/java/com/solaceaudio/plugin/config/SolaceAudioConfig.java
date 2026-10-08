@@ -7,7 +7,7 @@ import static com.solaceaudio.resolver.TrackResolutionEngine.ISRC_PATTERN;
 import static com.solaceaudio.resolver.TrackResolutionEngine.QUERY_PATTERN;
 
 @ConfigurationProperties(prefix = "plugins.solaceaudio")
-@Component
+@Component("solaceAudioConfigBean")
 public class SolaceAudioConfig {
 
     private String[] providers = {

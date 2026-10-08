@@ -4,7 +4,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 @ConfigurationProperties(prefix = "plugins.solaceaudio.amazonmusic")
-@Component
+@Component("solaceAudioAmazonMusicConfig")
 public class AmazonMusicConfig {
 
     private String apiUrl = "https://amazon-plugin-api.vercel.app/api";

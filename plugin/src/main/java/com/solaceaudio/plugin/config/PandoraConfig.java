@@ -4,7 +4,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 @ConfigurationProperties(prefix = "plugins.solaceaudio.pandora")
-@Component
+@Component("solaceAudioPandoraConfig")
 public class PandoraConfig {
 
     private String csrfToken = "";

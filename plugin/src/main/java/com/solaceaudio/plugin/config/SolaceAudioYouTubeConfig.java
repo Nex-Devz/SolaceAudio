@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 @ConfigurationProperties(prefix = "plugins.solaceaudio.youtube")
-@Component
+@Component("solaceAudioYouTubeConfig")
 public class SolaceAudioYouTubeConfig {
 
     private boolean oembed = false;
