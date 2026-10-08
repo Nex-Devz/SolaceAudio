@@ -49,7 +49,7 @@ public abstract class AudioMirrorTrack extends SolaceAudioTrack {
             if (tracks.isEmpty()) {
                 throw new TrackResolutionException("Mirror search returned empty results for " + this.trackInfo.title);
             }
-            resolved = tracks.get(0);
+            resolved = CandidateScorer.selectBest(this.trackInfo, tracks);
         }
 
         if (resolved instanceof InternalAudioTrack internalTrack) {

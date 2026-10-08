@@ -38,6 +38,8 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
     private PandoraAudioSourceManager pandora;
     private YouTubeSourceManager youtube;
     private LastFmSourceManager lastFm;
+    private com.solaceaudio.sources.deezer.DeezerAudioSourceManager deezer;
+    private com.solaceaudio.sources.tts.FloweryTtsAudioSourceManager flowerytts;
 
     public SolaceAudioPlugin(
         SolaceAudioConfig pluginConfig,
@@ -48,7 +50,9 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
         SolaceAudioYouTubeConfig youtubeConfig,
         AmazonMusicConfig amazonMusicConfig,
         SolaceAudioSpotifyConfig spotifyConfig,
-        LastFmConfig lastFmConfig
+        LastFmConfig lastFmConfig,
+        com.solaceaudio.plugin.config.DeezerConfig deezerConfig,
+        com.solaceaudio.plugin.config.FloweryTtsConfig floweryTtsConfig
     ) {
         log.info("Loading SolaceAudio plugin...");
         this.sourcesConfig = sourcesConfig;
@@ -113,6 +117,9 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
                 youtubeConfig.getDiskCachePath(),
                 youtubeConfig.getCipherUrl(),
                 youtubeConfig.getMaxDiskCacheMb(),
+                youtubeConfig.getPotokenUrl(),
+                youtubeConfig.getPotokenVisitorData(),
+                youtubeConfig.getPotoken(),
                 unused -> manager
             );
             if (hasNewYoutubeSource()) {
@@ -124,6 +131,22 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
 
         if (lastFmConfig.getApiKey() != null && !lastFmConfig.getApiKey().isEmpty()) {
             this.lastFm = new LastFmSourceManager(lastFmConfig.getApiKey());
+        }
+
+        if (sourcesConfig.isDeezer()) {
+            this.deezer = new com.solaceaudio.sources.deezer.DeezerAudioSourceManager(
+                deezerConfig.getApiUrl(),
+                deezerConfig.getPlaylistLoadLimit(),
+                deezerConfig.getAlbumLoadLimit(),
+                deezerConfig.getArtistLoadLimit()
+            );
+        }
+
+        if (sourcesConfig.isFlowerytts()) {
+            this.flowerytts = new com.solaceaudio.sources.tts.FloweryTtsAudioSourceManager(
+                floweryTtsConfig.getVoice(),
+                floweryTtsConfig.getSpeed()
+            );
         }
     }
 
@@ -179,6 +202,14 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
         }
         if (this.lastFm != null) {
             log.info("Registering Last.fm recommendations manager...");
+        }
+        if (this.deezer != null && this.sourcesConfig.isDeezer()) {
+            log.info("Registering Deezer audio source manager...");
+            manager.registerSourceManager(this.deezer);
+        }
+        if (this.flowerytts != null && this.sourcesConfig.isFlowerytts()) {
+            log.info("Registering Flowery TTS audio source manager...");
+            manager.registerSourceManager(this.flowerytts);
         }
         if (this.youtube != null && this.sourcesConfig.isYoutube() && !hasNewYoutubeSource()) {
             log.info("Registering SolaceAudio native standalone YouTube audio source manager...");

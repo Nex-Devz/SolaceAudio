@@ -94,10 +94,18 @@ public class YouTubeProxyHandler {
     }
 
     private final List<ClientHealth> clientPool = new ArrayList<>();
+    private volatile PoTokenManager poTokenManager;
 
     public YouTubeProxyHandler(String cipherUrl) {
+        this(cipherUrl, null, null, null);
+    }
+
+    public YouTubeProxyHandler(String cipherUrl, String potokenUrl, String staticVisitorData, String staticPoToken) {
         if (cipherUrl != null && !cipherUrl.isEmpty()) {
             this.cipherUrl = cipherUrl;
+        }
+        if (potokenUrl != null || staticVisitorData != null || staticPoToken != null) {
+            this.poTokenManager = new PoTokenManager(potokenUrl, staticVisitorData, staticPoToken);
         }
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(CONNECT_TIMEOUT)
@@ -105,11 +113,14 @@ public class YouTubeProxyHandler {
                 .build();
         this.mapper = new ObjectMapper();
 
-        clientPool.add(new ClientHealth(new WebClient()));
+        clientPool.add(new ClientHealth(new AndroidVrClient()));
+        clientPool.add(new ClientHealth(new AndroidMusicClient()));
         clientPool.add(new ClientHealth(new AndroidClient()));
         clientPool.add(new ClientHealth(new IosClient()));
+        clientPool.add(new ClientHealth(new WebRemixClient()));
         clientPool.add(new ClientHealth(new TvHtml5Client()));
         clientPool.add(new ClientHealth(new WebEmbeddedClient()));
+        clientPool.add(new ClientHealth(new WebClient()));
 
         warmInitialSessions();
         startSessionWarmerTask();
@@ -558,6 +569,13 @@ public class YouTubeProxyHandler {
         com.fasterxml.jackson.databind.node.ObjectNode contentPlaybackContext = mapper.createObjectNode();
         contentPlaybackContext.put("signatureTimestamp", session.sts);
         playbackContext.set("contentPlaybackContext", contentPlaybackContext);
+
+        if (poTokenManager != null && poTokenManager.hasPoToken()) {
+            com.fasterxml.jackson.databind.node.ObjectNode serviceIntegrity = mapper.createObjectNode();
+            serviceIntegrity.put("poToken", poTokenManager.getPoToken());
+            playbackContext.set("serviceIntegrityDimensions", serviceIntegrity);
+        }
+
         body.set("playbackContext", playbackContext);
 
         if ("TVHTML5".equals(client.getClientName())) {
@@ -577,8 +595,12 @@ public class YouTubeProxyHandler {
                 .timeout(REQUEST_TIMEOUT)
                 .POST(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(body)));
 
-        if (session.visitorData != null) {
-            reqBuilder.header("X-Goog-Visitor-Id", session.visitorData);
+        String activeVisitor = (poTokenManager != null && poTokenManager.getVisitorData() != null)
+                ? poTokenManager.getVisitorData()
+                : session.visitorData;
+
+        if (activeVisitor != null) {
+            reqBuilder.header("X-Goog-Visitor-Id", activeVisitor);
         }
 
         if ("ANDROID".equals(client.getClientName())) {

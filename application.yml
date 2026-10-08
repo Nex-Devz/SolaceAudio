@@ -4,13 +4,13 @@ server:
 
 lavalink:
   plugins:
-    # SolaceAudio v4 Plugin Auto-Download
-    - dependency: "com.github.Nex-Devz:SolaceAudio:v1.0.2"
+    # SolaceAudio Multi-Source Audio Engine
+    - dependency: "com.github.Nex-Devz.SolaceAudio:solaceaudio-plugin:v1.0.5"
       repository: "https://jitpack.io"
   server:
     password: "youshallnotpass"
     sources:
-      youtube: false
+      youtube: false # Handled natively by SolaceAudio / youtube plugin
       bandcamp: true
       soundcloud: true
       twitch: true
@@ -31,50 +31,76 @@ plugins:
       jiosaavn: true
       gaana: true
       amazonmusic: true
+      deezer: true
       pandora: true
       youtube: true
+      flowerytts: true
+
+    providers:
+      - "dzisrc:{isrc}"
+      - "ytsearch:\"{isrc}\""
+      - "ytsearch:{query}"
+      - "scsearch:{query}"
+      - "bcsearch:{query}"
+
     spotify:
-      market: "US"
-      fallbackMarkets:
-        - "GB"
-        - "DE"
-        - "IN"
+      countryCode: "US"
       playlistLoadLimit: 6
       albumLoadLimit: 6
       resolveArtistsInSearch: true
       localFiles: false
+      spDc: ""
+
     jiosaavn:
       apiUrl: "https://saavn.dev"
       playlistLoadLimit: 50
+
     gaana:
-      apiUrl: "https://gaana.com/apiv2"
-      playlistLoadLimit: 6
-      albumLoadLimit: 6
-      artistLoadLimit: 6
+      apiUrl: "https://gaana-plugin-api.vercel.app/api"
+      playlistLoadLimit: 50
+      albumLoadLimit: 50
+      artistLoadLimit: 50
+      searchLimit: 25
+
     amazonmusic:
-      apiUrl: ""
-      playlistLoadLimit: 6
-      albumLoadLimit: 6
-      artistLoadLimit: 6
+      apiUrl: "https://amazon-plugin-api.vercel.app/api"
+      playlistLoadLimit: 50
+      albumLoadLimit: 50
+      artistLoadLimit: 50
+
+    deezer:
+      apiUrl: "https://deezer-plugin-api.vercel.app/api"
+      playlistLoadLimit: 50
+      albumLoadLimit: 50
+      artistLoadLimit: 50
+      searchLimit: 25
+
     pandora:
+      csrfToken: ""
       searchLimit: 10
-    cache:
+
+    flowerytts:
+      voice: "en-US-Standard-A"
+      speed: 1.0
+
+    youtube:
+      oembed: false
+      mirror: true
+      mirrorProviders:
+        - "ytmsearch:%QUERY%"
+        - "scsearch:%QUERY%"
+      localDiskCache: true
+      diskCachePath: "youtube-cache"
       maxDiskCacheMb: 10240
-      maxSearchMemoryEntries: 5000
+      cipherUrl: "https://cipher.kikkia.dev"
+      # Optional: Auto-rotated PoToken generator URL (e.g. Vercel, Cloudflare, or local Docker)
+      potokenUrl: ""
+      # Optional: Static manual PoToken & Visitor Data fallback
+      potokenVisitorData: ""
+      potoken: ""
+
     lastfm:
       apiKey: ""
-
-  youtube:
-    enabled: true
-    allowSearch: true
-    allowDirectVideoIds: true
-    allowDirectPlaylistIds: true
-    clients:
-      - MUSIC
-      - ANDROID_VR
-      - WEB
-      - TVHTML5EMBEDDED
-
 
 metrics:
   prometheus:

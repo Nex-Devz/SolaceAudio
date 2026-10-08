@@ -13,6 +13,8 @@ public class SolaceAudioSourcesConfig {
     private boolean spotify = false;
     private boolean youtube = false;
     private boolean jiosaavn = true;
+    private boolean deezer = false;
+    private boolean flowerytts = false;
 
     public boolean isJiosaavn() {
         return jiosaavn;
@@ -60,5 +62,21 @@ public class SolaceAudioSourcesConfig {
 
     public void setYoutube(boolean youtube) {
         this.youtube = youtube;
+    }
+
+    public boolean isDeezer() {
+        return deezer;
+    }
+
+    public void setDeezer(boolean deezer) {
+        this.deezer = deezer;
+    }
+
+    public boolean isFlowerytts() {
+        return flowerytts;
+    }
+
+    public void setFlowerytts(boolean flowerytts) {
+        this.flowerytts = flowerytts;
     }
 }

@@ -168,6 +168,15 @@ plugins:
       playlistLoadLimit: 6
     pandora:
       searchLimit: 10
+    youtube:
+      localDiskCache: true
+      diskCachePath: "youtube-cache"
+      maxDiskCacheMb: 10240
+      cipherUrl: "https://cipher.kikkia.dev"
+      # Auto-rotated PoToken (Deploy 1-click free on Vercel: https://github.com/Nex-Devz/potoken-generator)
+      potokenUrl: "https://your-potoken-app.vercel.app/token"
+      potokenVisitorData: ""
+      potoken: ""
     cache:
       maxDiskCacheMb: 10240        # Local audio disk cache cap (in MB, default: 10GB)
       maxSearchMemoryEntries: 5000  # Number of search queries to retain in memory

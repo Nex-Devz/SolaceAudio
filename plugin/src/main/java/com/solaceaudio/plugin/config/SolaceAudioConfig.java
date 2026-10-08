@@ -13,7 +13,9 @@ public class SolaceAudioConfig {
     private String[] providers = {
             "dzisrc:" + ISRC_PATTERN,
             "ytsearch:\"" + ISRC_PATTERN + "\"",
-            "ytsearch:" + QUERY_PATTERN
+            "ytsearch:" + QUERY_PATTERN,
+            "scsearch:" + QUERY_PATTERN,
+            "bcsearch:" + QUERY_PATTERN
     };
 
     public String[] getProviders() {

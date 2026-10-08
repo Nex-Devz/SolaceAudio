@@ -17,7 +17,9 @@ public class TrackResolutionEngine implements TrackResolutionHandler {
 
     private static final String[] DEFAULT_PROVIDERS = {
             "ytsearch:\"" + ISRC_PATTERN + "\"",
-            "ytsearch:" + QUERY_PATTERN
+            "ytsearch:" + QUERY_PATTERN,
+            "scsearch:" + QUERY_PATTERN,
+            "bcsearch:" + QUERY_PATTERN
     };
 
     private final String[] providers;
@@ -29,6 +31,8 @@ public class TrackResolutionEngine implements TrackResolutionHandler {
             this.providers = DEFAULT_PROVIDERS;
         }
     }
+
+    private final SingleFlightResolver<String, AudioItem> singleFlight = new SingleFlightResolver<>();
 
     @Override
     public AudioItem apply(AudioTrack track) {
@@ -57,7 +61,13 @@ public class TrackResolutionEngine implements TrackResolutionHandler {
             }
 
             try {
-                AudioItem loaded = mirrorTrack.resolveFromProvider(candidate);
+                final String searchKey = candidate;
+                AudioItem loaded = singleFlight.execute(searchKey, () -> {
+                    return java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+                        return mirrorTrack.resolveFromProvider(searchKey);
+                    });
+                }).join();
+
                 if (loaded == null || loaded == AudioReference.NO_TRACK) {
                     continue;
                 }

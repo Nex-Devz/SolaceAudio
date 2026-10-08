@@ -1,4 +1,4 @@
-﻿plugins {
+plugins {
     java
     `maven-publish`
 }
@@ -27,6 +27,14 @@ dependencies {
     compileOnly("org.jetbrains:annotations:24.0.1")
     compileOnly("org.slf4j:slf4j-api:2.0.9")
     compileOnly("com.github.topi314.lavalyrics:lavalyrics:1.0.0")
+
+    testImplementation("dev.arbjerg:lavaplayer:2.0.4")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
 
 publishing {

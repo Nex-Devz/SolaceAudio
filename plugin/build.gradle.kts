@@ -22,6 +22,9 @@ tasks {
     compileJava {
         options.encoding = "UTF-8"
     }
+    jar {
+        mustRunAfter(":solaceaudio-main:compileTestJava")
+    }
 }
 
 dependencies {

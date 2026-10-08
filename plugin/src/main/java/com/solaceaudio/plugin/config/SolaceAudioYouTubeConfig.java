@@ -73,4 +73,32 @@ public class SolaceAudioYouTubeConfig {
     public void setCipherUrl(String cipherUrl) {
         this.cipherUrl = cipherUrl;
     }
+
+    private String potokenUrl = "";
+    private String potokenVisitorData = "";
+    private String potoken = "";
+
+    public String getPotokenUrl() {
+        return potokenUrl;
+    }
+
+    public void setPotokenUrl(String potokenUrl) {
+        this.potokenUrl = potokenUrl;
+    }
+
+    public String getPotokenVisitorData() {
+        return potokenVisitorData;
+    }
+
+    public void setPotokenVisitorData(String potokenVisitorData) {
+        this.potokenVisitorData = potokenVisitorData;
+    }
+
+    public String getPotoken() {
+        return potoken;
+    }
+
+    public void setPotoken(String potoken) {
+        this.potoken = potoken;
+    }
 }
