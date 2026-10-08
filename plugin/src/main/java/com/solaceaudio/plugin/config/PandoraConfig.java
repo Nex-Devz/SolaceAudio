@@ -3,7 +3,7 @@ package com.solaceaudio.plugin.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
-@ConfigurationProperties(prefix = "plugins.SolaceAudio.pandora")
+@ConfigurationProperties(prefix = "plugins.solaceaudio.pandora")
 @Component
 public class PandoraConfig {
 

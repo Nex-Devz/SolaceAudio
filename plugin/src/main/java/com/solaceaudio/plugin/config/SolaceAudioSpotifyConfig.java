@@ -3,7 +3,7 @@ package com.solaceaudio.plugin.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
-@ConfigurationProperties(prefix = "plugins.SolaceAudio.spotify")
+@ConfigurationProperties(prefix = "plugins.solaceaudio.spotify")
 @Component
 public class SolaceAudioSpotifyConfig {
     private String countryCode = "US";

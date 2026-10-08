@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
-@ConfigurationProperties(prefix = "plugins.SolaceAudio.youtube")
+@ConfigurationProperties(prefix = "plugins.solaceaudio.youtube")
 @Component
 public class SolaceAudioYouTubeConfig {
 

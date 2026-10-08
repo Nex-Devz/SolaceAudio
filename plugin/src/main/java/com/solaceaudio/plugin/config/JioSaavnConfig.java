@@ -3,7 +3,7 @@ package com.solaceaudio.plugin.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
-@ConfigurationProperties(prefix = "plugins.SolaceAudio.jiosaavn")
+@ConfigurationProperties(prefix = "plugins.solaceaudio.jiosaavn")
 @Component
 public class JioSaavnConfig {
 

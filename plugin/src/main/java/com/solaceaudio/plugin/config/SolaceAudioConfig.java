@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 import static com.solaceaudio.resolver.TrackResolutionEngine.ISRC_PATTERN;
 import static com.solaceaudio.resolver.TrackResolutionEngine.QUERY_PATTERN;
 
-@ConfigurationProperties(prefix = "plugins.SolaceAudio")
+@ConfigurationProperties(prefix = "plugins.solaceaudio")
 @Component
 public class SolaceAudioConfig {
 
