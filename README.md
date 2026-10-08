@@ -6,7 +6,7 @@
 
 [![Java Version](https://img.shields.io/badge/Java-17+-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)](https://java.com)
 [![Lavalink Version](https://img.shields.io/badge/Lavalink-4.0+-7289DA?style=for-the-badge&logo=discord&logoColor=white)](https://github.com/lavalink-devs/Lavalink)
-[![JitPack](https://img.shields.io/badge/JitPack-v1.0.1-brightgreen?style=for-the-badge)](https://jitpack.io/#Nex-Devz/SolaceAudio)
+[![JitPack](https://img.shields.io/badge/JitPack-v1.0.2-brightgreen?style=for-the-badge)](https://jitpack.io/#Nex-Devz/SolaceAudio)
 [![Discord Community](https://img.shields.io/badge/Discord-Join%20Community-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/devz)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg?style=for-the-badge)](LICENSE)
 
@@ -95,7 +95,7 @@ Add the following to your `application.yml`:
 ```yaml
 lavalink:
   plugins:
-    - dependency: "com.github.Nex-Devz:SolaceAudio:v1.0.1"
+    - dependency: "com.github.Nex-Devz:SolaceAudio:v1.0.2"
       repository: "https://jitpack.io"
 ```
 
@@ -126,7 +126,7 @@ server:
 lavalink:
   plugins:
     # SolaceAudio Plugin Dependency
-    - dependency: "com.github.Nex-Devz:SolaceAudio:v1.0.1"
+    - dependency: "com.github.Nex-Devz:SolaceAudio:v1.0.2"
       repository: "https://jitpack.io"
   server:
     password: "youshallnotpass"

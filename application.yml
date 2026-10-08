@@ -5,7 +5,7 @@ server:
 lavalink:
   plugins:
     # SolaceAudio v4 Plugin Auto-Download
-    - dependency: "com.github.Nex-Devz:SolaceAudio:v1.0.0"
+    - dependency: "com.github.Nex-Devz:SolaceAudio:v1.0.2"
       repository: "https://jitpack.io"
   server:
     password: "youshallnotpass"
