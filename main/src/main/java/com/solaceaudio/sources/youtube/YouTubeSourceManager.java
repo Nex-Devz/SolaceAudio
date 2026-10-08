@@ -98,6 +98,23 @@ public class YouTubeSourceManager implements AudioSourceManager {
             String potokenVisitorData,
             String potoken,
             Function<Void, AudioPlayerManager> audioPlayerManager) {
+        this(oembed, mirror, mirrorProviders, localDiskCache, diskCachePath, cipherUrl, maxDiskCacheMb, potokenUrl, potokenVisitorData, potoken, null, null, audioPlayerManager);
+    }
+
+    public YouTubeSourceManager(
+            boolean oembed,
+            boolean mirror,
+            List<String> mirrorProviders,
+            boolean localDiskCache,
+            String diskCachePath,
+            String cipherUrl,
+            long maxDiskCacheMb,
+            String potokenUrl,
+            String potokenVisitorData,
+            String potoken,
+            String cookie,
+            String cookieFile,
+            Function<Void, AudioPlayerManager> audioPlayerManager) {
         this.oembed = oembed;
         this.mirror = mirror;
         this.audioPlayerManager = audioPlayerManager;
@@ -105,7 +122,7 @@ public class YouTubeSourceManager implements AudioSourceManager {
         this.diskCachePath = diskCachePath != null && !diskCachePath.isEmpty() ? diskCachePath : "youtube-cache";
         this.cipherUrl = cipherUrl != null && !cipherUrl.isEmpty() ? cipherUrl : "https://cipher.kikkia.dev";
         this.maxDiskCacheMb = maxDiskCacheMb;
-        this.proxyHandler = new YouTubeProxyHandler(this.cipherUrl, potokenUrl, potokenVisitorData, potoken);
+        this.proxyHandler = new YouTubeProxyHandler(this.cipherUrl, potokenUrl, potokenVisitorData, potoken, cookie, cookieFile);
 
         if (mirrorProviders != null && !mirrorProviders.isEmpty()) {
             this.mirrorProviders = mirrorProviders.toArray(new String[0]);

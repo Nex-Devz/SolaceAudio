@@ -95,12 +95,20 @@ public class YouTubeProxyHandler {
 
     private final List<ClientHealth> clientPool = new ArrayList<>();
     private volatile PoTokenManager poTokenManager;
+    private final YtMusicCookieAuth ytMusicCookieAuth;
+    private final com.solaceaudio.core.MemoryCacheManager<StreamResult> streamCache =
+            new com.solaceaudio.core.MemoryCacheManager<>(500, Duration.ofHours(5).toMillis());
 
     public YouTubeProxyHandler(String cipherUrl) {
-        this(cipherUrl, null, null, null);
+        this(cipherUrl, null, null, null, null, null);
     }
 
     public YouTubeProxyHandler(String cipherUrl, String potokenUrl, String staticVisitorData, String staticPoToken) {
+        this(cipherUrl, potokenUrl, staticVisitorData, staticPoToken, null, null);
+    }
+
+    public YouTubeProxyHandler(String cipherUrl, String potokenUrl, String staticVisitorData, String staticPoToken,
+                               String cookie, String cookieFile) {
         if (cipherUrl != null && !cipherUrl.isEmpty()) {
             this.cipherUrl = cipherUrl;
         }
@@ -113,17 +121,32 @@ public class YouTubeProxyHandler {
                 .build();
         this.mapper = new ObjectMapper();
 
+        this.ytMusicCookieAuth = new YtMusicCookieAuth(this.httpClient);
+        this.ytMusicCookieAuth.loadCookie(cookie, cookieFile);
+
+        // If authenticated burner cookie is available, prioritize WebRemixClient first!
+        if (this.ytMusicCookieAuth.hasAuth()) {
+            log.info("[YouTubeProxyHandler] Authenticated YouTube burner cookie detected: prioritizing WEB_REMIX client.");
+            clientPool.add(new ClientHealth(new WebRemixClient()));
+        }
+
         clientPool.add(new ClientHealth(new AndroidVrClient()));
         clientPool.add(new ClientHealth(new AndroidMusicClient()));
         clientPool.add(new ClientHealth(new AndroidClient()));
         clientPool.add(new ClientHealth(new IosClient()));
-        clientPool.add(new ClientHealth(new WebRemixClient()));
+        if (!this.ytMusicCookieAuth.hasAuth()) {
+            clientPool.add(new ClientHealth(new WebRemixClient()));
+        }
         clientPool.add(new ClientHealth(new TvHtml5Client()));
         clientPool.add(new ClientHealth(new WebEmbeddedClient()));
         clientPool.add(new ClientHealth(new WebClient()));
 
         warmInitialSessions();
         startSessionWarmerTask();
+    }
+
+    public YtMusicCookieAuth getYtMusicCookieAuth() {
+        return ytMusicCookieAuth;
     }
 
     private void warmInitialSessions() {
@@ -189,6 +212,12 @@ public class YouTubeProxyHandler {
             return null;
         }
 
+        StreamResult cached = streamCache.get(videoId);
+        if (cached != null && !isStreamExpired(cached.url)) {
+            log.debug("Stream cache hit for video {}", videoId);
+            return cached;
+        }
+
         StreamResult res = tryInnertubeClients(videoId);
         if (res == null) {
             String counterpart = getCounterpartVideoId(videoId);
@@ -197,7 +226,26 @@ public class YouTubeProxyHandler {
                 res = tryInnertubeClients(counterpart);
             }
         }
+
+        if (res != null && res.url != null && !isStreamExpired(res.url)) {
+            streamCache.put(videoId, res);
+        }
+
         return res;
+    }
+
+    private boolean isStreamExpired(String url) {
+        if (url == null || url.isEmpty()) return true;
+        try {
+            Matcher m = Pattern.compile("[?&]expire=(\\d+)").matcher(url);
+            if (m.find()) {
+                long expireEpochSec = Long.parseLong(m.group(1));
+                // Consider expired 5 minutes (300s) before actual expiration to prevent stutter
+                long nowSec = System.currentTimeMillis() / 1000L;
+                return nowSec >= (expireEpochSec - 300L);
+            }
+        } catch (Exception ignored) {}
+        return false;
     }
 
     public VideoInfo getVideoInfo(String videoId) {
@@ -567,7 +615,10 @@ public class YouTubeProxyHandler {
 
         com.fasterxml.jackson.databind.node.ObjectNode playbackContext = mapper.createObjectNode();
         com.fasterxml.jackson.databind.node.ObjectNode contentPlaybackContext = mapper.createObjectNode();
-        contentPlaybackContext.put("signatureTimestamp", session.sts);
+        int activeSts = ("WEB_REMIX".equals(client.getClientName()) && ytMusicCookieAuth != null)
+                ? ytMusicCookieAuth.getSignatureTimestamp()
+                : session.sts;
+        contentPlaybackContext.put("signatureTimestamp", activeSts);
         playbackContext.set("contentPlaybackContext", contentPlaybackContext);
 
         if (poTokenManager != null && poTokenManager.hasPoToken()) {
@@ -607,12 +658,29 @@ public class YouTubeProxyHandler {
             reqBuilder.header("X-Goog-Api-Format-Version", "2");
         }
 
+        if ("WEB_REMIX".equals(client.getClientName())) {
+            reqBuilder.header("Origin", "https://music.youtube.com");
+            reqBuilder.header("Referer", "https://music.youtube.com/");
+            reqBuilder.header("X-Origin", "https://music.youtube.com");
+            if (ytMusicCookieAuth != null && ytMusicCookieAuth.hasAuth()) {
+                reqBuilder.header("Cookie", ytMusicCookieAuth.getCookieHeader());
+                String auth = ytMusicCookieAuth.generateSapisidHash();
+                if (auth != null) {
+                    reqBuilder.header("Authorization", auth);
+                }
+                reqBuilder.header("X-Youtube-Bootstrap-Logged-In", "true");
+            }
+        }
+
         if (client.isEmbedded()) {
             reqBuilder.header("Referer", "https://www.youtube.com");
         }
 
         HttpResponse<String> response = httpClient.send(reqBuilder.build(), HttpResponse.BodyHandlers.ofString());
-        if (response.statusCode() == 429 || response.statusCode() == 403) {
+        if (response.statusCode() == 429 || response.statusCode() == 403 || response.statusCode() == 401) {
+            if ("WEB_REMIX".equals(client.getClientName()) && ytMusicCookieAuth != null && ytMusicCookieAuth.hasAuth()) {
+                log.warn("[SolaceAudio] YouTube burner cookie received HTTP {} (expired or invalid session). Please update ytburner.txt with a fresh session dump.", response.statusCode());
+            }
             return new PlayerResultHolder(response.statusCode(), null);
         }
 
@@ -836,6 +904,12 @@ public class YouTubeProxyHandler {
     }
 
     private List<VideoInfo> tryInnertubeSearch(String query, boolean musicOnly) {
+        if (musicOnly || (ytMusicCookieAuth != null && ytMusicCookieAuth.hasAuth())) {
+            List<VideoInfo> musicResults = tryWebRemixSearch(query);
+            if (musicResults != null && !musicResults.isEmpty()) {
+                return musicResults;
+            }
+        }
         try {
             InnerTubeClient tubeClient = new WebClient();
 
@@ -907,6 +981,92 @@ public class YouTubeProxyHandler {
         }
     }
 
+    private List<VideoInfo> tryWebRemixSearch(String query) {
+        try {
+            InnerTubeClient remixClient = new WebRemixClient();
+            com.fasterxml.jackson.databind.node.ObjectNode clientNode = mapper.createObjectNode();
+            remixClient.populateClientContext(clientNode);
+
+            com.fasterxml.jackson.databind.node.ObjectNode context = mapper.createObjectNode();
+            context.set("client", clientNode);
+
+            com.fasterxml.jackson.databind.node.ObjectNode body = mapper.createObjectNode();
+            body.set("context", context);
+            body.put("query", query);
+            body.put("params", "Eg-KAQwIARAAGAAgACgAMABqChAEEAUQAxAKEAk%3D");
+
+            String endpoint = remixClient.getEndpointDomain() + "/youtubei/v1/search?key=" + remixClient.getApiKey()
+                    + "&prettyPrint=false";
+
+            HttpRequest.Builder reqBuilder = HttpRequest.newBuilder().uri(URI.create(endpoint))
+                    .header("User-Agent", remixClient.getUserAgent())
+                    .header("X-YouTube-Client-Name", remixClient.getClientId())
+                    .header("X-YouTube-Client-Version", remixClient.getClientVersion())
+                    .header("Origin", "https://music.youtube.com")
+                    .header("Referer", "https://music.youtube.com/")
+                    .header("X-Origin", "https://music.youtube.com")
+                    .header("Content-Type", "application/json")
+                    .timeout(REQUEST_TIMEOUT)
+                    .POST(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(body)));
+
+            if (ytMusicCookieAuth != null && ytMusicCookieAuth.hasAuth()) {
+                reqBuilder.header("Cookie", ytMusicCookieAuth.getCookieHeader());
+                String auth = ytMusicCookieAuth.generateSapisidHash();
+                if (auth != null) {
+                    reqBuilder.header("Authorization", auth);
+                }
+                reqBuilder.header("X-Youtube-Bootstrap-Logged-In", "true");
+            }
+
+            HttpResponse<String> response = httpClient.send(reqBuilder.build(), HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() != 200 || response.body() == null) {
+                return null;
+            }
+
+            String bodyStr = response.body();
+            List<VideoInfo> results = new ArrayList<>();
+            String needle = "\"musicResponsiveListItemRenderer\"";
+            int start = 0;
+
+            while ((start = bodyStr.indexOf(needle, start)) != -1 && results.size() < 20) {
+                int next = bodyStr.indexOf(needle, start + needle.length());
+                String block = (next != -1) ? bodyStr.substring(start, next) : bodyStr.substring(start);
+                start = (next != -1) ? next : bodyStr.length();
+
+                String videoId = null;
+                Matcher idMatcher = Pattern.compile("\"videoId\"\\s*:\\s*\"([a-zA-Z0-9_-]{11})\"").matcher(block);
+                if (idMatcher.find()) {
+                    videoId = idMatcher.group(1);
+                }
+
+                List<String> texts = new ArrayList<>();
+                Matcher textMatcher = Pattern.compile("\"text\"\\s*:\\s*\"([^\"]+)\"").matcher(block);
+                while (textMatcher.find()) {
+                    texts.add(textMatcher.group(1));
+                }
+
+                if (videoId != null && !texts.isEmpty()) {
+                    String title = texts.get(0);
+                    String author = texts.size() > 1 ? texts.get(1) : "Unknown";
+                    long durationMs = 0;
+                    for (String t : texts) {
+                        if (t.matches("^\\d{1,2}:\\d{2}$")) {
+                            durationMs = parseDurationStrict(t);
+                            break;
+                        }
+                    }
+
+                    results.add(new VideoInfo(videoId, title, author, durationMs > 0 ? durationMs : Long.MAX_VALUE,
+                            "https://img.youtube.com/vi/" + videoId + "/mqdefault.jpg",
+                            "https://music.youtube.com/watch?v=" + videoId, durationMs == 0, null));
+                }
+            }
+            return results.isEmpty() ? null : results;
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
     private long parseDurationStrict(String text) {
         if (text == null || text.trim().isEmpty())
             return 0;
@@ -941,6 +1101,80 @@ public class YouTubeProxyHandler {
 
     public void shutdown() {
         sessionWarmer.shutdownNow();
+    }
+
+    public static class AudioStreamInfo {
+        public final int itag;
+        public final int bitrate;
+        public final String mimeType;
+        public final String url;
+
+        public AudioStreamInfo(int itag, int bitrate, String mimeType, String url) {
+            this.itag = itag;
+            this.bitrate = bitrate;
+            this.mimeType = mimeType;
+            this.url = url;
+        }
+    }
+
+    public List<AudioStreamInfo> getAudioStreams(String videoId) {
+        if (videoId == null || videoId.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        InnerTubeClient client = (ytMusicCookieAuth != null && ytMusicCookieAuth.hasAuth())
+                ? new WebRemixClient()
+                : new AndroidClient();
+
+        try {
+            PlayerFetchResult fetchResult = fetchPlayerWithRegionRetry(videoId, client);
+            if (fetchResult == null || fetchResult.json == null) {
+                return Collections.emptyList();
+            }
+
+            JsonNode formats = fetchResult.json.path("streamingData").path("adaptiveFormats");
+            if (formats.isMissingNode() || !formats.isArray()) {
+                return Collections.emptyList();
+            }
+
+            List<AudioStreamInfo> streams = new ArrayList<>();
+            for (JsonNode fmt : formats) {
+                String mimeType = fmt.path("mimeType").asText("");
+                if (!mimeType.startsWith("audio/")) continue;
+
+                int itag = fmt.path("itag").asInt(0);
+                int bitrate = fmt.path("bitrate").asInt(0);
+                String url = null;
+
+                if (fmt.has("signatureCipher") || fmt.has("cipher")) {
+                    String cipherStr = fmt.has("signatureCipher") ? fmt.path("signatureCipher").asText() : fmt.path("cipher").asText();
+                    url = resolveCipher(cipherStr);
+                } else if (fmt.has("url")) {
+                    String directUrl = fmt.path("url").asText(null);
+                    if (client.requiresCipher() || (directUrl != null && directUrl.contains("n="))) {
+                        url = resolveUrlParams(directUrl, null, null);
+                    } else {
+                        url = directUrl;
+                    }
+                }
+
+                if (url != null && !url.isEmpty()) {
+                    streams.add(new AudioStreamInfo(itag, bitrate, mimeType, url));
+                }
+            }
+
+            streams.sort((a, b) -> {
+                boolean aOpus = a.mimeType != null && (a.mimeType.contains("opus") || a.mimeType.contains("webm"));
+                boolean bOpus = b.mimeType != null && (b.mimeType.contains("opus") || b.mimeType.contains("webm"));
+                if (aOpus != bOpus) return aOpus ? -1 : 1;
+                return Integer.compare(b.bitrate, a.bitrate);
+            });
+
+            return streams;
+        } catch (Exception e) {
+            log.debug("getAudioStreams failed for {}: {}", videoId, e.getMessage());
+            return Collections.emptyList();
+        }
     }
 
     public static class StreamResult {

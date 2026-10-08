@@ -243,5 +243,24 @@ public class Config {
         public void setMaxDiskCacheMb(Long maxDiskCacheMb) {
             this.maxDiskCacheMb = maxDiskCacheMb;
         }
+
+        private String cookie;
+        private String cookieFile;
+
+        public String getCookie() {
+            return this.cookie;
+        }
+
+        public void setCookie(String cookie) {
+            this.cookie = cookie;
+        }
+
+        public String getCookieFile() {
+            return this.cookieFile;
+        }
+
+        public void setCookieFile(String cookieFile) {
+            this.cookieFile = cookieFile;
+        }
     }
 }

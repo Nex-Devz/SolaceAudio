@@ -10,12 +10,17 @@ public class WebRemixClient extends InnerTubeClient {
 
     @Override
     public String getClientVersion() {
-        return "1.20240304.01.00";
+        return "1.20260213.01.00";
+    }
+
+    @Override
+    public String getEndpointDomain() {
+        return "https://music.youtube.com";
     }
 
     @Override
     public String getUserAgent() {
-        return "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
+        return "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36";
     }
 
     @Override

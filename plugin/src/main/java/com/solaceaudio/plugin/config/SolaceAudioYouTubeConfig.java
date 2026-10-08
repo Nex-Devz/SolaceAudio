@@ -101,4 +101,23 @@ public class SolaceAudioYouTubeConfig {
     public void setPotoken(String potoken) {
         this.potoken = potoken;
     }
+
+    private String cookie = "";
+    private String cookieFile = "";
+
+    public String getCookie() {
+        return cookie;
+    }
+
+    public void setCookie(String cookie) {
+        this.cookie = cookie;
+    }
+
+    public String getCookieFile() {
+        return cookieFile;
+    }
+
+    public void setCookieFile(String cookieFile) {
+        this.cookieFile = cookieFile;
+    }
 }

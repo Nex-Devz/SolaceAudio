@@ -120,6 +120,8 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
                 youtubeConfig.getPotokenUrl(),
                 youtubeConfig.getPotokenVisitorData(),
                 youtubeConfig.getPotoken(),
+                youtubeConfig.getCookie(),
+                youtubeConfig.getCookieFile(),
                 unused -> manager
             );
             if (hasNewYoutubeSource()) {
@@ -306,6 +308,9 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
             }
             if (ytConfig.getMaxDiskCacheMb() != null) {
                 this.youtube.setMaxDiskCacheMb(ytConfig.getMaxDiskCacheMb());
+            }
+            if ((ytConfig.getCookie() != null || ytConfig.getCookieFile() != null) && this.youtube.getProxyHandler() != null) {
+                this.youtube.getProxyHandler().getYtMusicCookieAuth().loadCookie(ytConfig.getCookie(), ytConfig.getCookieFile());
             }
         }
     }
