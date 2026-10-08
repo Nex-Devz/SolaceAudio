@@ -1,7 +1,7 @@
 jdk:
   - openjdk21
 before_install:
-  - sdk install gradle 8.10.2
-  - sdk use gradle 8.10.2
+  - sdk install gradle 8.9
+  - sdk use gradle 8.9
 install:
-  - gradle clean build publishToMavenLocal -x test --no-daemon -Dorg.gradle.jvmargs="-Xmx1536m"
+  - gradle clean build publishToMavenLocal -x test
