@@ -1,5 +1,6 @@
-﻿plugins {
+plugins {
     java
+    `maven-publish`
     alias(libs.plugins.lavalink)
 }
 
@@ -30,3 +31,17 @@ dependencies {
     compileOnly("com.github.topi314.lavalyrics:lavalyrics:1.0.0")
 }
 
+publishing {
+    publications {
+        register<MavenPublication>("mavenJava") {
+            from(components["java"])
+            groupId = "com.github.Nex-Devz"
+            artifactId = "SolaceAudio"
+        }
+        register<MavenPublication>("mavenPlugin") {
+            from(components["java"])
+            groupId = "com.github.Nex-Devz.SolaceAudio"
+            artifactId = "plugin"
+        }
+    }
+}

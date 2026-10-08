@@ -1,4 +1,7 @@
 jdk:
   - openjdk21
+before_install:
+  - sed -i -e 's/\r$//' gradlew
+  - chmod +x gradlew
 install:
   - ./gradlew clean build publishToMavenLocal -x test
