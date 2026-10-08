@@ -1,7 +1,4 @@
 jdk:
   - openjdk21
-before_install:
-  - sdk install gradle 8.9
-  - sdk use gradle 8.9
 install:
-  - gradle clean build publishToMavenLocal -x test
+  - java -cp gradle/wrapper/gradle-wrapper.jar org.gradle.wrapper.GradleWrapperMain clean build publishToMavenLocal -x test --no-daemon
