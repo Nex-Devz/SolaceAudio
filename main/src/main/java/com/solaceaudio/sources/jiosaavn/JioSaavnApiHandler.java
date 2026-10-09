@@ -21,11 +21,12 @@ public class JioSaavnApiHandler {
 
     private static final Logger log = LoggerFactory.getLogger(JioSaavnApiHandler.class);
     private static final String DES_KEY = "38346591";
-    private static final String DEFAULT_API_URL = "https://saavn.dev";
+    public static final String OFFICIAL_API_URL = "https://www.jiosaavn.com/api.php";
 
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
     private final String baseUrl;
+    private final boolean isOfficialApi;
 
     public JioSaavnApiHandler(String apiUrl) {
         this.httpClient = HttpClient.newBuilder()
@@ -33,27 +34,51 @@ public class JioSaavnApiHandler {
                 .followRedirects(HttpClient.Redirect.NORMAL)
                 .build();
         this.objectMapper = new ObjectMapper();
-        String url = (apiUrl == null || apiUrl.isBlank()) ? DEFAULT_API_URL : apiUrl;
-        this.baseUrl = url.endsWith("/") ? url.substring(0, url.length() - 1) : url;
+        if (apiUrl == null || apiUrl.isBlank() || apiUrl.contains("saavn.dev") || apiUrl.contains("jiosaavn.com")) {
+            this.baseUrl = OFFICIAL_API_URL;
+            this.isOfficialApi = true;
+        } else {
+            this.baseUrl = apiUrl.endsWith("/") ? apiUrl.substring(0, apiUrl.length() - 1) : apiUrl;
+            this.isOfficialApi = false;
+        }
     }
 
     public JsonNode searchSongs(String query, int limit) throws IOException {
+        if (isOfficialApi) {
+            return fetchJson("?__call=search.getResults&api_version=4&_format=json&_marker=0&cc=in&ctx=web6dot0&includeMetaTags=1&q=" + enc(query) + "&n=" + limit);
+        }
         return fetchJson("/api/search/songs?query=" + enc(query) + "&limit=" + limit);
     }
 
     public JsonNode searchPlaylists(String query, int limit) throws IOException {
+        if (isOfficialApi) {
+            return fetchJson("?__call=search.getPlaylistResults&api_version=4&_format=json&_marker=0&cc=in&ctx=web6dot0&q=" + enc(query) + "&n=" + limit);
+        }
         return fetchJson("/api/search/playlists?query=" + enc(query) + "&limit=" + limit);
     }
 
     public JsonNode searchAlbums(String query, int limit) throws IOException {
+        if (isOfficialApi) {
+            return fetchJson("?__call=search.getAlbumResults&api_version=4&_format=json&_marker=0&cc=in&ctx=web6dot0&q=" + enc(query) + "&n=" + limit);
+        }
         return fetchJson("/api/search/albums?query=" + enc(query) + "&limit=" + limit);
     }
 
     public JsonNode searchArtists(String query, int limit) throws IOException {
+        if (isOfficialApi) {
+            return fetchJson("?__call=search.getArtistResults&api_version=4&_format=json&_marker=0&cc=in&ctx=web6dot0&q=" + enc(query) + "&n=" + limit);
+        }
         return fetchJson("/api/search/artists?query=" + enc(query) + "&limit=" + limit);
     }
 
     public JsonNode getSongDetails(String idOrUrl) throws IOException {
+        if (isOfficialApi) {
+            if (idOrUrl.startsWith("http")) {
+                String token = extractPermaToken(idOrUrl);
+                return fetchJson("?__call=webapi.get&api_version=4&_format=json&_marker=0&ctx=web6dot0&token=" + enc(token) + "&type=song");
+            }
+            return fetchJson("?__call=song.getDetails&api_version=4&_format=json&_marker=0&ctx=web6dot0&pids=" + enc(idOrUrl));
+        }
         if (idOrUrl.startsWith("http")) {
             return fetchJson("/api/songs?link=" + enc(idOrUrl));
         }
@@ -61,6 +86,10 @@ public class JioSaavnApiHandler {
     }
 
     public JsonNode getAlbumDetails(String idOrUrl) throws IOException {
+        if (isOfficialApi) {
+            String token = extractPermaToken(idOrUrl);
+            return fetchJson("?__call=webapi.get&api_version=4&_format=json&_marker=0&ctx=web6dot0&token=" + enc(token) + "&type=album");
+        }
         if (idOrUrl.startsWith("http")) {
             return fetchJson("/api/albums?link=" + enc(idOrUrl));
         }
@@ -68,6 +97,10 @@ public class JioSaavnApiHandler {
     }
 
     public JsonNode getPlaylistDetails(String idOrUrl, int limit) throws IOException {
+        if (isOfficialApi) {
+            String token = extractPermaToken(idOrUrl);
+            return fetchJson("?__call=webapi.get&api_version=4&_format=json&_marker=0&ctx=web6dot0&token=" + enc(token) + "&type=playlist&n=" + limit);
+        }
         if (idOrUrl.startsWith("http")) {
             return fetchJson("/api/playlists?link=" + enc(idOrUrl) + "&limit=" + limit);
         }
@@ -75,6 +108,10 @@ public class JioSaavnApiHandler {
     }
 
     public JsonNode getArtistDetails(String idOrUrl) throws IOException {
+        if (isOfficialApi) {
+            String token = extractPermaToken(idOrUrl);
+            return fetchJson("?__call=webapi.get&api_version=4&_format=json&_marker=0&ctx=web6dot0&token=" + enc(token) + "&type=artist&n_song=50");
+        }
         if (idOrUrl.startsWith("http")) {
             return fetchJson("/api/artists?link=" + enc(idOrUrl));
         }
@@ -82,7 +119,21 @@ public class JioSaavnApiHandler {
     }
 
     public JsonNode getRecommendations(String songId, int limit) throws IOException {
+        if (isOfficialApi) {
+            return fetchJson("?__call=reco.getreco&api_version=4&_format=json&_marker=0&ctx=web6dot0&pid=" + enc(songId) + "&n=" + limit);
+        }
         return fetchJson("/api/songs/" + enc(songId) + "/suggestions?limit=" + limit);
+    }
+
+    private static String extractPermaToken(String urlOrId) {
+        if (!urlOrId.startsWith("http")) return urlOrId;
+        int lastSlash = urlOrId.lastIndexOf('/');
+        if (lastSlash != -1 && lastSlash < urlOrId.length() - 1) {
+            String sub = urlOrId.substring(lastSlash + 1);
+            int q = sub.indexOf('?');
+            return q != -1 ? sub.substring(0, q) : sub;
+        }
+        return urlOrId;
     }
 
     public static String decryptMediaUrl(String encryptedUrl) {
@@ -103,13 +154,20 @@ public class JioSaavnApiHandler {
     }
 
     private JsonNode fetchJson(String path) throws IOException {
-        String fullUrl = baseUrl + path;
+        String fullUrl;
+        if (path.startsWith("?")) {
+            fullUrl = baseUrl + path;
+        } else if (baseUrl.endsWith("/api") && path.startsWith("/api/")) {
+            fullUrl = baseUrl + path.substring(4);
+        } else {
+            fullUrl = baseUrl + (path.startsWith("/") ? path : "/" + path);
+        }
         try {
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(fullUrl))
-                    .header("User-Agent", "SolaceAudio/1.0.0")
+                    .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
                     .header("Accept", "application/json")
-                    .timeout(Duration.ofSeconds(10))
+                    .timeout(Duration.ofSeconds(12))
                     .GET()
                     .build();
 

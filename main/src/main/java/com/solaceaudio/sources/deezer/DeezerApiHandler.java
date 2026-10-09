@@ -19,9 +19,12 @@ public class DeezerApiHandler {
     private static final Logger log = LoggerFactory.getLogger(DeezerApiHandler.class);
     private static final String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36";
 
+    public static final String OFFICIAL_DEEZER_API = "https://api.deezer.com";
+
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
     private final String baseUrl;
+    private final boolean isOfficialApi;
 
     public DeezerApiHandler(String apiUrl) {
         this.httpClient = HttpClient.newBuilder()
@@ -29,25 +32,33 @@ public class DeezerApiHandler {
                 .followRedirects(HttpClient.Redirect.NORMAL)
                 .build();
         this.objectMapper = new ObjectMapper();
-        this.baseUrl = (apiUrl != null && !apiUrl.isBlank())
-                ? (apiUrl.endsWith("/") ? apiUrl.substring(0, apiUrl.length() - 1) : apiUrl)
-                : "https://deezer-plugin-api.vercel.app/api";
+        if (apiUrl == null || apiUrl.isBlank() || apiUrl.contains("deezer-plugin-api.vercel.app") || apiUrl.contains("api.deezer.com")) {
+            this.baseUrl = OFFICIAL_DEEZER_API;
+            this.isOfficialApi = true;
+        } else {
+            this.baseUrl = apiUrl.endsWith("/") ? apiUrl.substring(0, apiUrl.length() - 1) : apiUrl;
+            this.isOfficialApi = false;
+        }
     }
 
     public JsonNode searchTracks(String query, int limit) throws IOException {
-        return fetchJson("/search/tracks?q=" + enc(query) + "&limit=" + limit);
+        String path = isOfficialApi ? "/search/track?q=" + enc(query) + "&limit=" + limit : "/search/tracks?q=" + enc(query) + "&limit=" + limit;
+        return fetchJson(path);
     }
 
     public JsonNode searchAlbums(String query, int limit) throws IOException {
-        return fetchJson("/search/albums?q=" + enc(query) + "&limit=" + limit);
+        String path = isOfficialApi ? "/search/album?q=" + enc(query) + "&limit=" + limit : "/search/albums?q=" + enc(query) + "&limit=" + limit;
+        return fetchJson(path);
     }
 
     public JsonNode searchPlaylists(String query, int limit) throws IOException {
-        return fetchJson("/search/playlists?q=" + enc(query) + "&limit=" + limit);
+        String path = isOfficialApi ? "/search/playlist?q=" + enc(query) + "&limit=" + limit : "/search/playlists?q=" + enc(query) + "&limit=" + limit;
+        return fetchJson(path);
     }
 
     public JsonNode searchArtists(String query, int limit) throws IOException {
-        return fetchJson("/search/artists?q=" + enc(query) + "&limit=" + limit);
+        String path = isOfficialApi ? "/search/artist?q=" + enc(query) + "&limit=" + limit : "/search/artists?q=" + enc(query) + "&limit=" + limit;
+        return fetchJson(path);
     }
 
     public JsonNode searchAll(String query, int limit) throws IOException {
@@ -55,34 +66,44 @@ public class DeezerApiHandler {
     }
 
     public JsonNode getTrack(String id) throws IOException {
-        return fetchJson("/tracks/" + enc(id));
+        String path = isOfficialApi ? "/track/" + enc(id) : "/tracks/" + enc(id);
+        return fetchJson(path);
     }
 
     public JsonNode getAlbum(String id) throws IOException {
-        return fetchJson("/albums/" + enc(id) + "?include_tracks=true");
+        String path = isOfficialApi ? "/album/" + enc(id) : "/albums/" + enc(id) + "?include_tracks=true";
+        return fetchJson(path);
     }
 
     public JsonNode getPlaylist(String id) throws IOException {
-        return fetchJson("/playlists/" + enc(id));
+        String path = isOfficialApi ? "/playlist/" + enc(id) : "/playlists/" + enc(id);
+        return fetchJson(path);
     }
 
     public JsonNode getArtist(String id) throws IOException {
-        return fetchJson("/artists/" + enc(id));
+        String path = isOfficialApi ? "/artist/" + enc(id) : "/artists/" + enc(id);
+        return fetchJson(path);
     }
 
     public JsonNode getArtistRadio(String id, int limit) throws IOException {
-        return fetchJson("/artists/" + enc(id) + "/radio?limit=" + limit);
+        String path = isOfficialApi ? "/artist/" + enc(id) + "/radio?limit=" + limit : "/artists/" + enc(id) + "/radio?limit=" + limit;
+        return fetchJson(path);
     }
 
     public JsonNode getIsrc(String isrc) throws IOException {
-        return fetchJson("/isrc?isrc=" + enc(isrc));
+        String path = isOfficialApi ? "/track/isrc:" + enc(isrc) : "/isrc?isrc=" + enc(isrc);
+        return fetchJson(path);
     }
 
     public JsonNode getCharts(int limit) throws IOException {
-        return fetchJson("/charts?limit=" + limit);
+        String path = isOfficialApi ? "/chart?limit=" + limit : "/charts?limit=" + limit;
+        return fetchJson(path);
     }
 
     public String getStreamUrl(String trackId) {
+        if (isOfficialApi) {
+            return null; // Official API returns 30s preview in track.preview, full audio resolved via mirror
+        }
         return baseUrl + "/stream/" + trackId + "?quality=320";
     }
 

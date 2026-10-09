@@ -40,20 +40,10 @@ public class PandoraTokenTracker {
         this.configCsrfToken = configCsrfToken;
         if (configCsrfToken != null && !configCsrfToken.isEmpty()) {
             this.csrfToken = configCsrfToken;
-        }
-        boolean tokenReady = false;
-        for (int attempt = 1; attempt <= 3 && !tokenReady; attempt++) {
             try {
                 this.refreshTokens();
-                tokenReady = true;
             } catch (Exception e) {
-                if (attempt < 3) {
-                    try {
-                        Thread.sleep(1000L * attempt);
-                    } catch (InterruptedException ignored) {
-                        Thread.currentThread().interrupt();
-                    }
-                }
+                log.debug("Pandora initial token setup deferred: {}", e.getMessage());
             }
         }
     }

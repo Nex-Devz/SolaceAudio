@@ -131,6 +131,7 @@ public class YouTubeProxyHandler {
         }
 
         clientPool.add(new ClientHealth(new AndroidVrClient()));
+        clientPool.add(new ClientHealth(new VisionOsClient()));
         clientPool.add(new ClientHealth(new AndroidMusicClient()));
         clientPool.add(new ClientHealth(new AndroidClient()));
         clientPool.add(new ClientHealth(new IosClient()));
@@ -836,7 +837,8 @@ public class YouTubeProxyHandler {
                 body.put("n_param", nParam);
             }
 
-            String endpoint = this.cipherUrl.endsWith("/") ? this.cipherUrl + "api/resolve_url" : this.cipherUrl + "/api/resolve_url";
+            String base = this.cipherUrl.endsWith("/") ? this.cipherUrl.substring(0, this.cipherUrl.length() - 1) : this.cipherUrl;
+            String endpoint = base.endsWith("/api") ? base + "/resolve_url" : base + "/resolve_url";
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(endpoint))
                     .header("Content-Type", "application/json")

@@ -80,8 +80,15 @@ public class JioSaavnAudioTrack extends DelegatedAudioTrack {
             JsonNode json = sourceManager.getApi().getSongDetails(trackInfo.identifier);
             if (json == null) return null;
 
-            JsonNode data = json.has("data") ? json.get("data") : json;
-            if (data.isArray() && data.size() > 0) {
+            JsonNode data = json;
+            if (data.has("songs") && data.get("songs").isArray() && data.get("songs").size() > 0) {
+                data = data.get("songs").get(0);
+            } else if (data.has("data")) {
+                data = data.get("data");
+                if (data.isArray() && data.size() > 0) {
+                    data = data.get(0);
+                }
+            } else if (data.isArray() && data.size() > 0) {
                 data = data.get(0);
             }
 
@@ -99,9 +106,15 @@ public class JioSaavnAudioTrack extends DelegatedAudioTrack {
                 if (bestUrl != null && !bestUrl.isBlank()) return bestUrl;
             }
 
-            // Fallback to encrypted media URL decryption
-            if (data.has("encrypted_media_url")) {
-                String encrypted = data.get("encrypted_media_url").asText();
+            // Fallback to encrypted media URL decryption (top-level or in more_info)
+            String encrypted = null;
+            if (data.has("encrypted_media_url") && !data.get("encrypted_media_url").isNull()) {
+                encrypted = data.get("encrypted_media_url").asText(null);
+            } else if (data.path("more_info").has("encrypted_media_url")) {
+                encrypted = data.path("more_info").path("encrypted_media_url").asText(null);
+            }
+
+            if (encrypted != null && !encrypted.isBlank()) {
                 String decrypted = JioSaavnApiHandler.decryptMediaUrl(encrypted);
                 if (decrypted != null) {
                     return decrypted.replace("_96.mp4", "_320.mp4");

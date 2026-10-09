@@ -5,7 +5,7 @@ server:
 lavalink:
   plugins:
     # SolaceAudio Multi-Source Audio Engine
-    - dependency: "com.github.Nex-Devz.SolaceAudio:solaceaudio-plugin:1.0.13"
+    - dependency: "com.github.Nex-Devz.SolaceAudio:solaceaudio-plugin:1.0.14"
       repository: "https://jitpack.io"
   server:
     password: "youshallnotpass"
@@ -52,10 +52,12 @@ plugins:
       spDc: ""
 
     jiosaavn:
-      apiUrl: "https://saavn.dev"
+      # Official API with in-process DES/320kbps direct CDN streaming (Zero proxy needed!)
+      apiUrl: "https://www.jiosaavn.com/api.php"
       playlistLoadLimit: 50
 
     gaana:
+      # Public endpoint or self-host via https://github.com/notdeltaxd/Gaana-API on Vercel
       apiUrl: "https://gaana-plugin-api.vercel.app/api"
       playlistLoadLimit: 50
       albumLoadLimit: 50
@@ -63,13 +65,15 @@ plugins:
       searchLimit: 25
 
     amazonmusic:
+      # Self-host via https://github.com/notdeltaxd/Amazon-Music-API on Vercel
       apiUrl: "https://amazon-plugin-api.vercel.app/api"
       playlistLoadLimit: 50
       albumLoadLimit: 50
       artistLoadLimit: 50
 
     deezer:
-      apiUrl: "https://deezer-plugin-api.vercel.app/api"
+      # Official public API for ISRC and metadata resolution (Zero proxy needed!)
+      apiUrl: "https://api.deezer.com"
       playlistLoadLimit: 50
       albumLoadLimit: 50
       artistLoadLimit: 50

@@ -25,6 +25,7 @@ public class SpotifyTokenTracker {
     private static final String SPOTIFY_TOKEN_URL = "https://open.spotify.com/api/token";
     private static final String SPOTIFY_SERVER_TIME = "https://open.spotify.com/api/server-time";
     private static final String NUANCE_URL = "https://gist.githubusercontent.com/saraansx/a622d4c1a12c36afdcf701201e9482a3/raw/9afe2c9c7d1a5eb3f7a05d0002a94f45b73682d0/nuance.json";
+    private static final String SPOTIFY_SECRETS_DICT_URL = "https://raw.githubusercontent.com/xyloflake/spot-secrets-go/refs/heads/main/secrets/secretDict.json";
     private static final String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.6998.178 Spotify/1.2.65.255 Safari/537.36";
 
     private final ObjectMapper mapper = new ObjectMapper();
@@ -235,7 +236,55 @@ public class SpotifyTokenTracker {
                 }
             }
         } catch (Exception e) {
-            log.debug("Remote nuance fetch failed ({}), falling back to embedded nuance ring", e.getMessage());
+            log.debug("Remote nuance fetch failed ({}), trying secondary secret dictionary", e.getMessage());
+        }
+
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(SPOTIFY_SECRETS_DICT_URL))
+                    .timeout(Duration.ofSeconds(6))
+                    .GET()
+                    .build();
+
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() == 200 && response.body() != null) {
+                JsonNode dict = mapper.readTree(response.body());
+                if (dict.isObject()) {
+                    int maxVer = -1;
+                    java.util.Iterator<String> fieldNames = dict.fieldNames();
+                    while (fieldNames.hasNext()) {
+                        String field = fieldNames.next();
+                        try {
+                            int v = Integer.parseInt(field);
+                            if (v > maxVer) maxVer = v;
+                        } catch (Exception ignored) {}
+                    }
+
+                    if (maxVer > 0) {
+                        JsonNode arr = dict.get(String.valueOf(maxVer));
+                        if (arr != null && arr.isArray() && arr.size() > 0) {
+                            StringBuilder sb = new StringBuilder();
+                            for (int i = 0; i < arr.size(); i++) {
+                                int val = arr.get(i).asInt();
+                                sb.append((char) (val ^ ((i % 33) + 9)));
+                            }
+                            // Convert to hex
+                            byte[] utf8Bytes = sb.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+                            StringBuilder hex = new StringBuilder();
+                            for (byte b : utf8Bytes) {
+                                hex.append(String.format("%02x", b));
+                            }
+                            String decodedSecret = hex.toString();
+                            cachedNuanceSecret = decodedSecret;
+                            cachedNuanceVersion = maxVer;
+                            cachedNuanceExpires = Instant.now().plusSeconds(3600);
+                            return new String[] { decodedSecret, String.valueOf(maxVer) };
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.debug("Secondary secrets dict fetch failed ({}), falling back to embedded nuance ring", e.getMessage());
         }
 
         for (String[] candidate : STATIC_FALLBACK_NUANCES) {

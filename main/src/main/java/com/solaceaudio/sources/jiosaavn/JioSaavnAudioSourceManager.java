@@ -209,16 +209,39 @@ public class JioSaavnAudioSourceManager implements AudioSourceManager {
         if (node == null || node.isNull()) return null;
 
         String id = node.path("id").asText(node.path("identifier").asText(""));
-        String title = cleanString(node.path("name").asText(node.path("title").asText("Unknown Track")));
-        String artist = cleanString(node.path("primaryArtists").asText(node.path("author").asText(node.path("singers").asText("Unknown Artist"))));
-        long duration = node.path("duration").asLong(node.path("length").asLong(0)) * 1000L;
+        String title = cleanString(node.path("song").asText(node.path("title").asText(node.path("name").asText("Unknown Track"))));
+        
+        JsonNode moreInfo = node.path("more_info");
+        String artist = null;
+        if (moreInfo.has("artistMap") && moreInfo.path("artistMap").has("primary_artists")) {
+            JsonNode pa = moreInfo.path("artistMap").path("primary_artists");
+            if (pa.isArray() && pa.size() > 0) {
+                artist = pa.get(0).path("name").asText(null);
+            }
+        }
+        if (artist == null || artist.isBlank()) {
+            artist = cleanString(node.path("primaryArtists").asText(
+                    moreInfo.path("singers").asText(
+                            node.path("author").asText(
+                                    node.path("singers").asText("Unknown Artist")))));
+        }
+
+        long duration = moreInfo.path("duration").asLong(
+                node.path("duration").asLong(node.path("length").asLong(0))) * 1000L;
         if (duration <= 0) duration = 180000L;
 
-        String url = node.path("url").asText(node.path("uri").asText(""));
-        String album = cleanString(node.path("album").path("name").asText(node.path("album").asText("")));
-        String artwork = node.path("image").isArray() && node.path("image").size() > 0 ?
-                node.path("image").get(node.path("image").size() - 1).path("link").asText() :
-                node.path("artworkUrl").asText(null);
+        String url = node.path("perma_url").asText(node.path("url").asText(node.path("uri").asText("")));
+        String album = cleanString(moreInfo.path("album").asText(
+                node.path("album").path("name").asText(node.path("album").asText(""))));
+        
+        String artwork = null;
+        if (node.path("image").isTextual()) {
+            artwork = node.path("image").asText().replace("150x150", "500x500");
+        } else if (node.path("image").isArray() && node.path("image").size() > 0) {
+            artwork = node.path("image").get(node.path("image").size() - 1).path("link").asText(null);
+        } else {
+            artwork = node.path("artworkUrl").asText(null);
+        }
 
         AudioTrackInfo info = new AudioTrackInfo(title, artist, duration, id, false, url, artwork, null);
         return new JioSaavnAudioTrack(info, album, null, null, null, this);
