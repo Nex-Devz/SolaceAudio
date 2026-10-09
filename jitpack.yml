@@ -1,5 +1,5 @@
 jdk:
-  - openjdk21
+  - openjdk17
 before_install:
   - curl -sL https://services.gradle.org/distributions/gradle-8.10.2-bin.zip -o gradle.zip
   - unzip -q gradle.zip
