@@ -8,11 +8,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.UUID;
 
-/**
- * Safe disk cache manager implementing atomic writes (.part -> rename)
- * and failure degradation. Cache write/read errors NEVER crash playback.
- */
 public class AtomicSafeCacheManager {
 
     private static final Logger log = LoggerFactory.getLogger(AtomicSafeCacheManager.class);
@@ -31,16 +28,21 @@ public class AtomicSafeCacheManager {
         }
     }
 
-    /**
-     * Atomically writes data to a target cache file using a temporary .part file.
-     */
     public boolean writeAtomically(String filename, byte[] data) {
-        if (!enabled || data == null || filename == null) {
+        if (!enabled || data == null || filename == null || filename.isBlank()) {
             return false;
         }
 
-        Path target = cacheDir.resolve(filename);
-        Path tempFile = cacheDir.resolve(filename + ".part." + System.currentTimeMillis());
+        Path target = cacheDir.resolve(filename).normalize();
+        if (!target.startsWith(cacheDir.toAbsolutePath().normalize()) && !target.startsWith(cacheDir.normalize())) {
+            log.warn("Path traversal rejected for cache file: {}", filename);
+            return false;
+        }
+
+        Path tempFile = cacheDir.resolve(filename + ".part." + UUID.randomUUID()).normalize();
+        if (!tempFile.startsWith(cacheDir.toAbsolutePath().normalize()) && !tempFile.startsWith(cacheDir.normalize())) {
+            return false;
+        }
 
         try {
             Files.write(tempFile, data);
@@ -55,15 +57,17 @@ public class AtomicSafeCacheManager {
         }
     }
 
-    /**
-     * Reads data from cache. Never throws exceptions.
-     */
     public byte[] readSafely(String filename) {
-        if (!enabled || filename == null) {
+        if (!enabled || filename == null || filename.isBlank()) {
             return null;
         }
 
-        Path target = cacheDir.resolve(filename);
+        Path target = cacheDir.resolve(filename).normalize();
+        if (!target.startsWith(cacheDir.toAbsolutePath().normalize()) && !target.startsWith(cacheDir.normalize())) {
+            log.warn("Path traversal rejected for cache read: {}", filename);
+            return null;
+        }
+
         if (!Files.exists(target)) {
             return null;
         }

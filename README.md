@@ -7,7 +7,7 @@
 <p align="center">
   <a href="https://adoptium.net"><img src="https://img.shields.io/badge/Runtime-Java_17+-00E5FF?style=for-the-badge&logo=openjdk&logoColor=black" alt="Java 17+" /></a>
   <a href="https://github.com/lavalink-devs/Lavalink"><img src="https://img.shields.io/badge/Lavalink-v4.0+-7928CA?style=for-the-badge&logo=discord&logoColor=white" alt="Lavalink v4" /></a>
-  <a href="https://github.com/Nex-Devz/SolaceAudio/releases"><img src="https://img.shields.io/badge/Release-v1.0.15-00DF72?style=for-the-badge" alt="Release" /></a>
+  <a href="https://github.com/Nex-Devz/SolaceAudio/releases"><img src="https://img.shields.io/badge/Release-v1.0.16-00DF72?style=for-the-badge" alt="Release" /></a>
   <a href="https://jitpack.io/#Nex-Devz/SolaceAudio"><img src="https://img.shields.io/badge/JitPack-Artifacts-FF0080?style=for-the-badge" alt="JitPack" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache_2.0-FFB800?style=for-the-badge" alt="License" /></a>
 </p>
@@ -109,7 +109,7 @@ Add the plugin dependency to your `application.yml`:
 ```yaml
 lavalink:
   plugins:
-    - dependency: "com.github.Nex-Devz.SolaceAudio:solaceaudio-plugin:1.0.15"
+    - dependency: "com.github.Nex-Devz.SolaceAudio:solaceaudio-plugin:1.0.16"
       repository: "https://jitpack.io"
 ```
 

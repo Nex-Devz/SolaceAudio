@@ -60,7 +60,12 @@ public class MemoryCacheManager<T> {
         cacheMap.clear();
     }
 
+    private void evictExpired() {
+        cacheMap.entrySet().removeIf(e -> e.getValue().isExpired());
+    }
+
     public synchronized int size() {
+        evictExpired();
         return cacheMap.size();
     }
 }

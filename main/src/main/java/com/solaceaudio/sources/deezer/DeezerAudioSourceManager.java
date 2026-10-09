@@ -28,6 +28,7 @@ public class DeezerAudioSourceManager extends SolaceAudioSourceManager {
 
     public static final String SOURCE_NAME = "deezer";
     public static final String SEARCH_PREFIX = "dzsearch:";
+    public static final String ISRC_PREFIX = "dzisrc:";
     public static final String RECOMMEND_PREFIX = "dzrec:";
     public static final int MAX_SEARCH_RESULTS = 25;
 
@@ -72,9 +73,14 @@ public class DeezerAudioSourceManager extends SolaceAudioSourceManager {
                 return getSearch(identifier.substring(SEARCH_PREFIX.length()).trim());
             }
 
+            if (identifier.startsWith(ISRC_PREFIX)) {
+                return getIsrc(identifier.substring(ISRC_PREFIX.length()).trim());
+            }
+
             if (identifier.startsWith(RECOMMEND_PREFIX)) {
                 return getRecommendations(identifier.substring(RECOMMEND_PREFIX.length()).trim());
             }
+
 
             Matcher matcher = URL_PATTERN.matcher(identifier);
             if (!matcher.matches()) {
@@ -160,6 +166,19 @@ public class DeezerAudioSourceManager extends SolaceAudioSourceManager {
         );
     }
 
+    public AudioItem getIsrc(String isrc) throws IOException {
+        if (isrc == null || isrc.isBlank()) {
+            return AudioReference.NO_TRACK;
+        }
+        JsonNode data = api.getIsrc(isrc);
+        if (data == null) {
+            return AudioReference.NO_TRACK;
+        }
+
+        AudioTrack track = parseTrack(data);
+        return track != null ? track : AudioReference.NO_TRACK;
+    }
+
     public AudioItem getTrack(String id) throws IOException {
         JsonNode data = api.getTrack(id);
         if (data == null) {
@@ -169,6 +188,7 @@ public class DeezerAudioSourceManager extends SolaceAudioSourceManager {
         AudioTrack track = parseTrack(data);
         return track != null ? track : AudioReference.NO_TRACK;
     }
+
 
     public AudioItem getAlbum(String id) throws IOException {
         JsonNode data = api.getAlbum(id);

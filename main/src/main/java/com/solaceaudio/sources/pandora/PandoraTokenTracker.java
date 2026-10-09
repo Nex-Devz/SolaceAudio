@@ -112,10 +112,8 @@ public class PandoraTokenTracker {
 
     public void loadCookies(HttpInterface httpInterface) throws IOException {
         String csrf;
-        try {
+        synchronized (this) {
             csrf = this.csrfToken;
-        } catch (Exception e) {
-            throw new IOException("Failed to get csrf token for cookies", e);
         }
 
         if (csrf == null || csrf.isEmpty()) {

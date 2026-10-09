@@ -55,13 +55,24 @@ public abstract class SolaceAudioSourceManager implements AudioSourceManager {
         String previewUrl = null;
         boolean preview = false;
 
-        if (((DataInputStream) input).available() > Long.BYTES) {
-            albumName = DataFormatTools.readNullableText(input);
-            albumUrl = DataFormatTools.readNullableText(input);
-            artistUrl = DataFormatTools.readNullableText(input);
-            artistArtworkUrl = DataFormatTools.readNullableText(input);
-            previewUrl = DataFormatTools.readNullableText(input);
-            preview = input.readBoolean();
+        int available = 0;
+        if (input instanceof DataInputStream dis) {
+            available = dis.available();
+        } else {
+            available = Integer.MAX_VALUE;
+        }
+
+
+        if (available > Long.BYTES) {
+            try {
+                albumName = DataFormatTools.readNullableText(input);
+                albumUrl = DataFormatTools.readNullableText(input);
+                artistUrl = DataFormatTools.readNullableText(input);
+                artistArtworkUrl = DataFormatTools.readNullableText(input);
+                previewUrl = DataFormatTools.readNullableText(input);
+                preview = input.readBoolean();
+            } catch (java.io.EOFException ignored) {
+            }
         }
 
         return new ExtendedAudioTrackInfo(albumName, albumUrl, artistArtworkUrl, previewUrl, artistUrl, preview);

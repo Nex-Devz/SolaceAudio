@@ -20,10 +20,6 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Handles YouTube Music burner / authenticated session cookies,
- * SAPISIDHASH authentication generation, and live player STS caching.
- */
 public class YtMusicCookieAuth {
 
     private static final Logger log = LoggerFactory.getLogger(YtMusicCookieAuth.class);
@@ -47,12 +43,10 @@ public class YtMusicCookieAuth {
     public synchronized void loadCookie(String rawCookie, String customFilePath) {
         String loaded = null;
 
-        // 1. Direct string if provided
         if (rawCookie != null && !rawCookie.isBlank()) {
             loaded = sanitizeCookieString(rawCookie);
         }
 
-        // 2. Custom file path
         if (loaded == null && customFilePath != null && !customFilePath.isBlank()) {
             Path p = Paths.get(customFilePath);
             if (Files.exists(p)) {
@@ -65,7 +59,6 @@ public class YtMusicCookieAuth {
             }
         }
 
-        // 3. Environment variable YOUTUBE_COOKIE
         if (loaded == null) {
             String envCookie = System.getenv("YOUTUBE_COOKIE");
             if (envCookie != null && !envCookie.isBlank()) {
@@ -74,7 +67,6 @@ public class YtMusicCookieAuth {
             }
         }
 
-        // 4. Default project directory files (ytburner.txt, yt_cookie.txt, youtube_cookie.txt)
         if (loaded == null) {
             String[] commonPaths = {
                     "ytburner.txt",
@@ -129,7 +121,6 @@ public class YtMusicCookieAuth {
     }
 
     public synchronized int getSignatureTimestamp() {
-        // Refresh every 6 hours
         if (System.currentTimeMillis() - lastStsUpdate > 21600000L || signatureTimestamp <= 0) {
             refreshPlayerMeta();
         }
@@ -195,20 +186,19 @@ public class YtMusicCookieAuth {
         Map<String, String> cookieMap = new LinkedHashMap<>();
 
         if (raw.contains("\t")) {
-            // Chrome DevTools table dump format
             String[] lines = raw.split("\\r?\\n");
             for (String l : lines) {
+                if (l.startsWith("#") || l.isBlank()) continue;
                 String[] parts = l.split("\t");
-                if (parts.length >= 2) {
-                    String name = parts[0].trim();
-                    String val = parts[1].trim();
-                    if (!name.isBlank() && !val.isBlank() && !cookieMap.containsKey(name)) {
+                if (parts.length >= 7) {
+                    String name = parts[5].trim();
+                    String val = parts[6].trim();
+                    if (!name.isBlank() && !cookieMap.containsKey(name)) {
                         cookieMap.put(name, val);
                     }
                 }
             }
         } else {
-            // Standard HTTP Cookie header format
             String[] parts = raw.split(";");
             for (String p : parts) {
                 int idx = p.indexOf('=');

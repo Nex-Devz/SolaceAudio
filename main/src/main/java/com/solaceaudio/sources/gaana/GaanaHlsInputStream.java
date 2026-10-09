@@ -130,6 +130,12 @@ public class GaanaHlsInputStream extends InputStream {
                     }
                 }
 
+                if (!success && !stopped.get() && version == currentVersion.get()) {
+                    log.error("Exhausted retries downloading Gaana segment {}. Terminating stream.", i);
+                    stopped.set(true);
+                    return;
+                }
+
                 while (segmentQueue.size() >= SEGMENT_BUFFER_SIZE && !stopped.get() && version == currentVersion.get()) {
                     Thread.sleep(100);
                 }
@@ -138,6 +144,7 @@ public class GaanaHlsInputStream extends InputStream {
             Thread.currentThread().interrupt();
         }
     }
+
 
     private byte[] fetchSegment(String url) throws IOException {
         HttpGet request = new HttpGet(url);

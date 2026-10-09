@@ -14,11 +14,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Manages YouTube PoToken (Proof of Origin Token) & Visitor Data.
- * Supports auto-fetching from a remote worker (e.g. Vercel, Cloudflare, or local Docker)
- * and static manual fallback in application.yml.
- */
 public class PoTokenManager {
 
     private static final Logger log = LoggerFactory.getLogger(PoTokenManager.class);

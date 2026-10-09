@@ -124,7 +124,6 @@ public class YouTubeProxyHandler {
         this.ytMusicCookieAuth = new YtMusicCookieAuth(this.httpClient);
         this.ytMusicCookieAuth.loadCookie(cookie, cookieFile);
 
-        // If authenticated burner cookie is available, prioritize WebRemixClient first!
         if (this.ytMusicCookieAuth.hasAuth()) {
             log.info("[YouTubeProxyHandler] Authenticated YouTube burner cookie detected: prioritizing WEB_REMIX client.");
             clientPool.add(new ClientHealth(new WebRemixClient()));
@@ -241,7 +240,6 @@ public class YouTubeProxyHandler {
             Matcher m = Pattern.compile("[?&]expire=(\\d+)").matcher(url);
             if (m.find()) {
                 long expireEpochSec = Long.parseLong(m.group(1));
-                // Consider expired 5 minutes (300s) before actual expiration to prevent stutter
                 long nowSec = System.currentTimeMillis() / 1000L;
                 return nowSec >= (expireEpochSec - 300L);
             }
@@ -1103,6 +1101,9 @@ public class YouTubeProxyHandler {
 
     public void shutdown() {
         sessionWarmer.shutdownNow();
+        if (poTokenManager != null) {
+            poTokenManager.shutdown();
+        }
     }
 
     public static class AudioStreamInfo {

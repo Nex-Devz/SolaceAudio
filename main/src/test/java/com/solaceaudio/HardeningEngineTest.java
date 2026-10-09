@@ -55,17 +55,17 @@ public class HardeningEngineTest {
         SingleFlightResolver<String, String> resolver = new SingleFlightResolver<>();
         AtomicInteger executions = new AtomicInteger(0);
 
-        CompletableFuture<String> delayedSupplier = CompletableFuture.supplyAsync(() -> {
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException ignored) {}
-            executions.incrementAndGet();
-            return "Resolved Track Data";
-        });
+        java.util.function.Supplier<CompletableFuture<String>> supplier = () ->
+                CompletableFuture.supplyAsync(() -> {
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException ignored) {}
+                    executions.incrementAndGet();
+                    return "Resolved Track Data";
+                });
 
-        // Launch 2 calls for identical key simultaneously
-        CompletableFuture<String> call1 = resolver.execute("track-123", () -> delayedSupplier);
-        CompletableFuture<String> call2 = resolver.execute("track-123", () -> delayedSupplier);
+        CompletableFuture<String> call1 = resolver.execute("track-123", supplier);
+        CompletableFuture<String> call2 = resolver.execute("track-123", supplier);
 
         CompletableFuture.allOf(call1, call2).join();
 

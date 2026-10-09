@@ -5,8 +5,10 @@ server:
 lavalink:
   plugins:
     # SolaceAudio Multi-Source Audio Engine
-    - dependency: "com.github.Nex-Devz.SolaceAudio:solaceaudio-plugin:1.0.15"
+    - dependency: "com.github.Nex-Devz.SolaceAudio:solaceaudio-plugin:1.0.16"
       repository: "https://jitpack.io"
+
+
   server:
     password: "youshallnotpass"
     sources:

@@ -66,6 +66,9 @@ public class TrackResolutionEngine implements TrackResolutionHandler {
                     return java.util.concurrent.CompletableFuture.supplyAsync(() -> {
                         return mirrorTrack.resolveFromProvider(searchKey);
                     });
+                }).exceptionally(ex -> {
+                    log.debug("SingleFlight provider error for [{}]: {}", searchKey, ex.getMessage());
+                    return AudioReference.NO_TRACK;
                 }).join();
 
                 if (loaded == null || loaded == AudioReference.NO_TRACK) {
@@ -75,9 +78,10 @@ public class TrackResolutionEngine implements TrackResolutionHandler {
                     continue;
                 }
                 return loaded;
-            } catch (Exception e) {
-                log.debug("Mirror provider resolution error for pattern [{}]: {}", candidate, e.getMessage());
+            } catch (Throwable t) {
+                log.debug("Mirror provider resolution error for pattern [{}]: {}", candidate, t.getMessage());
             }
+
         }
 
         return AudioReference.NO_TRACK;
@@ -88,7 +92,7 @@ public class TrackResolutionEngine implements TrackResolutionHandler {
         String author = track.getInfo().author;
 
         if (author != null && !author.equalsIgnoreCase("Unknown Artist") && !author.isBlank()) {
-            return title + " - " + author;
+            return author + " - " + title;
         }
         return title != null ? title : "";
     }

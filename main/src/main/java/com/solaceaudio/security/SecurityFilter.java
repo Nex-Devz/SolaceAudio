@@ -4,10 +4,6 @@ import java.net.URI;
 import java.net.InetAddress;
 import java.util.regex.Pattern;
 
-/**
- * Validates external requests against Server-Side Request Forgery (SSRF)
- * and sanitizes sensitive credentials from logs.
- */
 public final class SecurityFilter {
 
     private static final Pattern SENSITIVE_PATTERN = Pattern.compile(
@@ -16,9 +12,6 @@ public final class SecurityFilter {
 
     private SecurityFilter() {}
 
-    /**
-     * Sanitizes strings containing sensitive headers, passwords, or tokens.
-     */
     public static String sanitize(String input) {
         if (input == null || input.isBlank()) {
             return input;
@@ -26,10 +19,6 @@ public final class SecurityFilter {
         return SENSITIVE_PATTERN.matcher(input).replaceAll("$1=***REDACTED***");
     }
 
-    /**
-     * Validates whether a target URI is safe from SSRF.
-     * Rejects private loopback, link-local, and internal subnet targets.
-     */
     public static boolean isSafeUrl(String uriString) {
         if (uriString == null || uriString.isBlank()) {
             return false;
@@ -47,19 +36,19 @@ public final class SecurityFilter {
                 return false;
             }
 
-            // Quick string checks for obvious loopback/local references
             if (host.equalsIgnoreCase("localhost") || host.equals("127.0.0.1") || host.equals("::1")) {
                 return false;
             }
 
-            // AWS / Cloud Metadata endpoint protection
             if (host.equals("169.254.169.254")) {
                 return false;
             }
 
-            InetAddress address = InetAddress.getByName(host);
-            if (address.isLoopbackAddress() || address.isSiteLocalAddress() || address.isLinkLocalAddress() || address.isAnyLocalAddress()) {
-                return false;
+            InetAddress[] addresses = InetAddress.getAllByName(host);
+            for (InetAddress address : addresses) {
+                if (address.isLoopbackAddress() || address.isSiteLocalAddress() || address.isLinkLocalAddress() || address.isAnyLocalAddress()) {
+                    return false;
+                }
             }
 
             return true;

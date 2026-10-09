@@ -4,17 +4,10 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
-/**
- * Coalesces duplicate simultaneous resolutions for identical keys (tracks/queries).
- * Prevents upstream quota storms when multiple channels request the same song at once.
- */
 public class SingleFlightResolver<K, V> {
 
     private final ConcurrentHashMap<K, CompletableFuture<V>> inFlight = new ConcurrentHashMap<>();
 
-    /**
-     * Executes the task or joins an ongoing identical in-flight task.
-     */
     public CompletableFuture<V> execute(K key, Supplier<CompletableFuture<V>> supplier) {
         if (key == null) {
             return supplier.get();
@@ -33,7 +26,8 @@ public class SingleFlightResolver<K, V> {
             }
 
             try {
-                supplier.get().whenComplete((result, throwable) -> {
+                CompletableFuture<V> supplierFuture = supplier.get();
+                supplierFuture.whenComplete((result, throwable) -> {
                     try {
                         if (throwable != null) {
                             future.completeExceptionally(throwable);

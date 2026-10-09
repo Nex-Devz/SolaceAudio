@@ -102,7 +102,7 @@ public class DeezerApiHandler {
 
     public String getStreamUrl(String trackId) {
         if (isOfficialApi) {
-            return null; // Official API returns 30s preview in track.preview, full audio resolved via mirror
+            return null;
         }
         return baseUrl + "/stream/" + trackId + "?quality=320";
     }

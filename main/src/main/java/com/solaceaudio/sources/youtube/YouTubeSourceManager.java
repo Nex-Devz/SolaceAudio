@@ -127,7 +127,7 @@ public class YouTubeSourceManager implements AudioSourceManager {
         if (mirrorProviders != null && !mirrorProviders.isEmpty()) {
             this.mirrorProviders = mirrorProviders.toArray(new String[0]);
         } else {
-            this.mirrorProviders = new String[] { "scsearch:%QUERY%" };
+            this.mirrorProviders = new String[] { "scsearch:{query}" };
         }
 
         if (this.localDiskCache) {
@@ -367,6 +367,11 @@ public class YouTubeSourceManager implements AudioSourceManager {
                             return (List<AudioSourceManager>) value;
                         }
                     }
+                } catch (java.lang.reflect.InaccessibleObjectException e) {
+                    log.warn("[YouTubeSourceManager] Reflective access denied for field '{}' on '{}'. " +
+                            "YouTube attachment failed. Add --add-opens to JVM args if needed: {}",
+                            field.getName(), clazz.getName(), e.getMessage());
+                    return null;
                 } catch (Exception ignored) {
                 }
             }
@@ -520,6 +525,10 @@ public class YouTubeSourceManager implements AudioSourceManager {
 
         if (loadException != null && loadException instanceof RuntimeException) {
             throw (RuntimeException) loadException;
+        }
+
+        if (loadException != null) {
+            throw new RuntimeException("YouTube source load failed", loadException);
         }
 
         return null;

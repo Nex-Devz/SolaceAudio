@@ -52,7 +52,9 @@ public class RecommendationController {
             @RequestParam(name = "track", required = false) String track,
             @RequestParam(name = "limit", required = false, defaultValue = "10") int limit
     ) {
+        final int effectiveLimit = Math.max(1, Math.min(limit, 100));
         ISocketContext context = socketServer.getSessions().get(sessionId);
+
         if (context == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error("Session not found"));
         }
@@ -86,7 +88,7 @@ public class RecommendationController {
         }
 
         try {
-            List<AudioTrack> recommendations = resolveRecommendations(currentTrack, limit);
+            List<AudioTrack> recommendations = resolveRecommendations(currentTrack, effectiveLimit);
 
             ObjectNode response = mapper.createObjectNode();
             response.put("source", detectSource(currentTrack));

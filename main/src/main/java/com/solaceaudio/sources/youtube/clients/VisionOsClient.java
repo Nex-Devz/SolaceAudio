@@ -2,10 +2,6 @@ package com.solaceaudio.sources.youtube.clients;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-/**
- * YouTube VisionOS client (emulates Apple Vision Pro).
- * Provides unthrottled direct playback stream resolution without player deciphering.
- */
 public class VisionOsClient extends InnerTubeClient {
     public static final String VISIONOS_KEY = "AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8";
 

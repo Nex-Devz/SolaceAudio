@@ -92,7 +92,6 @@ public class JioSaavnAudioTrack extends DelegatedAudioTrack {
                 data = data.get(0);
             }
 
-            // Check downloadUrl array first if present
             if (data.has("downloadUrl") && data.get("downloadUrl").isArray()) {
                 JsonNode downloadArr = data.get("downloadUrl");
                 String bestUrl = null;
@@ -106,7 +105,6 @@ public class JioSaavnAudioTrack extends DelegatedAudioTrack {
                 if (bestUrl != null && !bestUrl.isBlank()) return bestUrl;
             }
 
-            // Fallback to encrypted media URL decryption (top-level or in more_info)
             String encrypted = null;
             if (data.has("encrypted_media_url") && !data.get("encrypted_media_url").isNull()) {
                 encrypted = data.get("encrypted_media_url").asText(null);
@@ -117,9 +115,10 @@ public class JioSaavnAudioTrack extends DelegatedAudioTrack {
             if (encrypted != null && !encrypted.isBlank()) {
                 String decrypted = JioSaavnApiHandler.decryptMediaUrl(encrypted);
                 if (decrypted != null) {
-                    return decrypted.replace("_96.mp4", "_320.mp4");
+                    return decrypted.replaceFirst("_(?:96|160|48)\\.mp4", "_320.mp4");
                 }
             }
+
         } catch (Exception e) {
             log.error("Failed to resolve JioSaavn stream URL for {}", trackInfo.identifier, e);
         }
