@@ -1,6 +1,8 @@
 jdk:
   - openjdk21
 before_install:
-  - chmod +x ./gradlew
+  - curl -sL https://services.gradle.org/distributions/gradle-8.10.2-bin.zip -o gradle.zip
+  - unzip -q gradle.zip
+  - chmod +x ./gradle-8.10.2/bin/gradle
 install:
-  - ./gradlew --no-daemon clean build publishToMavenLocal -x test
+  - ./gradle-8.10.2/bin/gradle --no-daemon clean build publishToMavenLocal -x test
