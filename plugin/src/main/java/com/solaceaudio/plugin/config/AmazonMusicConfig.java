@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 @Component("solaceAudioAmazonMusicConfig")
 public class AmazonMusicConfig {
 
-    private String apiUrl = "https://amazon-plugin-api.vercel.app/api";
+    private String apiUrl = "https://amazon-music-api-dun.vercel.app/api";
     private int playlistLoadLimit = 50;
     private int albumLoadLimit = 50;
     private int artistLoadLimit = 50;

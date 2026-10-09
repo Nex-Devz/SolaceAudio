@@ -65,8 +65,8 @@ plugins:
       searchLimit: 25
 
     amazonmusic:
-      # Self-host via https://github.com/notdeltaxd/Amazon-Music-API on Vercel
-      apiUrl: "https://amazon-plugin-api.vercel.app/api"
+      # Self-hosted via https://github.com/Nex-Devz/amazon-music-api on Vercel
+      apiUrl: "https://amazon-music-api-dun.vercel.app/api"
       playlistLoadLimit: 50
       albumLoadLimit: 50
       artistLoadLimit: 50
