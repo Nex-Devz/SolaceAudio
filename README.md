@@ -247,9 +247,12 @@ GET /v4/sessions/{sessionId}/players/{guildId}/recommendation?limit=10
 
 ## Credits & Acknowledgements
 
+* **[SlugYZeon by xylen-py](https://github.com/xylen-py/SlugYZeon)** &mdash; Original multi-module architecture, audio source handlers, and configuration from which substantial portions of this project are derived. Licensed under the Apache License, Version 2.0.
 * **[saraansx](https://github.com/saraansx)** &mdash; Spotify metadata architecture and [`nuance.json`](https://gist.githubusercontent.com/saraansx/a622d4c1a12c36afdcf701201e9482a3/raw/9afe2c9c7d1a5eb3f7a05d0002a94f45b73682d0/nuance.json) reference schema.
 * **[NodeLink by PerformanC](https://github.com/PerformanC/NodeLink)** &mdash; YouTube VisionOS client stream implementation concepts.
 * **Official Repository** &mdash; Maintained at [`Nex-Devz/SolaceAudio`](https://github.com/Nex-Devz/SolaceAudio/).
+
+> **Attribution Notice:** SolaceAudio is a derivative work based on [SlugYZeon](https://github.com/xylen-py/SlugYZeon), Copyright (c) xylen-py, and is used and distributed in accordance with the Apache License, Version 2.0. Original copyright and attribution notices are retained. See the [LICENSE](LICENSE) `NOTICE` section for details.
 
 ---
 

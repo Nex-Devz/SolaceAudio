@@ -174,3 +174,21 @@
       of your accepting any such warranty or additional liability.
 
    END OF TERMS AND CONDITIONS
+
+=========================================================================
+
+                              NOTICE
+
+SolaceAudio (https://github.com/Nex-Devz/SolaceAudio) is a derivative
+work that incorporates source code, multi-module architecture, and
+configuration from the following original work:
+
+  * SlugYZeon (https://github.com/xylen-py/SlugYZeon)
+    Copyright (c) xylen-py (https://github.com/xylen-py)
+    Licensed under the Apache License, Version 2.0.
+
+In accordance with Section 4 of the Apache License, Version 2.0, the
+original copyright, patent, trademark, and attribution notices from the
+Source form of the above work are retained. Portions of this project are
+derived from SlugYZeon and remain subject to the terms of the Apache
+License, Version 2.0.
