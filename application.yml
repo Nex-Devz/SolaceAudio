@@ -90,7 +90,7 @@ plugins:
       speed: 1.0
 
     youtube:
-      oembed: false
+      oembed: true
       mirror: true
       mirrorProviders:
         - "ytmsearch:%QUERY%"

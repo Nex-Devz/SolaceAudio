@@ -9,7 +9,7 @@ import java.util.List;
 @Component("solaceAudioYouTubeConfig")
 public class SolaceAudioYouTubeConfig {
 
-    private boolean oembed = false;
+    private boolean oembed = true;
     private boolean mirror = false;
     private List<String> mirrorProviders;
     private boolean localDiskCache = false;
