@@ -5,7 +5,7 @@ server:
 lavalink:
   plugins:
     # SolaceAudio Multi-Source Audio Engine
-    - dependency: "com.github.Nex-Devz.SolaceAudio:solaceaudio-plugin:1.0.18"
+    - dependency: "com.github.Nex-Devz.SolaceAudio:solaceaudio-plugin:1.0.19"
       repository: "https://jitpack.io"
 
 
@@ -90,7 +90,9 @@ plugins:
       speed: 1.0
 
     youtube:
+      # Lightweight oEmbed metadata resolution (bypasses datacenter bot blocks on direct track URLs)
       oembed: true
+      # Intelligent mirror fallback if direct YouTube playback is blocked on host IP
       mirror: true
       mirrorProviders:
         - "ytmsearch:%QUERY%"

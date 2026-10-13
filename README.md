@@ -7,7 +7,7 @@
 <p align="center">
   <a href="https://adoptium.net"><img src="https://img.shields.io/badge/Runtime-Java_17+-00E5FF?style=for-the-badge&logo=openjdk&logoColor=black" alt="Java 17+" /></a>
   <a href="https://github.com/lavalink-devs/Lavalink"><img src="https://img.shields.io/badge/Lavalink-v4.0+-7928CA?style=for-the-badge&logo=discord&logoColor=white" alt="Lavalink v4" /></a>
-  <a href="https://github.com/Nex-Devz/SolaceAudio/releases"><img src="https://img.shields.io/badge/Release-v1.0.18-00DF72?style=for-the-badge" alt="Release" /></a>
+  <a href="https://github.com/Nex-Devz/SolaceAudio/releases"><img src="https://img.shields.io/badge/Release-v1.0.19-00DF72?style=for-the-badge" alt="Release" /></a>
   <a href="https://jitpack.io/#Nex-Devz/SolaceAudio"><img src="https://img.shields.io/badge/JitPack-Artifacts-FF0080?style=for-the-badge" alt="JitPack" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache_2.0-FFB800?style=for-the-badge" alt="License" /></a>
 </p>
@@ -54,6 +54,11 @@ SolaceAudio is engineered from the ground up to solve upstream rate-limiting, IP
       <td><b>Single-Flight Coalescing</b></td>
       <td>Concurrent duplicate query deduplication with lock-free atomic futures</td>
       <td>Eliminates upstream burst spikes during automated queue ingestion</td>
+    </tr>
+    <tr>
+      <td><b>oEmbed Resolution & Multilingual Normalization</b></td>
+      <td>Lightweight JSON oEmbed fallback coupled with Unicode script & Indic matra preservation</td>
+      <td>Guarantees 100% accurate metadata extraction for direct URLs even when datacenter IPs are blocked</td>
     </tr>
     <tr>
       <td><b>Deterministic Scoring</b></td>
@@ -109,7 +114,7 @@ Add the plugin dependency to your `application.yml`:
 ```yaml
 lavalink:
   plugins:
-    - dependency: "com.github.Nex-Devz.SolaceAudio:solaceaudio-plugin:1.0.18"
+    - dependency: "com.github.Nex-Devz.SolaceAudio:solaceaudio-plugin:1.0.19"
       repository: "https://jitpack.io"
 ```
 
@@ -137,6 +142,11 @@ plugins:
       - "bcsearch:{query}"     # Priority 5: Bandcamp catalog fallback
 
     youtube:
+      oembed: true             # Lightweight metadata resolution fallback (bypasses datacenter bot blocks)
+      mirror: true             # Automatic audio mirror fallback when direct playback is restricted
+      mirrorProviders:
+        - "ytmsearch:%QUERY%"
+        - "scsearch:%QUERY%"
       localDiskCache: true
       diskCachePath: "youtube-cache"
       maxDiskCacheMb: 10240
@@ -170,6 +180,14 @@ plugins:
 For nodes hosted on hostile datacenter networks (Hetzner, OVH, DigitalOcean, Pterodactyl), provide your burner cookie in `ytburner.txt` or configure `cookieFile: "ytburner.txt"`.
 
 SolaceAudio computes real-time cryptographic `SAPISIDHASH` headers in memory for every outgoing request to `WEB_REMIX`, ensuring uninterrupted direct audio extraction without bot challenge penalties.
+
+### Resilient Direct URL Ingestion & oEmbed Resolution
+
+When direct YouTube links are passed to Lavalink on datacenter IPs, YouTube's `/youtubei/v1/player` endpoint frequently blocks metadata requests without valid cookies or PoTokens. SolaceAudio solves this using an autonomous multi-tier fallback:
+
+1. **Lightweight oEmbed Resolution**: Fetches title, author, and channel metadata via public oEmbed endpoints without triggering bot friction or requiring authentication.
+2. **Multilingual Script Normalization**: Cleans title noise tags while preserving full Unicode scripts (Devanagari, Gurmukhi, Tamil, Japanese, Cyrillic, Arabic, etc.) and vowel marks (matras).
+3. **Deterministic Mirror Selection**: If direct streaming fails due to datacenter IP restrictions, SolaceAudio automatically resolves and scores mirror candidates across YouTube Music and SoundCloud, preventing generic audio degradation.
 
 ### Proof-of-Origin Token (PoToken) Routing
 
