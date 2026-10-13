@@ -73,4 +73,27 @@ public class HardeningEngineTest {
         assertEquals("Resolved Track Data", call2.get());
         assertEquals(1, executions.get(), "Upstream supplier should only have been called once!");
     }
+
+    @Test
+    public void testTrackNormalizerPreservesNonLatinScripts() {
+        String hindiTitle = "५२ गज का दामन (Official Video) ft. Renuka Panwar";
+        String cleaned = TrackNormalizer.normalize(hindiTitle);
+
+        assertTrue(cleaned.contains("५२ गज का दामन"), "Should preserve Hindi/Devanagari characters");
+        assertFalse(cleaned.contains("official"));
+    }
+
+    @Test
+    public void testCandidateScorerWithUnknownLength() {
+        AudioTrackInfo target = new AudioTrackInfo(
+                "52 Gaj Ka Daman", "Renuka Panwar", Long.MAX_VALUE, "yt1", false, "https://youtube.com"
+        );
+
+        AudioTrackInfo candidate = new AudioTrackInfo(
+                "52 Gaj Ka Daman", "Renuka Panwar", 180000, "sc1", false, "https://soundcloud.com"
+        );
+
+        int score = CandidateScorer.score(target, candidate);
+        assertTrue(score > 0, "Score should be positive even when target has Long.MAX_VALUE length");
+    }
 }

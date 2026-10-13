@@ -14,7 +14,7 @@ public final class TrackNormalizer {
     );
     private static final Pattern FEATURING_PATTERN = Pattern.compile("(?i)\\b(feat|ft|featuring|with)\\b.*");
     private static final Pattern CLEAN_WORDS_PATTERN = Pattern.compile("(?i)\\b(official|music|video|audio|lyrics|lyric|hd|4k|remastered|remaster|radio edit|original mix|extended mix)\\b");
-    private static final Pattern SPECIAL_CHARS_PATTERN = Pattern.compile("[^a-zA-Z0-9\\s]");
+    private static final Pattern SPECIAL_CHARS_PATTERN = Pattern.compile("[^\\p{L}\\p{M}\\p{N}\\s]");
     private static final Pattern MULTI_SPACE_PATTERN = Pattern.compile("\\s+");
 
     private TrackNormalizer() {}
@@ -25,7 +25,7 @@ public final class TrackNormalizer {
         }
 
         String normalized = Normalizer.normalize(input, Normalizer.Form.NFD);
-        normalized = normalized.replaceAll("\\p{M}", "");
+        normalized = normalized.replaceAll("\\p{InCombiningDiacriticalMarks}", "");
 
         normalized = normalized.toLowerCase(Locale.ROOT);
 

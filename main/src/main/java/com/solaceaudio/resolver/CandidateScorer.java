@@ -20,7 +20,7 @@ public final class CandidateScorer {
         String normTargetAuthor = TrackNormalizer.normalize(target.author);
         String normCandAuthor = TrackNormalizer.normalize(candidate.author);
 
-        if (target.length > 0 && candidate.length > 0) {
+        if (target.length > 0 && target.length < Long.MAX_VALUE && candidate.length > 0 && candidate.length < Long.MAX_VALUE) {
             long deltaMs = Math.abs(target.length - candidate.length);
             if (deltaMs <= 2000) {
                 score += 35;
