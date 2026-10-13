@@ -218,12 +218,12 @@ public class YouTubeSourceManager implements AudioSourceManager {
         }
     }
 
-    private static class OembedData {
-        String title;
-        String authorName;
-        int width;
-        int height;
-        String type;
+    public static class OembedData {
+        public String title;
+        public String authorName;
+        public int width;
+        public int height;
+        public String type;
     }
 
     public Function<Void, AudioPlayerManager> getAudioPlayerManager() {
@@ -413,10 +413,15 @@ public class YouTubeSourceManager implements AudioSourceManager {
         return null;
     }
 
-    private OembedData fetchOembedData(String url) throws Exception {
+    public OembedData fetchOembedData(String url) throws Exception {
+        String reqUrl = oembedUrl + url;
+        if (!reqUrl.contains("format=json")) {
+            reqUrl += "&format=json";
+        }
         HttpRequest req = HttpRequest.newBuilder()
-                .uri(URI.create(oembedUrl + url))
-                .timeout(Duration.ofSeconds(10))
+                .uri(URI.create(reqUrl))
+                .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+                .timeout(Duration.ofSeconds(6))
                 .GET()
                 .build();
         HttpResponse<String> res = httpClient.send(req, HttpResponse.BodyHandlers.ofString());
@@ -464,33 +469,51 @@ public class YouTubeSourceManager implements AudioSourceManager {
             }
         }
 
-        if ((result == null || loadException != null) && oembed && isYouTubeUrl(reference.identifier)) {
+        if ((result == null || loadException != null) && isYouTubeUrl(reference.identifier)) {
             try {
                 OembedData data = fetchOembedData(reference.identifier);
-                if (data != null && data.title != null && originalYouTubeSource != null) {
-                    String[] prefixes = {"ytsearch:", "ytmsearch:"};
-                    String query = data.title + (data.authorName != null ? " " + data.authorName : "");
-                    for (String prefix : prefixes) {
-                        AudioItem searchResult = originalYouTubeSource.loadItem(manager, new AudioReference(prefix + query, null));
+                if (data != null && data.title != null) {
+                    if (originalYouTubeSource != null) {
+                        String[] prefixes = {"ytsearch:", "ytmsearch:"};
+                        String query = data.title + (data.authorName != null ? " " + data.authorName : "");
+                        for (String prefix : prefixes) {
+                            AudioItem searchResult = originalYouTubeSource.loadItem(manager, new AudioReference(prefix + query, null));
 
-                        if (searchResult instanceof AudioPlaylist) {
-                            String videoId = extractVideoId(reference.identifier);
-                            for (AudioTrack track : ((AudioPlaylist) searchResult).getTracks()) {
+                            if (searchResult instanceof AudioPlaylist) {
+                                String videoId = extractVideoId(reference.identifier);
+                                for (AudioTrack track : ((AudioPlaylist) searchResult).getTracks()) {
+                                    if (track.getIdentifier().equals(videoId) && !track.getInfo().isStream) {
+                                        log.info("Resolved \"{}\" via https://youtube.com/oembed", track.getInfo().title);
+                                        result = track;
+                                        break;
+                                    }
+                                }
+                            } else if (searchResult instanceof AudioTrack) {
+                                AudioTrack track = (AudioTrack) searchResult;
+                                String videoId = extractVideoId(reference.identifier);
                                 if (track.getIdentifier().equals(videoId) && !track.getInfo().isStream) {
                                     log.info("Resolved \"{}\" via https://youtube.com/oembed", track.getInfo().title);
                                     result = track;
-                                    break;
                                 }
                             }
-                        } else if (searchResult instanceof AudioTrack) {
-                            AudioTrack track = (AudioTrack) searchResult;
-                            String videoId = extractVideoId(reference.identifier);
-                            if (track.getIdentifier().equals(videoId) && !track.getInfo().isStream) {
-                                log.info("Resolved \"{}\" via https://youtube.com/oembed", track.getInfo().title);
-                                result = track;
-                            }
+                            if (result != null) break;
                         }
-                        if (result != null) break;
+                    }
+                    if (result == null) {
+                        String videoId = extractVideoId(reference.identifier);
+                        if (videoId != null) {
+                            AudioTrackInfo trackInfo = new AudioTrackInfo(
+                                    data.title,
+                                    data.authorName != null && !data.authorName.isBlank() ? data.authorName : "YouTube",
+                                    Long.MAX_VALUE,
+                                    videoId,
+                                    false,
+                                    "https://www.youtube.com/watch?v=" + videoId,
+                                    "https://img.youtube.com/vi/" + videoId + "/mqdefault.jpg",
+                                    null
+                            );
+                            result = new YouTubeTrack(trackInfo, videoId, null, this);
+                        }
                     }
                 }
             } catch (Exception ignored) {
@@ -569,6 +592,24 @@ public class YouTubeSourceManager implements AudioSourceManager {
                 if (info != null) {
                     return buildProxyTrack(info);
                 } else {
+                    try {
+                        OembedData data = fetchOembedData("https://www.youtube.com/watch?v=" + videoId);
+                        if (data != null && data.title != null && !data.title.isBlank()) {
+                            AudioTrackInfo trackInfo = new AudioTrackInfo(
+                                    data.title,
+                                    data.authorName != null && !data.authorName.isBlank() ? data.authorName : "YouTube",
+                                    Long.MAX_VALUE,
+                                    videoId,
+                                    false,
+                                    "https://www.youtube.com/watch?v=" + videoId,
+                                    "https://img.youtube.com/vi/" + videoId + "/mqdefault.jpg",
+                                    null
+                            );
+                            return new YouTubeTrack(trackInfo, videoId, null, this);
+                        }
+                    } catch (Exception ignored) {
+                    }
+
                     AudioTrackInfo trackInfo = new AudioTrackInfo(
                             "YouTube Track (" + videoId + ")",
                             "YouTube",

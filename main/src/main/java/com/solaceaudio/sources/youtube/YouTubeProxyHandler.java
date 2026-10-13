@@ -251,7 +251,48 @@ public class YouTubeProxyHandler {
         if (videoId == null || videoId.isEmpty()) {
             return null;
         }
-        return tryInnertubeVideoInfo(videoId);
+        VideoInfo info = tryInnertubeVideoInfo(videoId);
+        if (info != null) {
+            return info;
+        }
+        return tryOembedVideoInfo(videoId);
+    }
+
+    public VideoInfo tryOembedVideoInfo(String videoId) {
+        if (videoId == null || videoId.isEmpty()) {
+            return null;
+        }
+        try {
+            String url = "https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=" + videoId + "&format=json";
+            HttpRequest req = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+                    .timeout(Duration.ofSeconds(6))
+                    .GET()
+                    .build();
+            HttpResponse<String> res = httpClient.send(req, HttpResponse.BodyHandlers.ofString());
+            if (res.statusCode() == 200 && res.body() != null) {
+                JsonNode json = mapper.readTree(res.body());
+                String title = json.has("title") ? json.get("title").asText(null) : null;
+                String author = json.has("author_name") ? json.get("author_name").asText("YouTube") : "YouTube";
+                if (title != null && !title.isBlank()) {
+                    log.info("[YouTubeProxyHandler] Successfully retrieved metadata via oEmbed for {}: \"{}\" by \"{}\"", videoId, title, author);
+                    return new VideoInfo(
+                            videoId,
+                            title,
+                            author,
+                            Long.MAX_VALUE,
+                            "https://img.youtube.com/vi/" + videoId + "/mqdefault.jpg",
+                            "https://www.youtube.com/watch?v=" + videoId,
+                            false,
+                            null
+                    );
+                }
+            }
+        } catch (Exception e) {
+            log.debug("oEmbed video info resolution failed for {}: {}", videoId, e.getMessage());
+        }
+        return null;
     }
 
     public List<VideoInfo> search(String query, boolean musicOnly) {

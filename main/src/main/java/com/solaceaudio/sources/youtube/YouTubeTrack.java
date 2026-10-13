@@ -11,6 +11,7 @@ import com.sedmelluq.discord.lavaplayer.track.playback.LocalAudioTrackExecutor;
 import com.sedmelluq.discord.lavaplayer.container.matroska.MatroskaAudioTrack;
 import com.sedmelluq.discord.lavaplayer.container.mpeg.MpegAudioTrack;
 import com.sedmelluq.discord.lavaplayer.tools.io.NonSeekableInputStream;
+import com.solaceaudio.resolver.CandidateScorer;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -67,14 +68,15 @@ public class YouTubeTrack extends DelegatedAudioTrack {
 
     private String cleanTitle(String title) {
         if (title == null) return "";
-        String cleaned = title.replaceAll("(?i)\\s*[\\(\\[\\{Ã£â‚¬Â].*?[\\)\\]\\}Ã£â‚¬â€˜]", "");
+        String cleaned = title.replaceAll("(?i)\\s*[\\(\\[\\{\\u3010].*?[\\)\\]\\}\\u3011]", "");
         cleaned = cleaned.replaceAll("[\\p{So}\\p{Cn}]", "");
-        cleaned = cleaned.replaceAll("(?i)\\s*\\b(?:official|music video|lyric video|lyrics|audio|hd|hq|4k|8k|full hd|1080p|720p|live|cover|remaster|remastered|feat\\.?|ft\\.?|remix)\\b.*", "");
+        cleaned = cleaned.replaceAll("(?i)\\s*\\b(?:official\\s+video|official\\s+audio|music\\s+video|lyric\\s+video|lyrics|hd|hq|4k|8k|full\\s+hd|1080p|720p|live|cover|remaster|remastered|feat\\.?|ft\\.?|remix)\\b.*", "");
         cleaned = cleaned.replaceAll("\\s*\\|.*", "");
         cleaned = cleaned.replaceAll("(?i)\\b(?:prod\\.?|produced)\\s+by\\b.*", "");
         cleaned = cleaned.replaceAll("\\s*[-|/:;*]+\\s*$", "");
         cleaned = cleaned.replaceAll("\\s{2,}", " ");
-        return cleaned.trim();
+        cleaned = cleaned.trim();
+        return cleaned.isEmpty() ? title.trim() : cleaned;
     }
 
     @Override
@@ -411,14 +413,34 @@ public class YouTubeTrack extends DelegatedAudioTrack {
             return false;
         }
 
-        String query = cleanTitle(trackInfo.title);
-        if (query.isEmpty()) {
-            query = trackInfo.title;
+        String rawTitle = trackInfo.title;
+        String rawAuthor = trackInfo.author;
+
+        if (rawTitle == null || rawTitle.isBlank() || rawTitle.startsWith("YouTube Track")) {
+            try {
+                YouTubeSourceManager.OembedData oembed = sourceManager.fetchOembedData("https://www.youtube.com/watch?v=" + videoId);
+                if (oembed != null && oembed.title != null && !oembed.title.isBlank()) {
+                    rawTitle = oembed.title;
+                    if (oembed.authorName != null && !oembed.authorName.isBlank()) {
+                        rawAuthor = oembed.authorName;
+                    }
+                }
+            } catch (Exception ignored) {
+            }
         }
-        if (trackInfo.author != null && !trackInfo.author.isEmpty()
-                && !"Unknown".equalsIgnoreCase(trackInfo.author)
-                && !"Unknown artist".equalsIgnoreCase(trackInfo.author)) {
-            query += " " + trackInfo.author;
+
+        String query = cleanTitle(rawTitle);
+        if (query.isEmpty() || query.equalsIgnoreCase("YouTube Track")) {
+            query = (rawTitle != null && !rawTitle.startsWith("YouTube Track")) ? rawTitle : "";
+        }
+        if (rawAuthor != null && !rawAuthor.isEmpty()
+                && !"Unknown".equalsIgnoreCase(rawAuthor)
+                && !"Unknown artist".equalsIgnoreCase(rawAuthor)
+                && !"YouTube".equalsIgnoreCase(rawAuthor)) {
+            query = query.isEmpty() ? rawAuthor : query + " " + rawAuthor;
+        }
+        if (query.isBlank()) {
+            query = videoId;
         }
 
         String[] configuredProviders = sourceManager.getMirrorProviders();
@@ -429,10 +451,12 @@ public class YouTubeTrack extends DelegatedAudioTrack {
                 }
 
                 String searchQuery = provider;
-                if (provider.contains("%ISRC%") && trackInfo.isrc != null && !trackInfo.isrc.isEmpty()) {
-                    searchQuery = provider.replace("%ISRC%", trackInfo.isrc.replace("-", ""));
-                } else if (provider.contains("%QUERY%")) {
-                    searchQuery = provider.replace("%QUERY%", query);
+                if ((provider.contains("%ISRC%") || provider.contains("{isrc}")) && trackInfo.isrc != null && !trackInfo.isrc.isEmpty()) {
+                    searchQuery = searchQuery.replace("%ISRC%", trackInfo.isrc.replace("-", ""))
+                                             .replace("{isrc}", trackInfo.isrc.replace("-", ""));
+                } else if (provider.contains("%QUERY%") || provider.contains("{query}")) {
+                    searchQuery = searchQuery.replace("%QUERY%", query)
+                                             .replace("{query}", query);
                 } else {
                     searchQuery = provider + query;
                 }
@@ -440,7 +464,8 @@ public class YouTubeTrack extends DelegatedAudioTrack {
                 try {
                     AudioItem item = loadItemSync(manager, searchQuery);
                     if (item instanceof AudioPlaylist && !((AudioPlaylist) item).getTracks().isEmpty()) {
-                        item = ((AudioPlaylist) item).getTracks().get(0);
+                        AudioTrack bestCandidate = CandidateScorer.selectBest(trackInfo, ((AudioPlaylist) item).getTracks());
+                        item = bestCandidate != null ? bestCandidate : ((AudioPlaylist) item).getTracks().get(0);
                     }
                     if (item instanceof InternalAudioTrack) {
                         log.info("Playing \"{}\" (Resolved) using mirror provider \"{}\"!", cleanTitle(trackInfo.title), provider);
@@ -469,7 +494,8 @@ public class YouTubeTrack extends DelegatedAudioTrack {
             try {
                 AudioItem item = loadItemSync(manager, entry.getValue() + query);
                 if (item instanceof AudioPlaylist && !((AudioPlaylist) item).getTracks().isEmpty()) {
-                    item = ((AudioPlaylist) item).getTracks().get(0);
+                    AudioTrack bestCandidate = CandidateScorer.selectBest(trackInfo, ((AudioPlaylist) item).getTracks());
+                    item = bestCandidate != null ? bestCandidate : ((AudioPlaylist) item).getTracks().get(0);
                 }
                 if (item instanceof InternalAudioTrack) {
                     log.info("Playing \"{}\" (Resolved) using {}!", cleanTitle(trackInfo.title), entry.getKey());
