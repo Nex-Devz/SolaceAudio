@@ -40,6 +40,7 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
     private LastFmSourceManager lastFm;
     private com.solaceaudio.sources.deezer.DeezerAudioSourceManager deezer;
     private com.solaceaudio.sources.tts.FloweryTtsAudioSourceManager flowerytts;
+    private com.solaceaudio.sources.applemusic.AppleMusicAudioSourceManager applemusic;
 
     public SolaceAudioPlugin(
         SolaceAudioConfig pluginConfig,
@@ -52,7 +53,8 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
         SolaceAudioSpotifyConfig spotifyConfig,
         LastFmConfig lastFmConfig,
         com.solaceaudio.plugin.config.DeezerConfig deezerConfig,
-        com.solaceaudio.plugin.config.FloweryTtsConfig floweryTtsConfig
+        com.solaceaudio.plugin.config.FloweryTtsConfig floweryTtsConfig,
+        com.solaceaudio.plugin.config.AppleMusicConfig appleMusicConfig
     ) {
         log.info("Loading SolaceAudio plugin...");
         this.sourcesConfig = sourcesConfig;
@@ -138,6 +140,8 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
         if (sourcesConfig.isDeezer()) {
             this.deezer = new com.solaceaudio.sources.deezer.DeezerAudioSourceManager(
                 deezerConfig.getApiUrl(),
+                deezerConfig.getArl(),
+                deezerConfig.getMasterKey(),
                 deezerConfig.getPlaylistLoadLimit(),
                 deezerConfig.getAlbumLoadLimit(),
                 deezerConfig.getArtistLoadLimit()
@@ -149,6 +153,23 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
                 floweryTtsConfig.getVoice(),
                 floweryTtsConfig.getSpeed()
             );
+        }
+
+        if (sourcesConfig.isApplemusic()) {
+            this.applemusic = new com.solaceaudio.sources.applemusic.AppleMusicAudioSourceManager(
+                pluginConfig.getProviders(),
+                appleMusicConfig.getCountryCode(),
+                unused -> manager
+            );
+            if (appleMusicConfig.getPlaylistLoadLimit() > 0) {
+                this.applemusic.setPlaylistLoadLimit(appleMusicConfig.getPlaylistLoadLimit());
+            }
+            if (appleMusicConfig.getAlbumLoadLimit() > 0) {
+                this.applemusic.setAlbumLoadLimit(appleMusicConfig.getAlbumLoadLimit());
+            }
+            if (appleMusicConfig.getArtistLoadLimit() > 0) {
+                this.applemusic.setArtistLoadLimit(appleMusicConfig.getArtistLoadLimit());
+            }
         }
     }
 
@@ -173,8 +194,26 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
         return this.lastFm;
     }
 
+    public com.solaceaudio.sources.applemusic.AppleMusicAudioSourceManager getAppleMusicSource() {
+        return this.applemusic;
+    }
+
     public AudioPlayerManager getPlayerManager() {
         return this.manager;
+    }
+
+    @org.springframework.context.annotation.Bean
+    public com.solaceaudio.lyrics.SolaceLyricsManager solaceLyricsManager() {
+        var lyricsMgr = new com.solaceaudio.lyrics.SolaceLyricsManager();
+        if (this.spotify != null) {
+            lyricsMgr.registerProvider(this.spotify);
+        }
+        return lyricsMgr;
+    }
+
+    @org.springframework.context.annotation.Bean
+    public com.solaceaudio.filter.SolaceFilterFactory solaceFilterFactory() {
+        return new com.solaceaudio.filter.SolaceFilterFactory();
     }
 
     @NotNull
@@ -212,6 +251,10 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
         if (this.flowerytts != null && this.sourcesConfig.isFlowerytts()) {
             log.info("Registering Flowery TTS audio source manager...");
             manager.registerSourceManager(this.flowerytts);
+        }
+        if (this.applemusic != null && this.sourcesConfig.isApplemusic()) {
+            log.info("Registering Apple Music audio source manager...");
+            manager.registerSourceManager(this.applemusic);
         }
         if (this.youtube != null && this.sourcesConfig.isYoutube() && !hasNewYoutubeSource()) {
             log.info("Registering SolaceAudio native standalone YouTube audio source manager...");
