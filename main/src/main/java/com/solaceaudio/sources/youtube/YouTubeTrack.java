@@ -81,6 +81,12 @@ public class YouTubeTrack extends DelegatedAudioTrack {
 
     @Override
     public void process(LocalAudioTrackExecutor executor) throws Exception {
+        if (sourceManager != null && sourceManager.getSponsorBlockManager() != null) {
+            try {
+                sourceManager.getCacheExecutor().submit(() -> sourceManager.getSponsorBlockManager().getSegments(videoId));
+            } catch (Exception ignored) {}
+        }
+
         if (tryCachedPlayback(executor)) {
             return;
         }

@@ -47,6 +47,7 @@ public class YouTubeSourceManager implements AudioSourceManager {
     private volatile long maxDiskCacheMb;
     private volatile String cipherUrl;
     private final YouTubeProxyHandler proxyHandler;
+    private final com.solaceaudio.sources.youtube.sponsorblock.SponsorBlockManager sponsorBlockManager = new com.solaceaudio.sources.youtube.sponsorblock.SponsorBlockManager(true);
     private final com.solaceaudio.core.MemoryCacheManager<AudioPlaylist> searchCache = new com.solaceaudio.core.MemoryCacheManager<>(500, Duration.ofMinutes(15).toMillis());
     private final HttpClient httpClient = HttpClient.newBuilder()
             .followRedirects(HttpClient.Redirect.ALWAYS)
@@ -316,6 +317,10 @@ public class YouTubeSourceManager implements AudioSourceManager {
 
     public ExecutorService getCacheExecutor() {
         return cacheExecutor;
+    }
+
+    public com.solaceaudio.sources.youtube.sponsorblock.SponsorBlockManager getSponsorBlockManager() {
+        return sponsorBlockManager;
     }
 
     public AudioSourceManager getOriginalYouTubeSource() {
