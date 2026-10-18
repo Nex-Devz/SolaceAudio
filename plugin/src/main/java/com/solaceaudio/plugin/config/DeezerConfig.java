@@ -7,7 +7,9 @@ import org.springframework.stereotype.Component;
 @Component("solaceAudioDeezerConfig")
 public class DeezerConfig {
 
-    private String apiUrl = "https://deezer-plugin-api.vercel.app/api";
+    private String apiUrl = "https://api.deezer.com";
+    private String arl = "";
+    private String masterKey = "g4el58wc0zvf9na1";
     private int playlistLoadLimit = 50;
     private int albumLoadLimit = 50;
     private int artistLoadLimit = 50;
@@ -19,6 +21,22 @@ public class DeezerConfig {
 
     public void setApiUrl(String apiUrl) {
         this.apiUrl = apiUrl;
+    }
+
+    public String getArl() {
+        return arl;
+    }
+
+    public void setArl(String arl) {
+        this.arl = arl;
+    }
+
+    public String getMasterKey() {
+        return masterKey;
+    }
+
+    public void setMasterKey(String masterKey) {
+        this.masterKey = masterKey;
     }
 
     public int getPlaylistLoadLimit() {

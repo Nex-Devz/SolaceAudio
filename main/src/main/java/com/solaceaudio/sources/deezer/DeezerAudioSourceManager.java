@@ -42,11 +42,19 @@ public class DeezerAudioSourceManager extends SolaceAudioSourceManager {
     private final int artistLoadLimit;
 
     public DeezerAudioSourceManager(String apiUrl, int playlistLoadLimit, int albumLoadLimit, int artistLoadLimit) {
+        this(apiUrl, null, null, playlistLoadLimit, albumLoadLimit, artistLoadLimit);
+    }
+
+    public DeezerAudioSourceManager(String apiUrl, String arl, String masterKey, int playlistLoadLimit, int albumLoadLimit, int artistLoadLimit) {
         this.playlistLoadLimit = playlistLoadLimit > 0 ? playlistLoadLimit : 50;
         this.albumLoadLimit = albumLoadLimit > 0 ? albumLoadLimit : 50;
         this.artistLoadLimit = artistLoadLimit > 0 ? artistLoadLimit : 50;
-        this.api = new DeezerApiHandler(apiUrl);
+        this.api = new DeezerApiHandler(apiUrl, arl, masterKey);
         this.httpInterfaceManager = HttpClientTools.createDefaultThreadLocalManager();
+    }
+
+    public String getMasterKey() {
+        return api.getMasterKey();
     }
 
     @Override

@@ -6,11 +6,13 @@ import com.sedmelluq.discord.lavaplayer.source.AudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.tools.Units;
 import com.sedmelluq.discord.lavaplayer.tools.io.HttpInterface;
+import com.sedmelluq.discord.lavaplayer.tools.io.NonSeekableInputStream;
 import com.sedmelluq.discord.lavaplayer.tools.io.PersistentHttpStream;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
 import com.sedmelluq.discord.lavaplayer.track.playback.LocalAudioTrackExecutor;
 import com.solaceaudio.model.SolaceAudioTrack;
+import com.solaceaudio.sources.deezer.crypto.DeezerBlowfishInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,10 +51,23 @@ public class DeezerAudioTrack extends SolaceAudioTrack {
 
         try (HttpInterface httpInterface = sourceManager.getHttpInterface()) {
             try (PersistentHttpStream stream = new PersistentHttpStream(httpInterface, new URI(streamUrl), Units.CONTENT_LENGTH_UNKNOWN)) {
-                if (streamUrl.contains(".mp4") || streamUrl.contains(".m4a")) {
-                    processDelegate(new MpegAudioTrack(trackInfo, stream), executor);
+                boolean isEncrypted = streamUrl.contains("dzcdn.net") || streamUrl.contains("deezer.com");
+                if (isEncrypted) {
+                    try (DeezerBlowfishInputStream decrypted = new DeezerBlowfishInputStream(
+                            stream, trackInfo.identifier, sourceManager.getMasterKey());
+                         NonSeekableInputStream nis = new NonSeekableInputStream(decrypted)) {
+                        if (streamUrl.contains(".mp4") || streamUrl.contains(".m4a")) {
+                            processDelegate(new MpegAudioTrack(trackInfo, nis), executor);
+                        } else {
+                            processDelegate(new Mp3AudioTrack(trackInfo, nis), executor);
+                        }
+                    }
                 } else {
-                    processDelegate(new Mp3AudioTrack(trackInfo, stream), executor);
+                    if (streamUrl.contains(".mp4") || streamUrl.contains(".m4a")) {
+                        processDelegate(new MpegAudioTrack(trackInfo, stream), executor);
+                    } else {
+                        processDelegate(new Mp3AudioTrack(trackInfo, stream), executor);
+                    }
                 }
             }
         }
