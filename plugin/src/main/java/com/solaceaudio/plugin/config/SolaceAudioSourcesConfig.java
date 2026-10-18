@@ -15,6 +15,15 @@ public class SolaceAudioSourcesConfig {
     private boolean jiosaavn = true;
     private boolean deezer = false;
     private boolean flowerytts = false;
+    private boolean applemusic = false;
+
+    public boolean isApplemusic() {
+        return applemusic;
+    }
+
+    public void setApplemusic(boolean applemusic) {
+        this.applemusic = applemusic;
+    }
 
     public boolean isJiosaavn() {
         return jiosaavn;
