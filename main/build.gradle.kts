@@ -29,6 +29,7 @@ dependencies {
     compileOnly("com.github.topi314.lavalyrics:lavalyrics:1.0.0")
 
     testImplementation("dev.arbjerg:lavaplayer:2.0.4")
+    testImplementation("com.github.topi314.lavalyrics:lavalyrics:1.0.0")
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
