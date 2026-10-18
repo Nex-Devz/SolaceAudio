@@ -131,13 +131,16 @@ public class YouTubeProxyHandler {
 
         clientPool.add(new ClientHealth(new AndroidVrClient()));
         clientPool.add(new ClientHealth(new VisionOsClient()));
+        clientPool.add(new ClientHealth(new TvDowngradedClient()));
         clientPool.add(new ClientHealth(new AndroidMusicClient()));
         clientPool.add(new ClientHealth(new AndroidClient()));
         clientPool.add(new ClientHealth(new IosClient()));
         if (!this.ytMusicCookieAuth.hasAuth()) {
             clientPool.add(new ClientHealth(new WebRemixClient()));
         }
+        clientPool.add(new ClientHealth(new TvCastClient()));
         clientPool.add(new ClientHealth(new TvHtml5Client()));
+        clientPool.add(new ClientHealth(new WebParentToolsClient()));
         clientPool.add(new ClientHealth(new WebEmbeddedClient()));
         clientPool.add(new ClientHealth(new WebClient()));
 
