@@ -37,6 +37,7 @@ plugins:
       pandora: true
       youtube: true
       flowerytts: true
+      applemusic: true
 
     providers:
       - "dzisrc:{isrc}"
@@ -52,6 +53,12 @@ plugins:
       resolveArtistsInSearch: true
       localFiles: false
       spDc: ""
+
+    applemusic:
+      countryCode: "us"
+      playlistLoadLimit: 50
+      albumLoadLimit: 50
+      artistLoadLimit: 50
 
     jiosaavn:
       # Official API with in-process DES/320kbps direct CDN streaming (Zero proxy needed!)
@@ -74,8 +81,10 @@ plugins:
       artistLoadLimit: 50
 
     deezer:
-      # Official public API for ISRC and metadata resolution (Zero proxy needed!)
+      # Official public API with native Blowfish-CBC stream decryption (Zero proxy needed!)
       apiUrl: "https://api.deezer.com"
+      arl: "" # Optional Deezer ARL cookie for authenticated HiFi streaming
+      masterKey: "g4el58wc0zvf9na1"
       playlistLoadLimit: 50
       albumLoadLimit: 50
       artistLoadLimit: 50
@@ -111,6 +120,25 @@ plugins:
 
     lastfm:
       apiKey: ""
+
+    lyrics:
+      enabled: true
+      # Fallback chain for synchronized and plain-text lyrics (no API keys required!)
+      sources:
+        - "lrclib"
+        - "deezer"
+        - "genius"
+        - "spotify"
+
+    sponsorblock:
+      enabled: true
+      # Categories to automatically skip during YouTube audio playback
+      categories:
+        - "sponsor"
+        - "selfpromo"
+        - "interaction"
+        - "intro"
+        - "outro"
 
 metrics:
   prometheus:

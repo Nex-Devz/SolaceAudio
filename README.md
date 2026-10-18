@@ -92,14 +92,17 @@ SolaceAudio is engineered from the ground up to solve upstream rate-limiting, IP
 | Provider | Ingestion Mode | Stream Output | Authentication Pipeline | Status |
 | :--- | :--- | :--- | :--- | :--- |
 | **Spotify** | ISRC & Metadata Mirror | 320kbps / 160kbps MP3/Opus | Nuance Metadata Schema | ![Active](https://img.shields.io/badge/Online-00DF72?style=flat-square) |
-| **YouTube** | VisionOS / Android VR / Web Remix | 160kbps Opus / AAC | PoToken & SAPISIDHASH Header | ![Active](https://img.shields.io/badge/Online-00DF72?style=flat-square) |
-| **Deezer** | Direct Stream & ISRC Audio | Up to 320kbps MP3 Direct | Public API / None Required | ![Active](https://img.shields.io/badge/Online-00DF72?style=flat-square) |
+| **Apple Music** | `amsearch:`, Albums, Playlists | High-Fidelity Audio Mirror | Auto-scraped Developer Bearer Token | ![Active](https://img.shields.io/badge/Online-00DF72?style=flat-square) |
+| **YouTube** | VisionOS / Cobalt TV / TvCast / Web | 160kbps Opus / AAC | Zero-BotGuard TV Downgrade & PoToken | ![Active](https://img.shields.io/badge/Online-00DF72?style=flat-square) |
+| **Deezer** | Direct Blowfish Decryption | Direct 320kbps MP3 / FLAC | In-Process Blowfish-CBC & Optional ARL | ![Active](https://img.shields.io/badge/Online-00DF72?style=flat-square) |
 | **JioSaavn** | Native Audio Extraction | Up to 320kbps MP4 Container | Public CDN Edge | ![Active](https://img.shields.io/badge/Online-00DF72?style=flat-square) |
 | **Gaana** | Native Chunked Stream | Master CDN HLS Transport | Public Stream Endpoint | ![Active](https://img.shields.io/badge/Online-00DF72?style=flat-square) |
 | **Amazon Music** | Metadata Cross-Resolution | High-Fidelity Mirror | Public Search Pipeline | ![Active](https://img.shields.io/badge/Online-00DF72?style=flat-square) |
 | **Pandora** | Direct Stream Resolution | Adaptive Bitrate AAC | None Required | ![Active](https://img.shields.io/badge/Online-00DF72?style=flat-square) |
 | **FloweryTTS** | Real-time Neural Synthesis | Uncompressed PCM Audio | Public API Pipeline | ![Active](https://img.shields.io/badge/Online-00DF72?style=flat-square) |
 | **Last.fm** | Contextual Recommendation Graph | Algorithmic Metadata | Optional API Key | ![Active](https://img.shields.io/badge/Online-00DF72?style=flat-square) |
+| **Synced Lyrics** | LRCLIB / Deezer / Genius / Spotify | Time-stamped LRC & Text | Zero-Auth Auto Fallback Engine | ![Active](https://img.shields.io/badge/Online-00DF72?style=flat-square) |
+| **SponsorBlock** | Non-Music Segment Elimination | Gapless Audio Playback | Official SponsorBlock API & Cache | ![Active](https://img.shields.io/badge/Online-00DF72?style=flat-square) |
 
 </div>
 
@@ -260,6 +263,44 @@ Query algorithmic track recommendations based on the active session player buffe
 ```http
 GET /v4/sessions/{sessionId}/players/{guildId}/recommendation?limit=10
 ```
+
+### Synchronized Lyrics Subsystem
+
+Multi-provider lyrics engine aggregating LRCLIB (public time-synced LRC), Deezer GraphQL, Genius, and Spotify:
+
+```http
+# Fetch lyrics for currently playing track in guild
+GET /v4/sessions/{sessionId}/players/{guildId}/lyrics
+
+# Direct metadata lookup with timestamp alignment
+GET /v4/lyrics?track={trackName}&artist={artistName}&duration={durationMs}
+
+# Fuzzy multi-source lyrics search
+GET /v4/lyrics/search?query={searchQuery}
+```
+
+### Native SponsorBlock Segments
+
+Manage YouTube segment skipping directly through Lavalink REST endpoints:
+
+```http
+# Fetch skipped segments for currently active YouTube track
+GET /v4/sessions/{sessionId}/players/{guildId}/sponsorblock
+
+# Update enabled categories for dynamic segment skipping
+POST /v4/sessions/{sessionId}/players/{guildId}/sponsorblock
+Content-Type: application/json
+
+{
+  "enabled": true,
+  "categories": ["sponsor", "selfpromo", "interaction", "intro", "outro"]
+}
+```
+
+### Real-Time Audio DSP Processing
+
+* **Voice Auto-Ducking**: High-performance `FloatPcmAudioFilter` providing seamless gain attenuation when voice activity is detected, ramping back to unity gain artifact-free.
+* **Silence Trimming**: Continuous exponential moving average (EMA) energy detector that eliminates awkward lead-in dead air and flags trailing silence for instantaneous queue transitions.
 
 ---
 
