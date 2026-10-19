@@ -10,15 +10,56 @@ public final class CandidateScorer {
     private CandidateScorer() {}
 
     public static int score(AudioTrackInfo target, AudioTrackInfo candidate) {
-        if (target == null || candidate == null) return 0;
-
-        int score = 0;
+        if (target == null || candidate == null) return -100;
 
         String normTargetTitle = TrackNormalizer.normalize(target.title);
         String normCandTitle = TrackNormalizer.normalize(candidate.title);
 
         String normTargetAuthor = TrackNormalizer.normalize(target.author);
         String normCandAuthor = TrackNormalizer.normalize(candidate.author);
+
+        int titleScore = 0;
+        boolean titleMatched = false;
+
+        if (!normTargetTitle.isEmpty() && !normCandTitle.isEmpty()) {
+            if (normCandTitle.contains(normTargetTitle) || normTargetTitle.contains(normCandTitle)) {
+                titleScore += 35;
+                titleMatched = true;
+            } else {
+                String[] words = normTargetTitle.split("\\s+");
+                int matchCount = 0;
+                int validWords = 0;
+                for (String word : words) {
+                    if (word.length() > 2) {
+                        validWords++;
+                        if (normCandTitle.contains(word)) {
+                            matchCount++;
+                        }
+                    }
+                }
+                if (validWords > 0 && matchCount > 0) {
+                    titleScore += (int) (((double) matchCount / validWords) * 30);
+                    titleMatched = (matchCount >= 2) || (matchCount == validWords);
+                }
+            }
+        }
+
+        int authorScore = 0;
+        boolean authorMatched = false;
+        if (!normTargetAuthor.isEmpty() && !normTargetAuthor.equalsIgnoreCase("unknown artist") && !normTargetAuthor.equalsIgnoreCase("youtube")) {
+            if (normCandAuthor.contains(normTargetAuthor) || normCandTitle.contains(normTargetAuthor)) {
+                authorScore += 25;
+                authorMatched = true;
+            }
+        }
+
+        // HARD GUARD: If neither title nor author matches at all, immediately reject
+        // This prevents duration or tag matching from accidentally selecting an entirely unrelated song
+        if (!titleMatched && !authorMatched && titleScore == 0) {
+            return -100;
+        }
+
+        int score = titleScore + authorScore;
 
         if (target.length > 0 && target.length < Long.MAX_VALUE && candidate.length > 0 && candidate.length < Long.MAX_VALUE) {
             long deltaMs = Math.abs(target.length - candidate.length);
@@ -30,29 +71,6 @@ public final class CandidateScorer {
                 score += 10;
             } else if (deltaMs > 30000) {
                 score -= 40; 
-            }
-        }
-
-        if (!normTargetTitle.isEmpty() && !normCandTitle.isEmpty()) {
-            if (normCandTitle.contains(normTargetTitle) || normTargetTitle.contains(normCandTitle)) {
-                score += 35;
-            } else {
-                String[] words = normTargetTitle.split("\\s+");
-                int matchCount = 0;
-                for (String word : words) {
-                    if (word.length() > 2 && normCandTitle.contains(word)) {
-                        matchCount++;
-                    }
-                }
-                if (words.length > 0) {
-                    score += (int) (((double) matchCount / words.length) * 25);
-                }
-            }
-        }
-
-        if (!normTargetAuthor.isEmpty() && !normTargetAuthor.equalsIgnoreCase("unknown artist")) {
-            if (normCandAuthor.contains(normTargetAuthor) || normCandTitle.contains(normTargetAuthor)) {
-                score += 25;
             }
         }
 
@@ -96,6 +114,6 @@ public final class CandidateScorer {
             }
         }
 
-        return highestScore > 0 ? bestTrack : null;
+        return highestScore >= 15 ? bestTrack : null;
     }
 }

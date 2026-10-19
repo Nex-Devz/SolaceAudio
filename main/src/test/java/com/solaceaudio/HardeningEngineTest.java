@@ -96,4 +96,39 @@ public class HardeningEngineTest {
         int score = CandidateScorer.score(target, candidate);
         assertTrue(score > 0, "Score should be positive even when target has Long.MAX_VALUE length");
     }
+
+    @Test
+    public void testCandidateScorerRejectsUnrelatedTrackEvenWithSameLength() {
+        AudioTrackInfo target = new AudioTrackInfo(
+                "Barsaat", "Flow With Reverb", 180000, "yt1", false, "https://youtube.com"
+        );
+
+        AudioTrackInfo unrelated = new AudioTrackInfo(
+                "New pashto 2012 attan video Tando adam Pathan Colony", "Qadus Khan", 180000, "sc1", false, "https://soundcloud.com"
+        );
+
+        int score = CandidateScorer.score(target, unrelated);
+        assertTrue(score < 0, "Unrelated song must receive a negative score even if duration is identical");
+    }
+
+    @Test
+    public void testCandidateScorerSelectBestReturnsNullForUnrelated() {
+        AudioTrackInfo target = new AudioTrackInfo(
+                "Barsaat", "Flow With Reverb", Long.MAX_VALUE, "yt1", false, "https://youtube.com"
+        );
+
+        AudioTrackInfo unrelated = new AudioTrackInfo(
+                "New pashto 2012 attan video Tando adam Pathan Colony", "Qadus Khan", 210000, "sc1", false, "https://soundcloud.com"
+        );
+
+        com.sedmelluq.discord.lavaplayer.track.AudioTrack dummyTrack = new com.sedmelluq.discord.lavaplayer.track.DelegatedAudioTrack(unrelated) {
+            @Override
+            public void process(com.sedmelluq.discord.lavaplayer.track.playback.LocalAudioTrackExecutor executor) {}
+            @Override
+            public com.sedmelluq.discord.lavaplayer.source.AudioSourceManager getSourceManager() { return null; }
+        };
+
+        com.sedmelluq.discord.lavaplayer.track.AudioTrack best = CandidateScorer.selectBest(target, java.util.List.of(dummyTrack));
+        assertNull(best, "selectBest must return null when candidates are unrelated");
+    }
 }
