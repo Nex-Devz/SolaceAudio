@@ -5,7 +5,7 @@ server:
 lavalink:
   plugins:
     # SolaceAudio Multi-Source Audio Engine
-    - dependency: "com.github.Nex-Devz.SolaceAudio:solaceaudio-plugin:1.0.21"
+    - dependency: "com.github.Nex-Devz.SolaceAudio:solaceaudio-plugin:1.0.22"
       repository: "https://jitpack.io"
 
 
@@ -43,7 +43,6 @@ plugins:
       - "dzisrc:{isrc}"
       - "ytsearch:\"{isrc}\""
       - "ytsearch:{query}"
-      - "scsearch:{query}"
       - "bcsearch:{query}"
 
     spotify:
@@ -105,7 +104,6 @@ plugins:
       mirror: true
       mirrorProviders:
         - "ytmsearch:%QUERY%"
-        - "scsearch:%QUERY%"
       localDiskCache: true
       diskCachePath: "youtube-cache"
       maxDiskCacheMb: 10240
