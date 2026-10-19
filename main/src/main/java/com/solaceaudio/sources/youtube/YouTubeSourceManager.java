@@ -480,7 +480,9 @@ public class YouTubeSourceManager implements AudioSourceManager {
                 if (data != null && data.title != null) {
                     if (originalYouTubeSource != null) {
                         String[] prefixes = {"ytsearch:", "ytmsearch:"};
-                        String query = data.title + (data.authorName != null ? " " + data.authorName : "");
+                        String cleanTitle = data.title.replaceAll("[\\p{So}\\p{Cn}]", "").replace('|', ' ').replaceAll("\\s{2,}", " ").trim();
+                        String cleanAuthor = data.authorName != null ? data.authorName.replaceAll("[\\p{So}\\p{Cn}]", "").trim() : "";
+                        String query = cleanTitle + (!cleanAuthor.isEmpty() ? " " + cleanAuthor : "");
                         for (String prefix : prefixes) {
                             AudioItem searchResult = originalYouTubeSource.loadItem(manager, new AudioReference(prefix + query, null));
 

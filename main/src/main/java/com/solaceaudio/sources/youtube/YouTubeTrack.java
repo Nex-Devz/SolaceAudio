@@ -68,15 +68,46 @@ public class YouTubeTrack extends DelegatedAudioTrack {
 
     private String cleanTitle(String title) {
         if (title == null) return "";
-        String cleaned = title.replaceAll("(?i)\\s*[\\(\\[\\{\\u3010].*?[\\)\\]\\}\\u3011]", "");
-        cleaned = cleaned.replaceAll("[\\p{So}\\p{Cn}]", "");
-        cleaned = cleaned.replaceAll("(?i)\\s*\\b(?:official\\s+video|official\\s+audio|music\\s+video|lyric\\s+video|lyrics|hd|hq|4k|8k|full\\s+hd|1080p|720p|live|cover|remaster|remastered|feat\\.?|ft\\.?|remix)\\b.*", "");
-        cleaned = cleaned.replaceAll("\\s*\\|.*", "");
+        // Remove emoji and non-standard unicode symbols
+        String cleaned = title.replaceAll("[\\p{So}\\p{Cn}]", "");
+        // Only strip parentheticals containing technical clutter (do NOT strip versions/edits like Slowed, Reverb, Remix, etc.)
+        cleaned = cleaned.replaceAll("(?i)\\s*[\\[\\(\\{【]\\s*(?:official\\s+(?:music\\s+)?video|official\\s+audio|music\\s+video|lyric\\s+video|lyrics|4k|8k|hd|hq|1080p|720p|full\\s+hd|video|audio|visualizer)\\s*[\\]\\)\\}】]", "");
+        // Remove trailing buzzword phrases
+        cleaned = cleaned.replaceAll("(?i)\\s*\\b(?:official\\s+video|official\\s+audio|music\\s+video|lyric\\s+video|full\\s+video)\\b.*", "");
+        // Remove common playlist/curator tags after pipe
+        cleaned = cleaned.replaceAll("(?i)\\s*\\|\\s*(?:heart\\s+touching\\s+mix|trending\\s+songs|best\\s+songs|audio\\s+songs|all\\s+trending|mix\\s+songs|full\\s+album|top\\s+hits).*", "");
+        // Replace remaining pipes with spaces instead of truncating
+        cleaned = cleaned.replace('|', ' ');
         cleaned = cleaned.replaceAll("(?i)\\b(?:prod\\.?|produced)\\s+by\\b.*", "");
         cleaned = cleaned.replaceAll("\\s*[-|/:;*]+\\s*$", "");
         cleaned = cleaned.replaceAll("\\s{2,}", " ");
         cleaned = cleaned.trim();
         return cleaned.isEmpty() ? title.trim() : cleaned;
+    }
+
+    private String cleanAuthor(String author) {
+        if (author == null) return "";
+        String cleaned = author.replaceAll("(?i)\\s*-\\s*Topic$", "");
+        cleaned = cleaned.replaceAll("(?i)\\s*VEVO$", "");
+        cleaned = cleaned.replaceAll("[\\p{So}\\p{Cn}]", "");
+        return cleaned.trim();
+    }
+
+    private boolean isCuratorOrLabel(String author) {
+        if (author == null || author.isBlank()) return true;
+        String lower = author.toLowerCase();
+        return lower.contains("reverb")
+                || lower.contains("slowed")
+                || lower.contains("records")
+                || lower.contains("company")
+                || lower.contains("series")
+                || lower.contains("lofi")
+                || lower.contains("status")
+                || lower.contains("channel")
+                || lower.contains("music world")
+                || lower.contains("music word")
+                || lower.contains("vibes")
+                || lower.contains("edits");
     }
 
     @Override
@@ -439,11 +470,13 @@ public class YouTubeTrack extends DelegatedAudioTrack {
         if (query.isEmpty() || query.equalsIgnoreCase("YouTube Track")) {
             query = (rawTitle != null && !rawTitle.startsWith("YouTube Track")) ? rawTitle : "";
         }
-        if (rawAuthor != null && !rawAuthor.isEmpty()
-                && !"Unknown".equalsIgnoreCase(rawAuthor)
-                && !"Unknown artist".equalsIgnoreCase(rawAuthor)
-                && !"YouTube".equalsIgnoreCase(rawAuthor)) {
-            query = query.isEmpty() ? rawAuthor : query + " " + rawAuthor;
+        String author = cleanAuthor(rawAuthor);
+        if (!author.isEmpty()
+                && !isCuratorOrLabel(author)
+                && !"Unknown".equalsIgnoreCase(author)
+                && !"Unknown artist".equalsIgnoreCase(author)
+                && !"YouTube".equalsIgnoreCase(author)) {
+            query = query.isEmpty() ? author : query + " " + author;
         }
         if (query.isBlank()) {
             query = videoId;
@@ -452,7 +485,7 @@ public class YouTubeTrack extends DelegatedAudioTrack {
         String[] configuredProviders = sourceManager.getMirrorProviders();
         if (configuredProviders != null && configuredProviders.length > 0) {
             for (String provider : configuredProviders) {
-                if (provider == null || provider.contains("ytsearch") || provider.contains("ytmsearch")) {
+                if (provider == null || provider.startsWith("ytsearch:") || provider.contains("ytsearch:{query}")) {
                     continue;
                 }
 
@@ -469,9 +502,19 @@ public class YouTubeTrack extends DelegatedAudioTrack {
 
                 try {
                     AudioItem item = loadItemSync(manager, searchQuery);
-                    if (item instanceof AudioPlaylist && !((AudioPlaylist) item).getTracks().isEmpty()) {
-                        AudioTrack bestCandidate = CandidateScorer.selectBest(trackInfo, ((AudioPlaylist) item).getTracks());
-                        item = bestCandidate != null ? bestCandidate : ((AudioPlaylist) item).getTracks().get(0);
+                    if (item instanceof AudioPlaylist playlist) {
+                        if (playlist.getTracks().isEmpty()) {
+                            continue;
+                        }
+                        AudioTrack bestCandidate = CandidateScorer.selectBest(trackInfo, playlist.getTracks());
+                        if (bestCandidate == null) {
+                            continue;
+                        }
+                        item = bestCandidate;
+                    } else if (item instanceof AudioTrack singleTrack) {
+                        if (CandidateScorer.score(trackInfo, singleTrack.getInfo()) <= 0) {
+                            continue;
+                        }
                     }
                     if (item instanceof InternalAudioTrack) {
                         log.info("Playing \"{}\" (Resolved) using mirror provider \"{}\"!", cleanTitle(trackInfo.title), provider);
@@ -499,9 +542,19 @@ public class YouTubeTrack extends DelegatedAudioTrack {
             }
             try {
                 AudioItem item = loadItemSync(manager, entry.getValue() + query);
-                if (item instanceof AudioPlaylist && !((AudioPlaylist) item).getTracks().isEmpty()) {
-                    AudioTrack bestCandidate = CandidateScorer.selectBest(trackInfo, ((AudioPlaylist) item).getTracks());
-                    item = bestCandidate != null ? bestCandidate : ((AudioPlaylist) item).getTracks().get(0);
+                if (item instanceof AudioPlaylist playlist) {
+                    if (playlist.getTracks().isEmpty()) {
+                        continue;
+                    }
+                    AudioTrack bestCandidate = CandidateScorer.selectBest(trackInfo, playlist.getTracks());
+                    if (bestCandidate == null) {
+                        continue;
+                    }
+                    item = bestCandidate;
+                } else if (item instanceof AudioTrack singleTrack) {
+                    if (CandidateScorer.score(trackInfo, singleTrack.getInfo()) <= 0) {
+                        continue;
+                    }
                 }
                 if (item instanceof InternalAudioTrack) {
                     log.info("Playing \"{}\" (Resolved) using {}!", cleanTitle(trackInfo.title), entry.getKey());
