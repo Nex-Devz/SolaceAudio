@@ -99,6 +99,18 @@ public class YouTubeProxyHandler {
     private final com.solaceaudio.core.MemoryCacheManager<StreamResult> streamCache =
             new com.solaceaudio.core.MemoryCacheManager<>(500, Duration.ofHours(5).toMillis());
 
+    /**
+     * Timestamp of the most recent cipher service failure.
+     *
+     * <p>The cipher service is shared by every client, so its health is not a property of any
+     * single client. Recording the outage separately keeps a service-wide failure from being
+     * mistaken for several broken clients.
+     */
+    private final java.util.concurrent.atomic.AtomicLong lastCipherFailureAt = new java.util.concurrent.atomic.AtomicLong(0);
+
+    /** How long a cipher service outage is considered to be ongoing. */
+    private static final long CIPHER_FAILURE_WINDOW_MS = 5000L;
+
     public YouTubeProxyHandler(String cipherUrl) {
         this(cipherUrl, null, null, null, null, null);
     }
@@ -124,25 +136,39 @@ public class YouTubeProxyHandler {
         this.ytMusicCookieAuth = new YtMusicCookieAuth(this.httpClient);
         this.ytMusicCookieAuth.loadCookie(cookie, cookieFile);
 
-        if (this.ytMusicCookieAuth.hasAuth()) {
+        boolean authenticated = this.ytMusicCookieAuth.hasAuth();
+        if (authenticated) {
             log.info("[YouTubeProxyHandler] Authenticated YouTube burner cookie detected: prioritizing WEB_REMIX client.");
             clientPool.add(new ClientHealth(new WebRemixClient()));
         }
 
+        // Ordering matters: the first client that returns a playable format wins. Clients that
+        // hand back plain URLs are tried before the ones that return signed URLs, because a
+        // signed URL needs a full signature decipher rather than only the "n" transform, which
+        // makes it the more failure-prone of the two.
         clientPool.add(new ClientHealth(new AndroidVrClient()));
         clientPool.add(new ClientHealth(new VisionOsClient()));
+        clientPool.add(new ClientHealth(new WebClient()));
+
+        // Clients that return signed URLs. Usable, but resolving the signature is the step
+        // most likely to fail, so they are only reached once the plain-URL clients have failed.
         clientPool.add(new ClientHealth(new TvDowngradedClient()));
-        clientPool.add(new ClientHealth(new AndroidMusicClient()));
-        clientPool.add(new ClientHealth(new AndroidClient()));
-        clientPool.add(new ClientHealth(new IosClient()));
-        if (!this.ytMusicCookieAuth.hasAuth()) {
-            clientPool.add(new ClientHealth(new WebRemixClient()));
-        }
         clientPool.add(new ClientHealth(new TvCastClient()));
         clientPool.add(new ClientHealth(new TvHtml5Client()));
-        clientPool.add(new ClientHealth(new WebParentToolsClient()));
         clientPool.add(new ClientHealth(new WebEmbeddedClient()));
-        clientPool.add(new ClientHealth(new WebClient()));
+        if (!authenticated) {
+            clientPool.add(new ClientHealth(new WebRemixClient()));
+        }
+
+        // Mobile clients are rejected outright by YouTube unless their version string is
+        // current, and the music / parent-tools clients additionally require a signed-in
+        // session - without one they answer LOGIN_REQUIRED on every single lookup.
+        clientPool.add(new ClientHealth(new AndroidClient()));
+        clientPool.add(new ClientHealth(new IosClient()));
+        if (authenticated) {
+            clientPool.add(new ClientHealth(new AndroidMusicClient()));
+            clientPool.add(new ClientHealth(new WebParentToolsClient()));
+        }
 
         warmInitialSessions();
         startSessionWarmerTask();
@@ -506,6 +532,13 @@ public class YouTubeProxyHandler {
                 if (result != null) {
                     candidate.markSuccess();
                     return result;
+                } else if (isCipherServiceDown()) {
+                    // The cipher service is shared by every client, so this says nothing about
+                    // this client's health. Penalising it would push healthy clients into
+                    // cooldown for the whole duration of the outage.
+                    log.debug("Client {} produced no usable format because the cipher service is unavailable.",
+                            client.getClientName());
+                    continue;
                 } else {
                     candidate.markFailure(DEFAULT_COOLDOWN_MS / 4);
                 }
@@ -798,20 +831,15 @@ public class YouTubeProxyHandler {
                 continue;
             }
 
-            String url = null;
+            String cipherStr = null;
+            String rawUrl = null;
             if (fmt.has("signatureCipher") || fmt.has("cipher")) {
-                String cipherStr = fmt.has("signatureCipher") ? fmt.path("signatureCipher").asText() : fmt.path("cipher").asText();
-                url = resolveCipher(cipherStr);
+                cipherStr = fmt.has("signatureCipher") ? fmt.path("signatureCipher").asText() : fmt.path("cipher").asText();
             } else if (fmt.has("url")) {
-                String directUrl = fmt.path("url").asText(null);
-                if (client.requiresCipher() || (directUrl != null && directUrl.contains("n="))) {
-                    url = resolveUrlParams(directUrl, null, null);
-                } else {
-                    url = directUrl;
-                }
+                rawUrl = fmt.path("url").asText(null);
             }
 
-            if (url == null || url.isEmpty()) {
+            if (rawUrl == null && cipherStr == null) {
                 continue;
             }
 
@@ -819,7 +847,8 @@ public class YouTubeProxyHandler {
             boolean isOpus = mimeType.contains("opus") || mimeType.contains("webm");
             int adjusted = isOpus ? bitrate + 1 : bitrate;
 
-            candidates.add(new AudioFormatCandidate(url, mimeType, adjusted, bitrate));
+            candidates.add(new AudioFormatCandidate(rawUrl, cipherStr, mimeType, adjusted, bitrate,
+                    client.requiresCipher()));
         }
 
         if (candidates.isEmpty()) {
@@ -828,31 +857,123 @@ public class YouTubeProxyHandler {
 
         candidates.sort((a, b) -> Integer.compare(b.adjustedBitrate, a.adjustedBitrate));
 
-        AudioFormatCandidate best = candidates.get(0);
+        // The formats are resolved in bitrate order rather than all at once: every resolution
+        // is a round trip to the cipher service, so resolving the best format first means the
+        // common case costs one round trip instead of one per format.
+        String bestUrl = null;
+        String bestMimeType = null;
+        int bestBitrate = 0;
         List<String> fallbacks = new ArrayList<>();
-        for (int i = 1; i < candidates.size(); i++) {
-            fallbacks.add(candidates.get(i).url);
+
+        for (AudioFormatCandidate candidate : candidates) {
+            long failuresBefore = lastCipherFailureAt.get();
+            String url = resolveCandidate(candidate);
+            if (url == null) {
+                // The cipher service is shared by every client, so once it has failed the
+                // remaining formats would fail for the same reason. Stop instead of waiting
+                // out the timeout once per format.
+                if (lastCipherFailureAt.get() != failuresBefore) {
+                    break;
+                }
+                continue;
+            }
+            if (bestUrl == null) {
+                bestUrl = url;
+                bestMimeType = candidate.mimeType;
+                bestBitrate = candidate.bitrate;
+            } else {
+                fallbacks.add(url);
+            }
         }
 
-        return new StreamResult(best.url, best.mimeType, "youtube-direct", best.bitrate, client.getUserAgent(), fallbacks);
+        if (bestUrl == null) {
+            return null;
+        }
+
+        return new StreamResult(bestUrl, bestMimeType, "youtube-direct", bestBitrate, client.getUserAgent(), fallbacks);
+    }
+
+    private String resolveCandidate(AudioFormatCandidate candidate) {
+        if (candidate.cipherStr != null) {
+            return resolveCipher(candidate.cipherStr);
+        }
+        if (candidate.rawUrl == null) {
+            return null;
+        }
+        if (candidate.requiresCipher || candidate.rawUrl.contains("n=")) {
+            return resolveUrlParams(candidate.rawUrl, null, null);
+        }
+        return candidate.rawUrl;
     }
 
     private static class AudioFormatCandidate {
-        final String url;
+        final String rawUrl;
+        final String cipherStr;
         final String mimeType;
         final int adjustedBitrate;
         final int bitrate;
+        final boolean requiresCipher;
 
-        AudioFormatCandidate(String url, String mimeType, int adjustedBitrate, int bitrate) {
-            this.url = url;
+        AudioFormatCandidate(String rawUrl, String cipherStr, String mimeType, int adjustedBitrate, int bitrate,
+                             boolean requiresCipher) {
+            this.rawUrl = rawUrl;
+            this.cipherStr = cipherStr;
             this.mimeType = mimeType;
             this.adjustedBitrate = adjustedBitrate;
             this.bitrate = bitrate;
+            this.requiresCipher = requiresCipher;
         }
     }
 
     private String resolveUrlParams(String url, String s, String sp) {
-        if (url == null) return url;
+        if (url == null) return null;
+        // Nothing has to be deciphered: hand the URL straight back rather than paying for a
+        // visitor session, which may have to be fetched over the network when the pool is cold.
+        if (s == null && extractNParam(url) == null) {
+            return url;
+        }
+        VisitorSession session = getNextVisitorSession();
+        String resolved = resolveUrlParams(httpClient, mapper, cipherUrl, url, s, sp,
+                session != null ? session.playerScriptUrl : null);
+        if (resolved == null) {
+            lastCipherFailureAt.set(System.currentTimeMillis());
+        }
+        return resolved;
+    }
+
+    /**
+     * @return the value of the URL's "n" transform parameter, or null when it has none
+     */
+    private static String extractNParam(String url) {
+        if (url == null) return null;
+        Matcher nMatch = Pattern.compile("[?&]n=([^&]+)").matcher(url);
+        return nMatch.find() ? nMatch.group(1) : null;
+    }
+
+    /**
+     * @return true when the cipher service failed recently, meaning its outage is ongoing
+     */
+    private boolean isCipherServiceDown() {
+        long last = lastCipherFailureAt.get();
+        return last > 0 && (System.currentTimeMillis() - last) < CIPHER_FAILURE_WINDOW_MS;
+    }
+
+    /**
+     * Resolves a stream URL through the configured cipher service.
+     *
+     * @param httpClient client used to reach the cipher service
+     * @param mapper serializer for the request body
+     * @param cipherUrl base URL of the cipher service
+     * @param url the stream URL to resolve
+     * @param s the encrypted signature, or null
+     * @param sp the signature key, or null
+     * @param playerScriptUrl the player script URL used for deciphering, or null
+     * @return the resolved URL, the original URL when there is nothing to resolve, or
+     *         {@code null} when the URL required resolving but the cipher service failed
+     */
+    static String resolveUrlParams(HttpClient httpClient, ObjectMapper mapper, String cipherUrl,
+                                   String url, String s, String sp, String playerScriptUrl) {
+        if (url == null) return null;
         try {
             String nParam = null;
             Matcher nMatch = Pattern.compile("[?&]n=([^&]+)").matcher(url);
@@ -864,12 +985,10 @@ public class YouTubeProxyHandler {
                 return url;
             }
 
-            VisitorSession session = getNextVisitorSession();
-
             com.fasterxml.jackson.databind.node.ObjectNode body = mapper.createObjectNode();
             body.put("stream_url", url);
-            if (session.playerScriptUrl != null) {
-                body.put("player_url", session.playerScriptUrl);
+            if (playerScriptUrl != null) {
+                body.put("player_url", playerScriptUrl);
             }
             if (s != null) {
                 body.put("encrypted_signature", s);
@@ -879,7 +998,7 @@ public class YouTubeProxyHandler {
                 body.put("n_param", nParam);
             }
 
-            String base = this.cipherUrl.endsWith("/") ? this.cipherUrl.substring(0, this.cipherUrl.length() - 1) : this.cipherUrl;
+            String base = cipherUrl.endsWith("/") ? cipherUrl.substring(0, cipherUrl.length() - 1) : cipherUrl;
             String endpoint = base.endsWith("/api") ? base + "/resolve_url" : base + "/resolve_url";
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(endpoint))
@@ -896,9 +1015,14 @@ public class YouTubeProxyHandler {
                     return resJson.get("resolved_url").asText();
                 }
             }
-        } catch (Exception ignored) {
+            log.debug("Cipher service did not resolve the stream URL (HTTP {}).", response.statusCode());
+        } catch (Exception e) {
+            log.debug("Cipher service unreachable while resolving stream URL: {}", e.getMessage());
         }
-        return url;
+        // Returning the unresolved URL here would hand the caller a throttled signature that
+        // YouTube silently refuses to play. Report the failure instead so the caller can skip
+        // this format and let the client pool fall through to the next client.
+        return null;
     }
 
     private String resolveCipher(String cipherStr) {
