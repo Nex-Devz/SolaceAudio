@@ -39,6 +39,8 @@ public class YouTubeSourceManager implements AudioSourceManager {
     );
     private final Function<Void, AudioPlayerManager> audioPlayerManager;
     private AudioSourceManager originalYouTubeSource;
+    /** The official source manager that was replaced when the built-in source took over. */
+    private AudioSourceManager replacedYouTubeSource;
     private volatile boolean oembed;
     private volatile boolean mirror;
     private volatile String[] mirrorProviders;
@@ -125,11 +127,7 @@ public class YouTubeSourceManager implements AudioSourceManager {
         this.maxDiskCacheMb = maxDiskCacheMb;
         this.proxyHandler = new YouTubeProxyHandler(this.cipherUrl, potokenUrl, potokenVisitorData, potoken, cookie, cookieFile);
 
-        if (mirrorProviders != null && !mirrorProviders.isEmpty()) {
-            this.mirrorProviders = mirrorProviders.toArray(new String[0]);
-        } else {
-            this.mirrorProviders = new String[] { "scsearch:{query}" };
-        }
+        this.mirrorProviders = resolveMirrorProviders(mirrorProviders);
 
         if (this.localDiskCache) {
             File cacheDir = new File(this.diskCachePath);
@@ -219,6 +217,32 @@ public class YouTubeSourceManager implements AudioSourceManager {
         }
     }
 
+    /**
+     * Resolves the mirror providers to use.
+     *
+     * <p>An empty result means "no explicitly configured providers", in which case the built-in
+     * cross-service mirror list is used instead (Spotify, Deezer, JioSaavn, Apple Music). Those
+     * are the only providers that can rescue a track when YouTube itself is unreachable from this
+     * host, because they are served by completely different providers. A YouTube-prefixed
+     * provider is not a mirror at all: if YouTube is blocked, re-searching YouTube fails the
+     * same way.
+     *
+     * @param configured the configured providers, may be null or empty
+     * @return the providers to use, never null
+     */
+    static String[] resolveMirrorProviders(List<String> configured) {
+        if (configured == null || configured.isEmpty()) {
+            return new String[0];
+        }
+        List<String> cleaned = new ArrayList<>();
+        for (String provider : configured) {
+            if (provider != null && !provider.isBlank()) {
+                cleaned.add(provider.trim());
+            }
+        }
+        return cleaned.toArray(new String[0]);
+    }
+
     public static class OembedData {
         public String title;
         public String authorName;
@@ -306,9 +330,7 @@ public class YouTubeSourceManager implements AudioSourceManager {
     }
 
     public void setMirrorProviders(List<String> providers) {
-        if (providers != null && !providers.isEmpty()) {
-            this.mirrorProviders = providers.toArray(new String[0]);
-        }
+        this.mirrorProviders = resolveMirrorProviders(providers);
     }
 
     public YouTubeProxyHandler getProxyHandler() {
@@ -327,8 +349,34 @@ public class YouTubeSourceManager implements AudioSourceManager {
         return originalYouTubeSource;
     }
 
-    @SuppressWarnings("unchecked")
+    /**
+     * Wraps the official YouTube source: the official source becomes the delegate that does the
+     * actual loading, and this manager takes its place so that the oEmbed metadata repair,
+     * mirror fallback and disk cache apply to every track.
+     *
+     * @param manager the Lavalink player manager
+     * @return true when the official source was found and wrapped
+     */
     public boolean attachToYouTube(AudioPlayerManager manager) {
+        return replaceYouTubeSource(manager, true);
+    }
+
+    /**
+     * Takes over the official YouTube source without delegating to it.
+     *
+     * <p>Used when the built-in source is forced by configuration: the official source is removed
+     * from Lavalink's source list and replaced by this one, so exactly one source named
+     * "youtube" remains registered.
+     *
+     * @param manager the Lavalink player manager
+     * @return true when the official source was found and replaced
+     */
+    public boolean takeOverYouTubeSource(AudioPlayerManager manager) {
+        return replaceYouTubeSource(manager, false);
+    }
+
+    @SuppressWarnings("unchecked")
+    private boolean replaceYouTubeSource(AudioPlayerManager manager, boolean delegate) {
         List<AudioSourceManager> sources = findSourceList(manager);
         if (sources == null)
             return false;
@@ -345,7 +393,14 @@ public class YouTubeSourceManager implements AudioSourceManager {
             }
 
             if (isYouTube) {
-                this.originalYouTubeSource = source;
+                if (delegate) {
+                    this.originalYouTubeSource = source;
+                } else {
+                    // The official source is dropped from Lavalink's list, so Lavalink will
+                    // never shut it down. Keep the reference and shut it down ourselves,
+                    // otherwise its threads and HTTP client outlive the node.
+                    this.replacedYouTubeSource = source;
+                }
                 sources.set(i, this);
                 return true;
             }
@@ -698,5 +753,7 @@ public class YouTubeSourceManager implements AudioSourceManager {
         }
         if (originalYouTubeSource != null)
             originalYouTubeSource.shutdown();
+        if (replacedYouTubeSource != null)
+            replacedYouTubeSource.shutdown();
     }
 }

@@ -484,44 +484,31 @@ public class YouTubeTrack extends DelegatedAudioTrack {
 
         String[] configuredProviders = sourceManager.getMirrorProviders();
         if (configuredProviders != null && configuredProviders.length > 0) {
+            // Providers that search YouTube are tried last: a YouTube-prefixed provider is not
+            // really a mirror, because when YouTube is unreachable a YouTube search fails the
+            // same way. They are still honoured because a re-search can rescue a track whose
+            // direct URL is blocked while search still works.
+            List<String> crossService = new ArrayList<>();
+            List<String> youtubeProviders = new ArrayList<>();
             for (String provider : configuredProviders) {
-                if (provider == null || provider.startsWith("ytsearch:") || provider.contains("ytsearch:{query}")) {
+                if (provider == null || provider.isBlank()) {
                     continue;
                 }
-
-                String searchQuery = provider;
-                if ((provider.contains("%ISRC%") || provider.contains("{isrc}")) && trackInfo.isrc != null && !trackInfo.isrc.isEmpty()) {
-                    searchQuery = searchQuery.replace("%ISRC%", trackInfo.isrc.replace("-", ""))
-                                             .replace("{isrc}", trackInfo.isrc.replace("-", ""));
-                } else if (provider.contains("%QUERY%") || provider.contains("{query}")) {
-                    searchQuery = searchQuery.replace("%QUERY%", query)
-                                             .replace("{query}", query);
+                if (isYouTubeSearchProvider(provider)) {
+                    youtubeProviders.add(provider);
                 } else {
-                    searchQuery = provider + query;
+                    crossService.add(provider);
                 }
+            }
 
-                try {
-                    AudioItem item = loadItemSync(manager, searchQuery);
-                    if (item instanceof AudioPlaylist playlist) {
-                        if (playlist.getTracks().isEmpty()) {
-                            continue;
-                        }
-                        AudioTrack bestCandidate = CandidateScorer.selectBest(trackInfo, playlist.getTracks());
-                        if (bestCandidate == null) {
-                            continue;
-                        }
-                        item = bestCandidate;
-                    } else if (item instanceof AudioTrack singleTrack) {
-                        if (CandidateScorer.score(trackInfo, singleTrack.getInfo()) <= 0) {
-                            continue;
-                        }
-                    }
-                    if (item instanceof InternalAudioTrack) {
-                        log.info("Playing \"{}\" (Resolved) using mirror provider \"{}\"!", cleanTitle(trackInfo.title), provider);
-                        processDelegate((InternalAudioTrack) item, executor);
-                        return true;
-                    }
-                } catch (Exception ignored) {
+            for (String provider : crossService) {
+                if (tryMirrorProvider(manager, provider, query, executor)) {
+                    return true;
+                }
+            }
+            for (String provider : youtubeProviders) {
+                if (tryMirrorProvider(manager, provider, query, executor)) {
+                    return true;
                 }
             }
         }
@@ -536,10 +523,12 @@ public class YouTubeTrack extends DelegatedAudioTrack {
         } catch (Exception ignored) {
         }
 
+        boolean anyMirrorAvailable = false;
         for (java.util.Map.Entry<String, String> entry : MIRROR_SOURCES.entrySet()) {
             if (!activeSources.isEmpty() && !activeSources.contains(entry.getKey())) {
                 continue;
             }
+            anyMirrorAvailable = true;
             try {
                 AudioItem item = loadItemSync(manager, entry.getValue() + query);
                 if (item instanceof AudioPlaylist playlist) {
@@ -565,6 +554,71 @@ public class YouTubeTrack extends DelegatedAudioTrack {
             }
         }
 
+        if (!anyMirrorAvailable) {
+            log.warn("Mirror fallback is enabled but no mirror source is registered, so \"{}\" cannot be rescued "
+                    + "through another provider. Enable at least one of the Spotify, Deezer, JioSaavn or Apple Music "
+                    + "sources, or set plugins.solaceaudio.youtube.mirrorProviders explicitly.",
+                    cleanTitle(trackInfo.title));
+        }
+
+        return false;
+    }
+
+    /**
+     * @param provider a search provider reference, possibly containing placeholders
+     * @return true when the provider searches YouTube itself
+     */
+    private static boolean isYouTubeSearchProvider(String provider) {
+        String lower = provider.toLowerCase();
+        return lower.startsWith("ytsearch:") || lower.startsWith("ytmsearch:")
+                || lower.contains("ytsearch:") || lower.contains("ytmsearch:");
+    }
+
+    /**
+     * Attempts to play the track through a single mirror provider.
+     *
+     * @param manager the player manager
+     * @param provider the search provider reference, possibly containing placeholders
+     * @param query the resolved search query
+     * @param executor the track executor
+     * @return true when the track was successfully handed to the executor
+     */
+    private boolean tryMirrorProvider(AudioPlayerManager manager, String provider, String query,
+                                      LocalAudioTrackExecutor executor) {
+        String searchQuery = provider;
+        if ((provider.contains("%ISRC%") || provider.contains("{isrc}")) && trackInfo.isrc != null && !trackInfo.isrc.isEmpty()) {
+            searchQuery = searchQuery.replace("%ISRC%", trackInfo.isrc.replace("-", ""))
+                                     .replace("{isrc}", trackInfo.isrc.replace("-", ""));
+        } else if (provider.contains("%QUERY%") || provider.contains("{query}")) {
+            searchQuery = searchQuery.replace("%QUERY%", query)
+                                     .replace("{query}", query);
+        } else {
+            searchQuery = provider + query;
+        }
+
+        try {
+            AudioItem item = loadItemSync(manager, searchQuery);
+            if (item instanceof AudioPlaylist playlist) {
+                if (playlist.getTracks().isEmpty()) {
+                    return false;
+                }
+                AudioTrack bestCandidate = CandidateScorer.selectBest(trackInfo, playlist.getTracks());
+                if (bestCandidate == null) {
+                    return false;
+                }
+                item = bestCandidate;
+            } else if (item instanceof AudioTrack singleTrack) {
+                if (CandidateScorer.score(trackInfo, singleTrack.getInfo()) <= 0) {
+                    return false;
+                }
+            }
+            if (item instanceof InternalAudioTrack) {
+                log.info("Playing \"{}\" (Resolved) using mirror provider \"{}\"!", cleanTitle(trackInfo.title), provider);
+                processDelegate((InternalAudioTrack) item, executor);
+                return true;
+            }
+        } catch (Exception ignored) {
+        }
         return false;
     }
 
