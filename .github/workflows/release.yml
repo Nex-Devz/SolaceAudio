@@ -28,8 +28,29 @@ jobs:
       - name: Grant Execute Permission for Gradlew
         run: chmod +x gradlew
 
+      # plugin/build.gradle.kts reads the version from the VERSION environment
+      # variable and falls back to "dev". Without this the release asset is
+      # always named solaceaudio-plugin-dev.jar instead of the tag version.
+      - name: Set Version from Tag
+        run: |
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+          else
+            echo "VERSION=dev" >> "$GITHUB_ENV"
+            echo "::warning::Not running from a tag; the release asset will be named solaceaudio-plugin-dev.jar."
+          fi
+
       - name: Build Release Plugin
         run: ./gradlew build -x test
+
+      - name: Verify Release Version
+        run: |
+          set -euo pipefail
+          jar=$(ls plugin/build/libs/solaceaudio-plugin-*.jar | head -n 1)
+          if [ "$(basename "$jar")" != "solaceaudio-plugin-${VERSION}.jar" ]; then
+            echo "Release jar is named $(basename "$jar"), expected solaceaudio-plugin-${VERSION}.jar" >&2
+            exit 1
+          fi
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
