@@ -4,6 +4,18 @@ All notable changes to SolaceAudio are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.24] - 2026-11-04
+
+### Fixed
+
+- Release workflow now derives `VERSION` from the pushed tag, so release
+  assets are named `solaceaudio-plugin-<version>.jar` instead of
+  `solaceaudio-plugin-dev.jar`. The job fails if the built artifact name does
+  not match the tag, preventing a mislabelled release.
+
+No runtime or API changes. This release exists only to publish correctly
+versioned release artifacts; 1.0.23 artifacts on JitPack are unaffected.
+
 ## [1.0.23] - 2026-11-04
 
 ### Added
@@ -52,4 +64,5 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Mirror fallback now warns when it is enabled but no mirror source is
   registered.
 
+[1.0.24]: https://github.com/Nex-Devz/SolaceAudio/releases/tag/1.0.24
 [1.0.23]: https://github.com/Nex-Devz/SolaceAudio/releases/tag/1.0.23
