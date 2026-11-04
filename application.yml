@@ -3,16 +3,25 @@ server:
   address: 0.0.0.0
 
 lavalink:
+  # The official YouTube plugin is hosted on the Lavalink snapshot repository.
+  defaultPluginSnapshotRepository: "https://maven.lavalink.dev/snapshots"
+
   plugins:
     # SolaceAudio Multi-Source Audio Engine
     - dependency: "com.github.Nex-Devz.SolaceAudio:solaceaudio-plugin:1.0.22"
       repository: "https://jitpack.io"
 
+    # Official YouTube source. SolaceAudio detects this plugin and layers its oEmbed metadata
+    # repair, mirror fallback and disk cache on top of it. It is pinned to a snapshot build on
+    # purpose: the 1.18.x release line still ships InnerTube client versions that YouTube
+    # rejects with HTTP 400, which breaks playback.
+    - dependency: "dev.lavalink.youtube:youtube-plugin:2be8e542d3f6f178e048dca565892684c2e40177"
+      snapshot: true
 
   server:
     password: "youshallnotpass"
     sources:
-      youtube: false # Handled natively by SolaceAudio / youtube plugin
+      youtube: false # Provided by the official youtube-plugin above, wrapped by SolaceAudio
       bandcamp: true
       soundcloud: true
       twitch: true
@@ -27,6 +36,39 @@ lavalink:
     playerUpdateInterval: 5
 
 plugins:
+  # Official YouTube source (dev.lavalink.youtube). SolaceAudio detects this plugin at startup
+  # and layers its oEmbed metadata repair, mirror fallback and disk cache on top of it.
+  youtube:
+    enabled: true
+    allowSearch: true
+    allowDirectVideoIds: true
+    allowDirectPlaylistIds: true
+    # Clients are tried in order until one yields a playable stream. ANDROID and IOS are listed
+    # first because they return stream URLs that carry no encrypted signature, so they need less
+    # deciphering than the clients behind them.
+    clients:
+      - ANDROID
+      - IOS
+      - ANDROID_VR
+      - MUSIC
+      - WEB
+      - MWEB
+      - TV
+    # Signature deciphering is performed locally by the plugin, so no external cipher service
+    # is required. Uncomment to offload deciphering to a remote service instead.
+    # remoteCipher:
+    #   url: "https://cipher.kikkia.dev/"
+    #   userAgent: "Mozilla/5.0"
+    # PoToken: supply a token and matching visitor data to lift bot checks on datacenter IPs.
+    pot:
+      token: ""
+      visitorData: ""
+    # OAuth with a YouTube account raises the API quota ceiling considerably.
+    oauth:
+      enabled: false
+      refreshToken: ""
+      skipInitialization: false
+
   solaceaudio:
     sources:
       spotify: true
@@ -102,8 +144,21 @@ plugins:
       oembed: true
       # Intelligent mirror fallback if direct YouTube playback is blocked on host IP
       mirror: true
-      mirrorProviders:
-        - "ytmsearch:%QUERY%"
+      # Mirror providers are tried in order when direct YouTube playback fails. Leave empty to
+      # use the built-in cross-service list (Spotify, Deezer, JioSaavn, Apple Music), which are
+      # the only providers that can rescue a track when YouTube itself is unreachable.
+      # Supported placeholders: %QUERY% / {query} and %ISRC% / {isrc}.
+      mirrorProviders: []
+      # Use SolaceAudio's built-in YouTube source instead of the official plugin above.
+      # The official plugin tracks YouTube's client changes far more closely, so the built-in
+      # source is a fallback rather than the default.
+      nativeSource: false
+      # Override the InnerTube client version strings, keyed by client name. YouTube rejects
+      # outdated client versions without notice, and these can be corrected from configuration
+      # instead of waiting for a plugin release.
+      # clientVersions:
+      #   ANDROID: "21.02.35"
+      #   IOS: "21.32.4"
       localDiskCache: true
       diskCachePath: "youtube-cache"
       maxDiskCacheMb: 10240

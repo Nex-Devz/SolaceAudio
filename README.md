@@ -116,10 +116,21 @@ Add the plugin dependency to your `application.yml`:
 
 ```yaml
 lavalink:
+  defaultPluginSnapshotRepository: "https://maven.lavalink.dev/snapshots"
   plugins:
     - dependency: "com.github.Nex-Devz.SolaceAudio:solaceaudio-plugin:1.0.22"
       repository: "https://jitpack.io"
+    # Official YouTube source. SolaceAudio detects it and layers oEmbed metadata repair,
+    # mirror fallback and disk caching on top of it.
+    - dependency: "dev.lavalink.youtube:youtube-plugin:2be8e542d3f6f178e048dca565892684c2e40177"
+      snapshot: true
 ```
+
+> **Why the snapshot?** The `1.18.x` release line of the official plugin still ships InnerTube
+> client versions that YouTube rejects with HTTP 400 (`ANDROID 19.44.38`, `IOS 19.45.4`), which
+> breaks playback. The pinned snapshot carries the current client versions. Pin the exact
+> youtube-plugin version you want to run - SolaceAudio works with either the official plugin or
+> its own built-in source.
 
 ### 2. Comprehensive Configuration
 
@@ -147,9 +158,19 @@ plugins:
     youtube:
       oembed: true             # Lightweight metadata resolution fallback (bypasses datacenter bot blocks)
       mirror: true             # Automatic audio mirror fallback when direct playback is restricted
-      mirrorProviders:
-        - "ytmsearch:%QUERY%"
-        - "scsearch:%QUERY%"
+      # Mirror providers are tried in order when direct YouTube playback fails. Leave empty to
+      # use the built-in cross-service list (Spotify, Deezer, JioSaavn, Apple Music) - those are
+      # the only providers that can rescue a track when YouTube itself is unreachable.
+      # Supported placeholders: %QUERY% / {query} and %ISRC% / {isrc}.
+      mirrorProviders: []
+      # Use SolaceAudio's built-in YouTube source instead of the official youtube-plugin.
+      nativeSource: false
+      # Override the InnerTube client versions, keyed by client name. YouTube rejects outdated
+      # client versions without notice; this lets a broken client be repaired from config
+      # instead of waiting for a plugin release.
+      # clientVersions:
+      #   ANDROID: "21.02.35"
+      #   IOS: "21.32.4"
       localDiskCache: true
       diskCachePath: "youtube-cache"
       maxDiskCacheMb: 10240
