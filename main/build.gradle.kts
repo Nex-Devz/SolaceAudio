@@ -36,6 +36,10 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+    // Allow opt-in network diagnostics to be triggered with -Dsolace.yt.probe=true
+    listOf("solace.yt.probe").forEach { key ->
+        (System.getProperty(key))?.let { systemProperty(key, it) }
+    }
 }
 
 publishing {
