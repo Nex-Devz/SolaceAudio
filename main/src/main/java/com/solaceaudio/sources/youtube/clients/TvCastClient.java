@@ -13,7 +13,7 @@ public class TvCastClient extends InnerTubeClient {
 
     @Override
     public String getClientVersion() {
-        return "7.20190924";
+        return resolveVersion(getVersionOverrideKey(), "7.20190924");
     }
 
     @Override

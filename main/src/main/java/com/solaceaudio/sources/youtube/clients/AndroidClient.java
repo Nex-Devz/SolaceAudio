@@ -10,12 +10,12 @@ public class AndroidClient extends InnerTubeClient {
 
     @Override
     public String getClientVersion() {
-        return "19.09.37";
+        return resolveVersion(getVersionOverrideKey(), "21.02.35");
     }
 
     @Override
     public String getUserAgent() {
-        return "com.google.android.youtube/19.09.37 (Linux; U; Android 11) gzip";
+        return "com.google.android.youtube/" + getClientVersion() + " (Linux; U; Android 11) gzip";
     }
 
     @Override

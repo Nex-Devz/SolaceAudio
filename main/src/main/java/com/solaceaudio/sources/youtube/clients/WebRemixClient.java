@@ -10,7 +10,7 @@ public class WebRemixClient extends InnerTubeClient {
 
     @Override
     public String getClientVersion() {
-        return "1.20260213.01.00";
+        return resolveVersion(getVersionOverrideKey(), "1.20260213.01.00");
     }
 
     @Override

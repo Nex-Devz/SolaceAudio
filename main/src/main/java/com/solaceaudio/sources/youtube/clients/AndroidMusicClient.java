@@ -12,12 +12,12 @@ public class AndroidMusicClient extends InnerTubeClient {
 
     @Override
     public String getClientVersion() {
-        return "6.42.52";
+        return resolveVersion(getVersionOverrideKey(), "7.27.52");
     }
 
     @Override
     public String getUserAgent() {
-        return "com.google.android.apps.youtube.music/6.42.52 (Linux; U; Android 14) gzip";
+        return "com.google.android.apps.youtube.music/" + getClientVersion() + " (Linux; U; Android 14) gzip";
     }
 
     @Override

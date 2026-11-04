@@ -15,7 +15,7 @@ public class WebParentToolsClient extends InnerTubeClient {
 
     @Override
     public String getClientVersion() {
-        return "1.20220918";
+        return resolveVersion(getVersionOverrideKey(), "1.20220918");
     }
 
     @Override

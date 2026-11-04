@@ -12,12 +12,12 @@ public class AndroidVrClient extends InnerTubeClient {
 
     @Override
     public String getClientVersion() {
-        return "1.65.10";
+        return resolveVersion(getVersionOverrideKey(), "1.65.10");
     }
 
     @Override
     public String getUserAgent() {
-        return "com.google.android.apps.youtube.vr.oculus/1.65.10 (Linux; U; Android 10; Quest 2) gzip";
+        return "com.google.android.apps.youtube.vr.oculus/" + getClientVersion() + " (Linux; U; Android 10; Quest 2) gzip";
     }
 
     @Override

@@ -12,7 +12,7 @@ public class VisionOsClient extends InnerTubeClient {
 
     @Override
     public String getClientVersion() {
-        return "1.08";
+        return resolveVersion(getVersionOverrideKey(), "1.08");
     }
 
     @Override

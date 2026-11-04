@@ -8,7 +8,7 @@ public class TvHtml5Client extends InnerTubeClient {
 
     @Override
     public String getClientVersion() {
-        return "7.20240304.10.00";
+        return resolveVersion(getVersionOverrideKey(), "7.20250319.10.00");
     }
 
     @Override

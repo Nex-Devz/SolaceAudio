@@ -10,12 +10,12 @@ public class IosClient extends InnerTubeClient {
 
     @Override
     public String getClientVersion() {
-        return "19.09.3";
+        return resolveVersion(getVersionOverrideKey(), "21.32.4");
     }
 
     @Override
     public String getUserAgent() {
-        return "com.google.ios.youtube/19.09.3 (iPhone16,2; U; CPU OS 17_5_1 like Mac OS X;)";
+        return "com.google.ios.youtube/" + getClientVersion() + " (iPhone16,2; U; CPU OS 17_5_1 like Mac OS X;)";
     }
 
     @Override

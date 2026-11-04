@@ -14,9 +14,21 @@ public class TvDowngradedClient extends InnerTubeClient {
         return "TVHTML5";
     }
 
+    /**
+     * This client reports the same InnerTube client name as {@link TvHtml5Client} but runs a
+     * different version, so it needs its own override key. Without this a single
+     * {@code TVHTML5} override would rewrite both clients.
+     *
+     * @return the override key for this client
+     */
+    @Override
+    protected String getVersionOverrideKey() {
+        return "TVHTML5_COBALT";
+    }
+
     @Override
     public String getClientVersion() {
-        return "5.20260713";
+        return resolveVersion(getVersionOverrideKey(), "5.20260713");
     }
 
     @Override

@@ -8,7 +8,7 @@ public class WebEmbeddedClient extends InnerTubeClient {
 
     @Override
     public String getClientVersion() {
-        return "1.20240304.01.00";
+        return resolveVersion(getVersionOverrideKey(), "1.20250401.01.00");
     }
 
     @Override

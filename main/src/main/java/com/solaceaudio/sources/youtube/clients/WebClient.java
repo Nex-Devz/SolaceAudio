@@ -8,7 +8,7 @@ public class WebClient extends InnerTubeClient {
 
     @Override
     public String getClientVersion() {
-        return "2.20240304.00.00";
+        return resolveVersion(getVersionOverrideKey(), "2.20250403.01.00");
     }
 
     @Override
