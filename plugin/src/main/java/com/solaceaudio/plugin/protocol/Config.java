@@ -234,6 +234,16 @@ public class Config {
             this.cipherUrl = cipherUrl;
         }
 
+        private java.util.Map<String, String> clientVersions;
+
+        public java.util.Map<String, String> getClientVersions() {
+            return this.clientVersions;
+        }
+
+        public void setClientVersions(java.util.Map<String, String> clientVersions) {
+            this.clientVersions = clientVersions;
+        }
+
         private Long maxDiskCacheMb;
 
         public Long getMaxDiskCacheMb() {

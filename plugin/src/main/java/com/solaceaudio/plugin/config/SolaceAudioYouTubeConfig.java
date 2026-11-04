@@ -4,6 +4,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
 
 @ConfigurationProperties(prefix = "plugins.solaceaudio.youtube")
 @Component("solaceAudioYouTubeConfig")
@@ -15,6 +16,41 @@ public class SolaceAudioYouTubeConfig {
     private boolean localDiskCache = false;
     private String diskCachePath = "youtube-cache";
     private String cipherUrl = "https://cipher.kikkia.dev";
+
+    /**
+     * Forces SolaceAudio's built-in YouTube source to be used even when the official
+     * {@code dev.lavalink.youtube} plugin is installed.
+     *
+     * <p>By default SolaceAudio prefers the official plugin: it tracks YouTube's client
+     * changes far more closely than any in-house implementation can. The built-in source is
+     * still a complete fallback for deployments that cannot run the official plugin.
+     */
+    private boolean nativeSource = false;
+
+    /**
+     * Overrides for the InnerTube client version strings, keyed by client name
+     * (for example {@code ANDROID}, {@code IOS}, {@code WEB}).
+     *
+     * <p>YouTube rejects outdated client versions, and those versions stop working without
+     * any notice. Being able to correct a version from configuration avoids a plugin rebuild.
+     */
+    private Map<String, String> clientVersions;
+
+    public boolean isNativeSource() {
+        return nativeSource;
+    }
+
+    public void setNativeSource(boolean nativeSource) {
+        this.nativeSource = nativeSource;
+    }
+
+    public Map<String, String> getClientVersions() {
+        return clientVersions;
+    }
+
+    public void setClientVersions(Map<String, String> clientVersions) {
+        this.clientVersions = clientVersions;
+    }
 
     public boolean isOembed() {
         return oembed;

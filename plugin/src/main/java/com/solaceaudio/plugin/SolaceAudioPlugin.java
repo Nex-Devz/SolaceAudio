@@ -41,6 +41,8 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
     private com.solaceaudio.sources.deezer.DeezerAudioSourceManager deezer;
     private com.solaceaudio.sources.tts.FloweryTtsAudioSourceManager flowerytts;
     private com.solaceaudio.sources.applemusic.AppleMusicAudioSourceManager applemusic;
+    /** True when the built-in YouTube source must be used instead of the official plugin. */
+    private boolean nativeYoutubeSource;
 
     public SolaceAudioPlugin(
         SolaceAudioConfig pluginConfig,
@@ -111,6 +113,7 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
             }
         }
         if (sourcesConfig.isYoutube()) {
+            this.nativeYoutubeSource = youtubeConfig.isNativeSource();
             this.youtube = new YouTubeSourceManager(
                 youtubeConfig.isOembed(),
                 youtubeConfig.isMirror(),
@@ -126,7 +129,10 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
                 youtubeConfig.getCookieFile(),
                 unused -> manager
             );
-            if (hasNewYoutubeSource()) {
+            applyClientVersionOverrides(youtubeConfig.getClientVersions());
+            if (youtubeConfig.isNativeSource()) {
+                log.info("Native YouTube source forced by configuration. SolaceAudio will register its built-in YouTube audio source manager.");
+            } else if (hasNewYoutubeSource()) {
                 log.info("Detected official Lavalink YouTube plugin. SolaceAudio will attach enhanced caching, ATV swap & fallback layer.");
             } else {
                 log.info("No external YouTube plugin found. SolaceAudio will operate as the primary native YouTube audio source manager.");
@@ -179,6 +185,46 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
             return true;
         } catch (ClassNotFoundException ignored) {
             return false;
+        }
+    }
+
+    private boolean useNativeYoutubeSource() {
+        return this.nativeYoutubeSource;
+    }
+
+    /**
+     * @return true when Lavalink already has a source registered under the name "youtube"
+     */
+    private boolean isYoutubeSourceRegistered() {
+        if (this.manager == null) {
+            return false;
+        }
+        try {
+            for (com.sedmelluq.discord.lavaplayer.source.AudioSourceManager source : this.manager.getSourceManagers()) {
+                if (source != null && "youtube".equalsIgnoreCase(source.getSourceName())) {
+                    return true;
+                }
+            }
+        } catch (Exception ignored) {
+        }
+        return false;
+    }
+
+    /**
+     * Applies configured InnerTube client version overrides.
+     *
+     * @param versions client name to version, e.g. {@code ANDROID} to {@code 21.02.35}
+     */
+    private void applyClientVersionOverrides(java.util.Map<String, String> versions) {
+        if (versions == null || versions.isEmpty()) {
+            return;
+        }
+        for (java.util.Map.Entry<String, String> entry : versions.entrySet()) {
+            if (entry.getKey() == null || entry.getValue() == null) {
+                continue;
+            }
+            com.solaceaudio.sources.youtube.clients.InnerTubeClient.setVersionOverride(entry.getKey(), entry.getValue());
+            log.info("YouTube client version override applied: {} -> {}", entry.getKey(), entry.getValue());
         }
     }
 
@@ -256,6 +302,9 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
             log.info("Registering Apple Music audio source manager...");
             manager.registerSourceManager(this.applemusic);
         }
+        // Registered here only when the official YouTube plugin is absent. When it is present
+        // the built-in source replaces it later, once every plugin has registered its sources,
+        // so that exactly one source named "youtube" ends up in Lavalink's source list.
         if (this.youtube != null && this.sourcesConfig.isYoutube() && !hasNewYoutubeSource()) {
             log.info("Registering SolaceAudio native standalone YouTube audio source manager...");
             manager.registerSourceManager(this.youtube);
@@ -266,9 +315,57 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
 
     @org.springframework.context.event.EventListener(org.springframework.boot.context.event.ApplicationReadyEvent.class)
     public void onApplicationReady() {
-        if (this.youtube != null && this.manager != null && this.sourcesConfig.isYoutube() && hasNewYoutubeSource()) {
-            log.info("Registering SolaceAudio YouTube source resolver...");
-            this.youtube.attachToYouTube(this.manager);
+        if (this.youtube == null || this.manager == null || !this.sourcesConfig.isYoutube()) {
+            return;
+        }
+
+        if (useNativeYoutubeSource()) {
+            // The built-in source is forced. Replace the official source if it is present so
+            // that exactly one source named "youtube" stays registered - registering a second
+            // one would leave Lavalink resolving the request against whichever came first.
+            if (this.youtube.takeOverYouTubeSource(this.manager)) {
+                log.info("SolaceAudio native YouTube source replaced the official YouTube source manager.");
+            } else if (!isYoutubeSourceRegistered()) {
+                this.manager.registerSourceManager(this.youtube);
+                log.info("Registered SolaceAudio native YouTube audio source manager.");
+            } else {
+                // A source named "youtube" is already registered and could not be replaced.
+                // Registering a second one would leave Lavalink routing requests to whichever
+                // it happens to find first.
+                log.warn("A YouTube source is already registered and could not be replaced. "
+                        + "The official YouTube plugin remains in charge; SolaceAudio's oEmbed repair, "
+                        + "mirror fallback and disk caching are unavailable for YouTube.");
+            }
+            return;
+        }
+
+        if (!hasNewYoutubeSource()) {
+            // No official plugin: the built-in source was already registered during configure().
+            return;
+        }
+
+        log.info("Registering SolaceAudio YouTube source resolver...");
+        boolean attached = this.youtube.attachToYouTube(this.manager);
+        if (attached) {
+            log.info("SolaceAudio YouTube enhancement layer attached to the official YouTube source manager.");
+            return;
+        }
+
+        // Attaching works by replacing the official source manager inside Lavalink's source
+        // list. If that fails the official source keeps working, but every SolaceAudio
+        // enhancement (oEmbed metadata repair, mirror fallback, disk cache) is silently
+        // lost - so fall back to the built-in source instead of pretending it succeeded.
+        log.error("Failed to attach the SolaceAudio YouTube enhancement layer to the official YouTube source manager.");
+        if (this.youtube.takeOverYouTubeSource(this.manager)) {
+            log.info("Replaced the official YouTube source with the SolaceAudio native YouTube source.");
+            return;
+        }
+        if (!isYoutubeSourceRegistered()) {
+            this.manager.registerSourceManager(this.youtube);
+            log.info("Registered SolaceAudio native YouTube audio source manager as fallback.");
+        } else {
+            log.warn("A YouTube source is still registered without the SolaceAudio enhancement layer. "
+                    + "oEmbed metadata repair, mirror fallback and disk caching are unavailable for YouTube.");
         }
     }
 
@@ -337,7 +434,8 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
             if (ytConfig.getMirror() != null) {
                 this.youtube.setMirror(ytConfig.getMirror());
             }
-            if (ytConfig.getMirrorProviders() != null && !ytConfig.getMirrorProviders().isEmpty()) {
+            if (ytConfig.getMirrorProviders() != null) {
+                // An empty list means "use the built-in cross-service mirror list".
                 this.youtube.setMirrorProviders(ytConfig.getMirrorProviders());
             }
             if (ytConfig.getLocalDiskCache() != null) {
@@ -348,6 +446,9 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
             }
             if (ytConfig.getCipherUrl() != null && !ytConfig.getCipherUrl().isEmpty()) {
                 this.youtube.setCipherUrl(ytConfig.getCipherUrl());
+            }
+            if (ytConfig.getClientVersions() != null && !ytConfig.getClientVersions().isEmpty()) {
+                applyClientVersionOverrides(ytConfig.getClientVersions());
             }
             if (ytConfig.getMaxDiskCacheMb() != null) {
                 this.youtube.setMaxDiskCacheMb(ytConfig.getMaxDiskCacheMb());
