@@ -21,7 +21,7 @@ repositories {
 
 dependencies {
     compileOnly("dev.arbjerg:lavaplayer:2.0.4")
-    compileOnly("com.fasterxml.jackson.core:jackson-databind:2.17.0")
+    compileOnly("com.fasterxml.jackson.core:jackson-databind:2.22.4")
     compileOnly("org.jetbrains:annotations:24.0.1")
     compileOnly("org.slf4j:slf4j-api:2.0.9")
     implementation("com.github.topi314.lavalyrics:lavalyrics:1.0.0")
