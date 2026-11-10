@@ -30,7 +30,7 @@ tasks {
 
 dependencies {
     compileOnly("com.fasterxml.jackson.core:jackson-databind:2.17.0")
-    compileOnly("org.jetbrains:annotations:24.0.1")
+    compileOnly("org.jetbrains:annotations:26.1.0")
     implementation(project(":solaceaudio-main"))
     implementation("com.github.topi314.lavalyrics:lavalyrics:1.0.0")
 }
