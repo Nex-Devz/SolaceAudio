@@ -17,13 +17,13 @@ public class AtomicSafeCacheManager {
     private volatile boolean enabled = true;
 
     public AtomicSafeCacheManager(Path cacheDir) {
-        this.cacheDir = cacheDir;
+        this.cacheDir = cacheDir.toAbsolutePath().normalize();
         try {
-            if (!Files.exists(cacheDir)) {
-                Files.createDirectories(cacheDir);
+            if (!Files.exists(this.cacheDir)) {
+                Files.createDirectories(this.cacheDir);
             }
         } catch (Exception e) {
-            log.warn("Failed to create cache directory {}. Degrading cache.", cacheDir, e);
+            log.warn("Failed to create cache directory {}. Degrading cache.", this.cacheDir, e);
             this.enabled = false;
         }
     }
@@ -33,14 +33,14 @@ public class AtomicSafeCacheManager {
             return false;
         }
 
-        Path target = cacheDir.resolve(filename).normalize();
-        if (!target.startsWith(cacheDir.toAbsolutePath().normalize()) && !target.startsWith(cacheDir.normalize())) {
+        Path target = cacheDir.resolve(filename).toAbsolutePath().normalize();
+        if (!target.startsWith(cacheDir)) {
             log.warn("Path traversal rejected for cache file: {}", filename);
             return false;
         }
 
-        Path tempFile = cacheDir.resolve(filename + ".part." + UUID.randomUUID()).normalize();
-        if (!tempFile.startsWith(cacheDir.toAbsolutePath().normalize()) && !tempFile.startsWith(cacheDir.normalize())) {
+        Path tempFile = cacheDir.resolve(filename + ".part." + UUID.randomUUID()).toAbsolutePath().normalize();
+        if (!tempFile.startsWith(cacheDir)) {
             return false;
         }
 
@@ -62,8 +62,8 @@ public class AtomicSafeCacheManager {
             return null;
         }
 
-        Path target = cacheDir.resolve(filename).normalize();
-        if (!target.startsWith(cacheDir.toAbsolutePath().normalize()) && !target.startsWith(cacheDir.normalize())) {
+        Path target = cacheDir.resolve(filename).toAbsolutePath().normalize();
+        if (!target.startsWith(cacheDir)) {
             log.warn("Path traversal rejected for cache read: {}", filename);
             return null;
         }

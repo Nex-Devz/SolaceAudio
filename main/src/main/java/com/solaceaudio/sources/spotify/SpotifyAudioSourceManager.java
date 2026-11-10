@@ -312,7 +312,8 @@ public class SpotifyAudioSourceManager extends MirroringSourceManager implements
                     item = this.getSearch(String.format("%s %s", audioTrack.getInfo().title, audioTrack.getInfo().author), false);
                 }
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                log.debug("Spotify search error while loading lyrics: {}", e.getMessage());
+                return null;
             }
 
             if (item == AudioReference.NO_TRACK) {
@@ -330,8 +331,12 @@ public class SpotifyAudioSourceManager extends MirroringSourceManager implements
 
         try {
             return this.getLyrics(spotifyTackId);
-        } catch (IOException | InterruptedException e) {
-            throw new RuntimeException(e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return null;
+        } catch (IOException e) {
+            log.debug("Spotify lyrics fetch error for track {}: {}", spotifyTackId, e.getMessage());
+            return null;
         }
     }
 

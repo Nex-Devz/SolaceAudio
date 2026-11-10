@@ -445,7 +445,11 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
                 this.youtube.setDiskCachePath(ytConfig.getDiskCachePath());
             }
             if (ytConfig.getCipherUrl() != null && !ytConfig.getCipherUrl().isEmpty()) {
-                this.youtube.setCipherUrl(ytConfig.getCipherUrl());
+                if (com.solaceaudio.security.SecurityFilter.isSafeUrl(ytConfig.getCipherUrl())) {
+                    this.youtube.setCipherUrl(ytConfig.getCipherUrl());
+                } else {
+                    log.warn("Blocked potentially unsafe cipherUrl update (SSRF protection): {}", ytConfig.getCipherUrl());
+                }
             }
             if (ytConfig.getClientVersions() != null && !ytConfig.getClientVersions().isEmpty()) {
                 applyClientVersionOverrides(ytConfig.getClientVersions());

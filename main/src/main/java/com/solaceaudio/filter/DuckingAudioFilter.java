@@ -52,6 +52,10 @@ public class DuckingAudioFilter implements FloatPcmAudioFilter {
         this.targetVolume = Math.max(0.0f, Math.min(1.0f, volume));
     }
 
+    public float getDuckedVolume() {
+        return targetVolume;
+    }
+
     public void setNormalVolume(float volume) {
         this.normalVolume = Math.max(0.0f, Math.min(2.0f, volume));
     }

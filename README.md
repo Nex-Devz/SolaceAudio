@@ -14,6 +14,7 @@
   <a href="https://github.com/lavalink-devs/Lavalink"><img src="https://img.shields.io/badge/Lavalink-v4.0+-7928CA?style=for-the-badge&logo=discord&logoColor=white" alt="Lavalink v4" /></a>
   <a href="https://github.com/Nex-Devz/SolaceAudio/releases"><img src="https://img.shields.io/github/v/release/Nex-Devz/SolaceAudio?style=for-the-badge&color=00DF72&logo=semanticrelease&logoColor=white" alt="Latest Release" /></a>
   <a href="https://jitpack.io/#Nex-Devz/SolaceAudio"><img src="https://img.shields.io/badge/JitPack-Artifacts-FF0080?style=for-the-badge&logo=apachemaven&logoColor=white" alt="JitPack" /></a>
+  <a href="https://discord.gg/devz"><img src="https://img.shields.io/badge/Discord-Community_Support-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord Support" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache_2.0-FFB800?style=for-the-badge&logo=apache&logoColor=black" alt="License" /></a>
 </p>
 
