@@ -43,7 +43,7 @@ jobs:
 
       - name: Upload Plugin Artifact
         if: success()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: solaceaudio-plugin
           path: plugin/build/libs/solaceaudio-plugin-*.jar
@@ -52,7 +52,7 @@ jobs:
 
       - name: Upload Test Results on Failure
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: test-results
           path: |
