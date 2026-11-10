@@ -12,6 +12,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   assets are named `solaceaudio-plugin-<version>.jar` instead of
   `solaceaudio-plugin-dev.jar`. The job fails if the built artifact name does
   not match the tag, preventing a mislabelled release.
+- The checked-in plugin descriptor in `lavalink-plugins/` no longer advertises
+  1.0.18 while the released version is 1.0.24. The jar's own descriptor is
+  generated at build time and was always correct.
 
 No runtime or API changes. This release exists only to publish correctly
 versioned release artifacts; 1.0.23 artifacts on JitPack are unaffected.
