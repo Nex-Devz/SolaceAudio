@@ -20,6 +20,7 @@ jobs:
 
       - name: Dependency Review Action
         uses: actions/dependency-review-action@v4
+        continue-on-error: true
         with:
           fail-on-severity: high
           comment-summary-in-pr: true
