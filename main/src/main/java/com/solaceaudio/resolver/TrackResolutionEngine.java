@@ -63,13 +63,11 @@ public class TrackResolutionEngine implements TrackResolutionHandler {
             try {
                 final String searchKey = candidate;
                 AudioItem loaded = singleFlight.execute(searchKey, () -> {
-                    return java.util.concurrent.CompletableFuture.supplyAsync(() -> {
-                        return mirrorTrack.resolveFromProvider(searchKey);
-                    });
+                    return mirrorTrack.resolveFromProviderAsync(searchKey);
                 }).exceptionally(ex -> {
                     log.debug("SingleFlight provider error for [{}]: {}", searchKey, ex.getMessage());
                     return AudioReference.NO_TRACK;
-                }).join();
+                }).get(20, java.util.concurrent.TimeUnit.SECONDS);
 
                 if (loaded == null || loaded == AudioReference.NO_TRACK) {
                     continue;

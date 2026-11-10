@@ -119,7 +119,7 @@ public class SponsorBlockController {
         if (track instanceof YouTubeTrack) {
             return ((YouTubeTrack) track).getVideoId();
         }
-        if ("youtube".equalsIgnoreCase(track.getSourceManager().getSourceName())) {
+        if (track.getSourceManager() != null && "youtube".equalsIgnoreCase(track.getSourceManager().getSourceName())) {
             return track.getIdentifier();
         }
         return null;

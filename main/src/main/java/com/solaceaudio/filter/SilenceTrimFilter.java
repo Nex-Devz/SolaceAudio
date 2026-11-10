@@ -15,11 +15,15 @@ public class SilenceTrimFilter implements FloatPcmAudioFilter {
     private final float thresholdLinear;
     private final float alpha; // Exponential smoothing factor
 
+    private static final int MAX_LEAD_IN_FRAMES = 250; // ~5 seconds max lead-in skip
+
     private boolean leadInTrimmed = false;
+    private int leadInSkippedFrames = 0;
     private float smoothedRms = 0.0f;
     private int consecutiveSilentFrames = 0;
     private final int silentStreakLimit;
     private Consumer<Boolean> silenceListener;
+    private Runnable closeCallback;
 
     /**
      * @param downstream Downstream filter in pipeline
@@ -41,6 +45,10 @@ public class SilenceTrimFilter implements FloatPcmAudioFilter {
 
     public void setSilenceListener(Consumer<Boolean> listener) {
         this.silenceListener = listener;
+    }
+
+    public void setCloseCallback(Runnable callback) {
+        this.closeCallback = callback;
     }
 
     public float getSmoothedRms() {
@@ -65,6 +73,10 @@ public class SilenceTrimFilter implements FloatPcmAudioFilter {
         for (int ch = 0; ch < channelCount; ch++) {
             for (int i = 0; i < length; i++) {
                 float sample = input[ch][offset + i];
+                if (Float.isNaN(sample) || Float.isInfinite(sample)) {
+                    sample = 0.0f;
+                    input[ch][offset + i] = 0.0f;
+                }
                 sumSquares += (sample * sample);
             }
         }
@@ -74,7 +86,8 @@ public class SilenceTrimFilter implements FloatPcmAudioFilter {
 
         // Leading silence trimming
         if (!leadInTrimmed) {
-            if (smoothedRms < thresholdLinear) {
+            leadInSkippedFrames++;
+            if (smoothedRms < thresholdLinear && leadInSkippedFrames < MAX_LEAD_IN_FRAMES) {
                 // Skip silent lead-in chunk
                 return;
             } else {
@@ -102,6 +115,7 @@ public class SilenceTrimFilter implements FloatPcmAudioFilter {
     public void seekPerformed(long requestedTime, long providedTime) {
         // Reset lead-in trimming upon seek
         leadInTrimmed = false;
+        leadInSkippedFrames = 0;
         smoothedRms = 0.0f;
         consecutiveSilentFrames = 0;
         downstream.seekPerformed(requestedTime, providedTime);
@@ -114,6 +128,12 @@ public class SilenceTrimFilter implements FloatPcmAudioFilter {
 
     @Override
     public void close() {
-        downstream.close();
+        try {
+            if (closeCallback != null) {
+                closeCallback.run();
+            }
+        } finally {
+            downstream.close();
+        }
     }
 }

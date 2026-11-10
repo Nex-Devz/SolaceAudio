@@ -1,5 +1,9 @@
 <div align="center">
 
+<p align="center">
+  <img src=".github/assets/banner.jpg" alt="SolaceAudio Banner" width="100%" />
+</p>
+
 # SolaceAudio
 
 ### High-Throughput Audio Ingestion & Playback Engine for Lavalink v4

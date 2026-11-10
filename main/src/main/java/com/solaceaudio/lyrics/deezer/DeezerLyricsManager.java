@@ -147,7 +147,7 @@ public class DeezerLyricsManager implements AudioLyricsManager {
                     if (!text.isBlank()) {
                         lines.add(new BasicAudioLyrics.BasicLine(
                                 Duration.ofMillis(ms),
-                                duration > 0 ? Duration.ofMillis(ms + duration) : null,
+                                duration > 0 ? Duration.ofMillis(duration) : null,
                                 text
                         ));
                     }

@@ -62,7 +62,7 @@ public abstract class AudioMirrorTrack extends SolaceAudioTrack {
         throw new TrackResolutionException("Unable to resolve playable mirror candidate for: " + this.trackInfo.title);
     }
 
-    public AudioItem resolveFromProvider(String identifier) {
+    public CompletableFuture<AudioItem> resolveFromProviderAsync(String identifier) {
         var future = new CompletableFuture<AudioItem>();
         this.sourceManager.getAudioPlayerManager().loadItem(identifier, new AudioLoadResultHandler() {
             @Override
@@ -86,7 +86,16 @@ public abstract class AudioMirrorTrack extends SolaceAudioTrack {
             }
         });
 
-        return future.join();
+        return future;
+    }
+
+    public AudioItem resolveFromProvider(String identifier) {
+        try {
+            return resolveFromProviderAsync(identifier).get(15, java.util.concurrent.TimeUnit.SECONDS);
+        } catch (Exception e) {
+            log.debug("Resolution timed out or failed for identifier {}: {}", identifier, e.getMessage());
+            return AudioReference.NO_TRACK;
+        }
     }
 
     @Override

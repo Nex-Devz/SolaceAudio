@@ -19,8 +19,9 @@ public class DuckingAudioFilter implements FloatPcmAudioFilter {
     private volatile int rampSamples;
 
     private float currentVolume = 1.0f;
-    private long holdCounter = 0;
+    private volatile long holdCounter = 0;
     private long holdDurationSamples;
+    private Runnable closeCallback;
 
     /**
      * @param downstream Downstream audio filter in chain
@@ -33,6 +34,10 @@ public class DuckingAudioFilter implements FloatPcmAudioFilter {
         this.channelCount = channelCount;
         setFadeDurationMs(180);
         setHoldDurationMs(500);
+    }
+
+    public void setCloseCallback(Runnable callback) {
+        this.closeCallback = callback;
     }
 
     public void setFadeDurationMs(int ms) {
@@ -68,26 +73,35 @@ public class DuckingAudioFilter implements FloatPcmAudioFilter {
 
     @Override
     public void process(float[][] input, int offset, int length) throws InterruptedException {
-        float step = (normalVolume - targetVolume) / rampSamples;
+        float step = Math.abs(normalVolume - targetVolume) / rampSamples;
 
         for (int i = 0; i < length; i++) {
             if (duckingActive) {
                 // Attenuate down to targetVolume
                 if (currentVolume > targetVolume) {
                     currentVolume = Math.max(targetVolume, currentVolume - step);
+                } else if (currentVolume < targetVolume) {
+                    currentVolume = Math.min(targetVolume, currentVolume + step);
                 }
             } else {
                 // Holding period before releasing
-                if (holdCounter > 0) {
-                    holdCounter--;
+                long hc = holdCounter;
+                if (hc > 0) {
+                    holdCounter = hc - 1;
                 } else if (currentVolume < normalVolume) {
                     currentVolume = Math.min(normalVolume, currentVolume + step);
+                } else if (currentVolume > normalVolume) {
+                    currentVolume = Math.max(normalVolume, currentVolume - step);
                 }
             }
 
-            // Apply gain scalar to all channels
+            // Apply gain scalar to all channels, sanitizing NaN/Infinity
             for (int ch = 0; ch < channelCount; ch++) {
-                input[ch][offset + i] *= currentVolume;
+                float sample = input[ch][offset + i];
+                if (Float.isNaN(sample) || Float.isInfinite(sample)) {
+                    sample = 0.0f;
+                }
+                input[ch][offset + i] = sample * currentVolume;
             }
         }
 
@@ -106,6 +120,12 @@ public class DuckingAudioFilter implements FloatPcmAudioFilter {
 
     @Override
     public void close() {
-        downstream.close();
+        try {
+            if (closeCallback != null) {
+                closeCallback.run();
+            }
+        } finally {
+            downstream.close();
+        }
     }
 }

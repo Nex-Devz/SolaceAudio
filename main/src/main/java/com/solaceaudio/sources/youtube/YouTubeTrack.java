@@ -335,6 +335,10 @@ public class YouTubeTrack extends DelegatedAudioTrack {
                 HttpResponse<InputStream> response = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
                 if (response.statusCode() != 200 && response.statusCode() != 206) {
                     log.debug("Stream fetch returned HTTP {} for {} on url {}, trying fallback format", response.statusCode(), videoId, currentUrl);
+                    try {
+                        response.body().close();
+                    } catch (Exception ignored) {
+                    }
                     continue;
                 }
 
@@ -416,6 +420,11 @@ public class YouTubeTrack extends DelegatedAudioTrack {
                     } else {
                         log.debug("Cache download corrupt or incomplete for track {}, discarding", videoId);
                         partFile.delete();
+                    }
+                } else {
+                    try {
+                        response.body().close();
+                    } catch (Exception ignored) {
                     }
                 }
             } catch (Exception ignored) {

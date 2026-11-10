@@ -2,6 +2,7 @@ package com.solaceaudio.sources.youtube.sponsorblock;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.solaceaudio.core.MemoryCacheManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,7 +14,7 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
  * Handles automated querying and tracking of YouTube non-music and sponsorship segments
@@ -26,8 +27,9 @@ public class SponsorBlockManager {
 
     private final HttpClient httpClient;
     private final ObjectMapper mapper;
-    private final Map<String, List<Segment>> cache = new ConcurrentHashMap<>();
-    private final Set<String> enabledCategories = new HashSet<>(Arrays.asList(
+    private final MemoryCacheManager<List<Segment>> cache =
+            new MemoryCacheManager<>(500, Duration.ofHours(2).toMillis());
+    private final Set<String> enabledCategories = new CopyOnWriteArraySet<>(Arrays.asList(
             "sponsor", "intro", "outro", "music_offtopic"
     ));
     private volatile boolean enabled = true;
@@ -39,10 +41,14 @@ public class SponsorBlockManager {
     }
 
     public SponsorBlockManager(boolean enabled) {
-        this.enabled = enabled;
-        this.httpClient = HttpClient.newBuilder()
+        this(enabled, HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(4))
-                .build();
+                .build());
+    }
+
+    public SponsorBlockManager(boolean enabled, HttpClient httpClient) {
+        this.enabled = enabled;
+        this.httpClient = httpClient;
         this.mapper = new ObjectMapper();
     }
 
@@ -63,13 +69,27 @@ public class SponsorBlockManager {
         if (categories != null) {
             this.enabledCategories.addAll(categories);
         }
+        this.cache.clear();
+    }
+
+    public void clearCache() {
+        this.cache.clear();
     }
 
     public List<Segment> getSegments(String videoId) {
         if (!enabled || videoId == null || videoId.isBlank()) {
             return Collections.emptyList();
         }
-        return cache.computeIfAbsent(videoId, this::fetchSegments);
+        String key = videoId.trim();
+        List<Segment> cached = cache.get(key);
+        if (cached != null) {
+            return cached;
+        }
+        List<Segment> fetched = fetchSegments(key);
+        if (fetched != null && !fetched.isEmpty()) {
+            cache.put(key, fetched);
+        }
+        return fetched != null ? fetched : Collections.emptyList();
     }
 
     private List<Segment> fetchSegments(String videoId) {
@@ -105,9 +125,11 @@ public class SponsorBlockManager {
                 if (timeRange.isArray() && timeRange.size() >= 2) {
                     long start = (long) (timeRange.get(0).asDouble() * 1000);
                     long end = (long) (timeRange.get(1).asDouble() * 1000);
-                    String category = item.path("category").asText("sponsor");
-                    String uuid = item.path("UUID").asText(null);
-                    list.add(new Segment(start, end, category, uuid));
+                    if (start >= 0 && end > start) {
+                        String category = item.path("category").asText("sponsor");
+                        String uuid = item.path("UUID").asText(null);
+                        list.add(new Segment(start, end, category, uuid));
+                    }
                 }
             }
             if (!list.isEmpty()) {
@@ -134,7 +156,8 @@ public class SponsorBlockManager {
         }
         List<Segment> segments = getSegments(videoId);
         for (Segment seg : segments) {
-            if (positionMs >= (seg.startMs - marginMs) && positionMs < seg.endMs) {
+            long effectiveStart = Math.max(0, seg.startMs - marginMs);
+            if (positionMs >= effectiveStart && positionMs < seg.endMs) {
                 return OptionalLong.of(seg.endMs);
             }
         }
