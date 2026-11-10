@@ -18,10 +18,11 @@ java {
     targetCompatibility = JavaVersion.VERSION_17
 }
 
+tasks.withType<JavaCompile> {
+    options.encoding = "UTF-8"
+}
+
 tasks {
-    compileJava {
-        options.encoding = "UTF-8"
-    }
     jar {
         mustRunAfter(":solaceaudio-main:compileTestJava")
     }

@@ -8,10 +8,8 @@ java {
     targetCompatibility = JavaVersion.VERSION_17
 }
 
-tasks {
-    compileJava {
-        options.encoding = "UTF-8"
-    }
+tasks.withType<JavaCompile> {
+    options.encoding = "UTF-8"
 }
 
 repositories {
@@ -36,6 +34,7 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+    systemProperty("file.encoding", "UTF-8")
     // Allow opt-in network diagnostics to be triggered with -Dsolace.yt.probe=true
     listOf("solace.yt.probe").forEach { key ->
         (System.getProperty(key))?.let { systemProperty(key, it) }

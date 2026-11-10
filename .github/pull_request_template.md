@@ -7,7 +7,7 @@
 <!-- Reference any related issue (e.g. Fixes #12) -->
 
 ### Checklist
-- [ ] Code compiles cleanly with `./gradlew build -x test`.
+- [ ] Code compiles cleanly and passes unit tests with `./gradlew build`.
 - [ ] Tested on a live Lavalink v4 instance.
 - [ ] Preserved backward compatibility with existing configuration keys.
 - [ ] Adheres to existing code conventions and package hierarchy.

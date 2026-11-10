@@ -5,18 +5,19 @@
 ### High-Throughput Audio Ingestion & Playback Engine for Lavalink v4
 
 <p align="center">
+  <a href="https://github.com/Nex-Devz/SolaceAudio/actions/workflows/build.yml"><img src="https://img.shields.io/github/actions/workflow/status/Nex-Devz/SolaceAudio/build.yml?branch=main&style=for-the-badge&logo=github&label=CI%20Build" alt="CI Build Status" /></a>
   <a href="https://adoptium.net"><img src="https://img.shields.io/badge/Runtime-Java_17+-00E5FF?style=for-the-badge&logo=openjdk&logoColor=black" alt="Java 17+" /></a>
   <a href="https://github.com/lavalink-devs/Lavalink"><img src="https://img.shields.io/badge/Lavalink-v4.0+-7928CA?style=for-the-badge&logo=discord&logoColor=white" alt="Lavalink v4" /></a>
-  <a href="https://github.com/Nex-Devz/SolaceAudio/releases"><img src="https://img.shields.io/badge/Release-v1.0.24-00DF72?style=for-the-badge" alt="Release" /></a>
-  <a href="https://jitpack.io/#Nex-Devz/SolaceAudio"><img src="https://img.shields.io/badge/JitPack-Artifacts-FF0080?style=for-the-badge" alt="JitPack" /></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache_2.0-FFB800?style=for-the-badge" alt="License" /></a>
+  <a href="https://github.com/Nex-Devz/SolaceAudio/releases"><img src="https://img.shields.io/github/v/release/Nex-Devz/SolaceAudio?style=for-the-badge&color=00DF72&logo=semanticrelease&logoColor=white" alt="Latest Release" /></a>
+  <a href="https://jitpack.io/#Nex-Devz/SolaceAudio"><img src="https://img.shields.io/badge/JitPack-Artifacts-FF0080?style=for-the-badge&logo=apachemaven&logoColor=white" alt="JitPack" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache_2.0-FFB800?style=for-the-badge&logo=apache&logoColor=black" alt="License" /></a>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Status-Production_Ready-00E5FF?style=flat-square" />
-  <img src="https://img.shields.io/badge/Architecture-Non--Blocking_Async-7928CA?style=flat-square" />
-  <img src="https://img.shields.io/badge/YouTube_Engine-VisionOS_|_Web_Remix-FF0080?style=flat-square" />
-  <img src="https://img.shields.io/badge/Audio_Cache-Zero--Overhead_Atomic-00DF72?style=flat-square" />
+  <a href="https://github.com/Nex-Devz/SolaceAudio/stargazers"><img src="https://img.shields.io/github/stars/Nex-Devz/SolaceAudio?style=flat-square&logo=github&color=FFD700" alt="GitHub Stars" /></a>
+  <a href="https://github.com/Nex-Devz/SolaceAudio/network/members"><img src="https://img.shields.io/github/forks/Nex-Devz/SolaceAudio?style=flat-square&logo=github&color=blue" alt="GitHub Forks" /></a>
+  <a href="https://github.com/Nex-Devz/SolaceAudio/issues"><img src="https://img.shields.io/github/issues/Nex-Devz/SolaceAudio?style=flat-square&color=orange" alt="GitHub Issues" /></a>
+  <a href="https://github.com/Nex-Devz/SolaceAudio/pulls"><img src="https://img.shields.io/github/issues-pr/Nex-Devz/SolaceAudio?style=flat-square&color=green" alt="GitHub Pull Requests" /></a>
 </p>
 
 <p align="center">
@@ -27,15 +28,30 @@
   <a href="#system-architecture">Architecture</a> &bull;
   <a href="#source-matrix">Source Matrix</a> &bull;
   <a href="#quick-start">Quick Start</a> &bull;
+  <a href="#configuration-reference">Configuration</a> &bull;
   <a href="#anti-throttling-subsystems">Bypass Engine</a> &bull;
-  <a href="#amazon-music-metadata-api">Amazon Music API</a> &bull;
   <a href="#scoring-pipeline">Scoring Pipeline</a> &bull;
+  <a href="#management-endpoints">Management APIs</a> &bull;
+  <a href="#star-history">Star History</a> &bull;
   <a href="#credits--acknowledgements">Credits</a>
 </p>
 
 ---
 
 </div>
+
+## Key Features
+
+* **Single-Flight Search Coalescing**: Lock-free atomic futures deduplicate identical concurrent search requests, eliminating upstream burst spikes during mass queue additions.
+* **Atomic Disk Caching**: Zero-copy streaming audio pass-through with transactional `.part` swaps enables instantaneous repeated playback with zero memory leak risk or database dependencies.
+* **Deterministic Levenshtein Candidate Scoring**: Mathematical evaluation combining Levenshtein distance, duration delta matching ($\pm 2$s), and penalty term filtering to eliminate low-grade covers, acoustic versions, and music video rips.
+* **Multilingual Unicode & Indic Matra Preservation**: Cleans metadata noise while strictly preserving non-Latin scripts (Devanagari, Gurmukhi, Kanji, Cyrillic, Arabic, Tamil) and vowel signs.
+* **Autonomous Cascade Failover Ladder**: Automatic provider failover chain (Deezer Blowfish $\to$ YouTube Music $\to$ SoundCloud $\to$ Bandcamp) ensuring high availability even if an upstream source goes down.
+* **Rolling SAPISIDHASH & Dynamic PoToken Routing**: Computes rolling authorization headers in memory and integrates auto-rotating Proof-of-Origin token pipelines to bypass datacenter IP restrictions.
+* **Real-Time DSP Filters**: In-process 32-bit `FloatPcmAudioFilter` providing seamless gain ducking during voice activity and exponential moving average (EMA) silence trimming.
+* **Synchronized Lyrics Aggregation**: Unified time-stamped LRC and plain text lyrics engine aggregating LRCLIB, Deezer GraphQL, Genius, and Spotify without required API keys.
+
+---
 
 ## System Architecture
 
@@ -56,7 +72,7 @@ SolaceAudio is engineered from the ground up to solve upstream rate-limiting, IP
       <td>Eliminates upstream burst spikes during automated queue ingestion</td>
     </tr>
     <tr>
-      <td><b>oEmbed Resolution & Multilingual Normalization</b></td>
+      <td><b>oEmbed Resolution & Script Normalization</b></td>
       <td>Lightweight JSON oEmbed fallback coupled with Unicode script & Indic matra preservation</td>
       <td>Guarantees 100% accurate metadata extraction for direct URLs even when datacenter IPs are blocked</td>
     </tr>
@@ -90,19 +106,19 @@ SolaceAudio is engineered from the ground up to solve upstream rate-limiting, IP
 <div align="center">
 
 | Provider | Ingestion Mode | Stream Output | Authentication Pipeline | Status |
-| :--- | :--- | :--- | :--- | :--- |
-| **Spotify** | ISRC & Metadata Mirror | 320kbps / 160kbps MP3/Opus | Nuance Metadata Schema | ![Active](https://img.shields.io/badge/Online-00DF72?style=flat-square) |
-| **Apple Music** | `amsearch:`, Albums, Playlists | High-Fidelity Audio Mirror | Auto-scraped Developer Bearer Token | ![Active](https://img.shields.io/badge/Online-00DF72?style=flat-square) |
-| **YouTube** | VisionOS / Cobalt TV / TvCast / Web | 160kbps Opus / AAC | Zero-BotGuard TV Downgrade & PoToken | ![Active](https://img.shields.io/badge/Online-00DF72?style=flat-square) |
-| **Deezer** | Direct Blowfish Decryption | Direct 320kbps MP3 / FLAC | In-Process Blowfish-CBC & Optional ARL | ![Active](https://img.shields.io/badge/Online-00DF72?style=flat-square) |
-| **JioSaavn** | Native Audio Extraction | Up to 320kbps MP4 Container | Public CDN Edge | ![Active](https://img.shields.io/badge/Online-00DF72?style=flat-square) |
-| **Gaana** | Native Chunked Stream | Master CDN HLS Transport | Public Stream Endpoint | ![Active](https://img.shields.io/badge/Online-00DF72?style=flat-square) |
-| **Amazon Music** | Metadata Cross-Resolution | High-Fidelity Mirror | Public Search Pipeline | ![Active](https://img.shields.io/badge/Online-00DF72?style=flat-square) |
-| **Pandora** | Direct Stream Resolution | Adaptive Bitrate AAC | None Required | ![Active](https://img.shields.io/badge/Online-00DF72?style=flat-square) |
-| **FloweryTTS** | Real-time Neural Synthesis | Uncompressed PCM Audio | Public API Pipeline | ![Active](https://img.shields.io/badge/Online-00DF72?style=flat-square) |
-| **Last.fm** | Contextual Recommendation Graph | Algorithmic Metadata | Optional API Key | ![Active](https://img.shields.io/badge/Online-00DF72?style=flat-square) |
-| **Synced Lyrics** | LRCLIB / Deezer / Genius / Spotify | Time-stamped LRC & Text | Zero-Auth Auto Fallback Engine | ![Active](https://img.shields.io/badge/Online-00DF72?style=flat-square) |
-| **SponsorBlock** | Non-Music Segment Elimination | Gapless Audio Playback | Official SponsorBlock API & Cache | ![Active](https://img.shields.io/badge/Online-00DF72?style=flat-square) |
+| :--- | :--- | :--- | :--- | :---: |
+| **Spotify** | ISRC & Metadata Mirror | 320kbps / 160kbps MP3 / Opus | Nuance Metadata Schema | ![Online](https://img.shields.io/badge/Online-00DF72?style=flat-square) |
+| **Apple Music** | `amsearch:`, Albums, Playlists | High-Fidelity Audio Mirror | Auto-scraped Developer Bearer Token | ![Online](https://img.shields.io/badge/Online-00DF72?style=flat-square) |
+| **YouTube** | VisionOS / Cobalt TV / TvCast / Web | 160kbps Opus / AAC | Zero-BotGuard TV Downgrade & PoToken | ![Online](https://img.shields.io/badge/Online-00DF72?style=flat-square) |
+| **Deezer** | Direct Blowfish Decryption | Direct 320kbps MP3 / FLAC | In-Process Blowfish-CBC & Optional ARL | ![Online](https://img.shields.io/badge/Online-00DF72?style=flat-square) |
+| **JioSaavn** | Native Audio Extraction | Up to 320kbps MP4 Container | Public CDN Edge | ![Online](https://img.shields.io/badge/Online-00DF72?style=flat-square) |
+| **Gaana** | Native Chunked Stream | Master CDN HLS Transport | Public Stream Endpoint | ![Online](https://img.shields.io/badge/Online-00DF72?style=flat-square) |
+| **Amazon Music** | Metadata Cross-Resolution | High-Fidelity Mirror | Public Search Pipeline | ![Online](https://img.shields.io/badge/Online-00DF72?style=flat-square) |
+| **Pandora** | Direct Stream Resolution | Adaptive Bitrate AAC | None Required | ![Online](https://img.shields.io/badge/Online-00DF72?style=flat-square) |
+| **FloweryTTS** | Real-time Neural Synthesis | Uncompressed PCM Audio | Public Neural Speech API | ![Online](https://img.shields.io/badge/Online-00DF72?style=flat-square) |
+| **Last.fm** | Contextual Recommendation Graph | Algorithmic Metadata | Optional API Key | ![Online](https://img.shields.io/badge/Online-00DF72?style=flat-square) |
+| **Synced Lyrics** | LRCLIB / Deezer / Genius / Spotify | Time-stamped LRC & Text | Zero-Auth Auto Fallback Engine | ![Online](https://img.shields.io/badge/Online-00DF72?style=flat-square) |
+| **SponsorBlock** | Non-Music Segment Elimination | Gapless Audio Playback | Official SponsorBlock API & Cache | ![Online](https://img.shields.io/badge/Online-00DF72?style=flat-square) |
 
 </div>
 
@@ -126,13 +142,51 @@ lavalink:
       snapshot: true
 ```
 
+> [!NOTE]
 > **Why the snapshot?** The `1.18.x` release line of the official plugin still ships InnerTube
 > client versions that YouTube rejects with HTTP 400 (`ANDROID 19.44.38`, `IOS 19.45.4`), which
-> breaks playback. The pinned snapshot carries the current client versions. Pin the exact
-> youtube-plugin version you want to run - SolaceAudio works with either the official plugin or
+> breaks playback. The pinned snapshot carries current client versions. Pin the exact
+> youtube-plugin version you want to run &mdash; SolaceAudio works with either the official plugin or
 > its own built-in source.
 
-### 2. Comprehensive Configuration
+### 2. Standalone Library Dependency (Gradle / Maven)
+
+For developers building standalone Java applications with `solaceaudio-main`:
+
+#### Gradle (`build.gradle.kts`)
+```kotlin
+repositories {
+    mavenCentral()
+    maven("https://jitpack.io")
+    maven("https://maven.lavalink.dev/releases")
+}
+
+dependencies {
+    implementation("com.github.Nex-Devz.SolaceAudio:solaceaudio-main:1.0.24")
+}
+```
+
+#### Maven (`pom.xml`)
+```xml
+<repositories>
+  <repository>
+    <id>jitpack.io</id>
+    <url>https://jitpack.io</url>
+  </repository>
+</repositories>
+
+<dependencies>
+  <dependency>
+    <groupId>com.github.Nex-Devz.SolaceAudio</groupId>
+    <artifactId>solaceaudio-main</artifactId>
+    <version>1.0.24</version>
+  </dependency>
+</dependencies>
+```
+
+---
+
+## Configuration Reference
 
 ```yaml
 plugins:
@@ -146,6 +200,7 @@ plugins:
       amazonmusic: true
       pandora: true
       flowerytts: true
+      applemusic: true
 
     # Priority mirror ladder
     providers:
@@ -158,24 +213,13 @@ plugins:
     youtube:
       oembed: true             # Lightweight metadata resolution fallback (bypasses datacenter bot blocks)
       mirror: true             # Automatic audio mirror fallback when direct playback is restricted
-      # Mirror providers are tried in order when direct YouTube playback fails. Leave empty to
-      # use the built-in cross-service list (Spotify, Deezer, JioSaavn, Apple Music) - those are
-      # the only providers that can rescue a track when YouTube itself is unreachable.
-      # Supported placeholders: %QUERY% / {query} and %ISRC% / {isrc}.
-      mirrorProviders: []
-      # Use SolaceAudio's built-in YouTube source instead of the official youtube-plugin.
-      nativeSource: false
-      # Override the InnerTube client versions, keyed by client name. YouTube rejects outdated
-      # client versions without notice; this lets a broken client be repaired from config
-      # instead of waiting for a plugin release.
-      # clientVersions:
-      #   ANDROID: "21.02.35"
-      #   IOS: "21.32.4"
-      localDiskCache: true
+      mirrorProviders: []      # Empty defaults to built-in cross-service list (Spotify, Deezer, JioSaavn, Apple Music)
+      nativeSource: false      # Set true to use built-in YouTube source instead of youtube-plugin
+      localDiskCache: true     # Zero-overhead atomic disk cache
       diskCachePath: "youtube-cache"
-      maxDiskCacheMb: 10240
+      maxDiskCacheMb: 10240    # 10 GB cache quota
       cipherUrl: "https://cipher.kikkia.dev"
-      cookieFile: "ytburner.txt"
+      cookieFile: "ytburner.txt" # Recommended for datacenter IPs (Hetzner, OVH, etc.)
       potokenUrl: "https://potoken-generator.vercel.app/token"
 
     spotify:
@@ -184,15 +228,56 @@ plugins:
       albumLoadLimit: 6
       resolveArtistsInSearch: true
 
-    flowerytts:
-      voice: "en-US-Standard-A"
-      speed: 1.0
+    applemusic:
+      countryCode: "us"
+      playlistLoadLimit: 50
+      albumLoadLimit: 50
+      artistLoadLimit: 50
+
+    deezer:
+      apiUrl: "https://api.deezer.com"
+      arl: ""                  # Optional Deezer ARL cookie for 320kbps / FLAC
+      masterKey: "g4el58wc0zvf9na1"
+      playlistLoadLimit: 50
+      albumLoadLimit: 50
+      artistLoadLimit: 50
+
+    jiosaavn:
+      apiUrl: "https://www.jiosaavn.com/api.php"
+      playlistLoadLimit: 50
+
+    gaana:
+      apiUrl: "https://gaana-plugin-api.vercel.app/api"
+      playlistLoadLimit: 50
+      albumLoadLimit: 50
+      artistLoadLimit: 50
 
     amazonmusic:
       apiUrl: "https://amazon-music-api-dun.vercel.app/api"
       playlistLoadLimit: 50
       albumLoadLimit: 50
       artistLoadLimit: 50
+
+    flowerytts:
+      voice: "en-US-Standard-A"
+      speed: 1.0
+
+    lyrics:
+      enabled: true
+      sources:
+        - "lrclib"
+        - "deezer"
+        - "genius"
+        - "spotify"
+
+    sponsorblock:
+      enabled: true
+      categories:
+        - "sponsor"
+        - "selfpromo"
+        - "interaction"
+        - "intro"
+        - "outro"
 ```
 
 ---
@@ -201,7 +286,7 @@ plugins:
 
 ### Rolling SAPISIDHASH Header Generation
 
-For nodes hosted on hostile datacenter networks (Hetzner, OVH, DigitalOcean, Pterodactyl), provide your burner cookie in `ytburner.txt` or configure `cookieFile: "ytburner.txt"`.
+For nodes hosted on datacenter networks (Hetzner, OVH, DigitalOcean, Pterodactyl), provide your burner cookie in `ytburner.txt` or configure `cookieFile: "ytburner.txt"`.
 
 SolaceAudio computes real-time cryptographic `SAPISIDHASH` headers in memory for every outgoing request to `WEB_REMIX`, ensuring uninterrupted direct audio extraction without bot challenge penalties.
 
@@ -211,7 +296,7 @@ When direct YouTube links are passed to Lavalink on datacenter IPs, YouTube's `/
 
 1. **Lightweight oEmbed Resolution**: Fetches title, author, and channel metadata via public oEmbed endpoints without triggering bot friction or requiring authentication.
 2. **Multilingual Script Normalization**: Cleans title noise tags while preserving full Unicode scripts (Devanagari, Gurmukhi, Tamil, Japanese, Cyrillic, Arabic, etc.) and vowel marks (matras).
-3. **Deterministic Mirror Selection**: If direct streaming fails due to datacenter IP restrictions, SolaceAudio automatically resolves and scores mirror candidates across YouTube Music and SoundCloud, preventing generic audio degradation.
+3. **Deterministic Mirror Selection**: If direct streaming fails due to datacenter IP restrictions, SolaceAudio automatically resolves and scores mirror candidates across YouTube Music, Deezer, and SoundCloud.
 
 ### Proof-of-Origin Token (PoToken) Routing
 
@@ -235,7 +320,7 @@ Source repository: [Nex-Devz/potoken-generator](https://github.com/Nex-Devz/poto
 
 ---
 
-## 🎧 Amazon Music Metadata API
+## Amazon Music Metadata API
 
 SolaceAudio mirrors Amazon Music track, album, playlist, and community playlist metadata through our official high-availability serverless API adapter.
 
@@ -322,6 +407,62 @@ Content-Type: application/json
 
 * **Voice Auto-Ducking**: High-performance `FloatPcmAudioFilter` providing seamless gain attenuation when voice activity is detected, ramping back to unity gain artifact-free.
 * **Silence Trimming**: Continuous exponential moving average (EMA) energy detector that eliminates awkward lead-in dead air and flags trailing silence for instantaneous queue transitions.
+
+---
+
+## Troubleshooting & FAQ
+
+<details>
+<summary><b>YouTube streams return HTTP 403 Forbidden or 429 Too Many Requests</b></summary>
+<br/>
+Datacenter IP ranges are heavily monitored by YouTube. To resolve this:
+<ol>
+  <li>Provide a burner cookie file in your Lavalink root directory (<code>ytburner.txt</code>) and configure <code>cookieFile: "ytburner.txt"</code>.</li>
+  <li>Ensure <code>potokenUrl: "https://potoken-generator.vercel.app/token"</code> is active in your configuration.</li>
+  <li>Enable <code>youtube.mirror: true</code> so SolaceAudio automatically falls back to Deezer or alternative sources if direct streaming is restricted.</li>
+</ol>
+</details>
+
+<details>
+<summary><b>Lavalink logs warn: "Release jar is named dev"</b></summary>
+<br/>
+When building locally without a Git tag, Gradle defaults the artifact version to <code>dev</code>. In production releases or CI, setting the environment variable <code>VERSION=1.0.24</code> produces <code>solaceaudio-plugin-1.0.24.jar</code>.
+</details>
+
+<details>
+<summary><b>Disk cache is growing too large</b></summary>
+<br/>
+Adjust <code>maxDiskCacheMb</code> under <code>plugins.solaceaudio.youtube</code> in your <code>application.yml</code>. SolaceAudio automatically purges the least recently used cached tracks when the storage threshold is reached.
+</details>
+
+---
+
+## Star History
+
+<div align="center">
+
+<a href="https://star-history.com/#Nex-Devz/SolaceAudio&Date">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=Nex-Devz/SolaceAudio&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=Nex-Devz/SolaceAudio&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=Nex-Devz/SolaceAudio&type=Date" width="100%" />
+ </picture>
+</a>
+
+</div>
+
+---
+
+## Contributing
+
+Contributions, bug reports, and pull requests are welcomed. Please refer to [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md) for code conventions and security disclosure policies.
+
+1. Fork the repository.
+2. Create your feature branch (`git checkout -b feature/improvement`).
+3. Commit your changes (`git commit -m 'feat: improve resolver resilience'`).
+4. Ensure tests pass cleanly with `./gradlew build`.
+5. Push to your branch (`git push origin feature/improvement`).
+6. Open a [Pull Request](https://github.com/Nex-Devz/SolaceAudio/pulls).
 
 ---
 

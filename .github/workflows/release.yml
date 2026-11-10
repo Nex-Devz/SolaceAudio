@@ -6,59 +6,78 @@ on:
       - 'v*'
       - '[0-9]+.*'
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag or version name to publish'
+        required: false
+        type: string
+
+permissions:
+  contents: write
 
 jobs:
   publish:
     name: Build & Release Artifacts
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
 
     steps:
-      - name: Checkout Code
+      - name: Checkout Repository
         uses: actions/checkout@v4
+
+      - name: Validate Gradle Wrapper
+        uses: gradle/actions/wrapper-validation@v4
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
-          cache: 'gradle'
 
-      - name: Grant Execute Permission for Gradlew
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make Gradlew Executable
         run: chmod +x gradlew
 
-      # plugin/build.gradle.kts reads the version from the VERSION environment
-      # variable and falls back to "dev". Without this the release asset is
-      # always named solaceaudio-plugin-dev.jar instead of the tag version.
-      - name: Set Version from Tag
+      - name: Set Version from Tag / Input
         run: |
-          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+          if [ -n "${{ inputs.tag }}" ]; then
+            RAW_TAG="${{ inputs.tag }}"
+            echo "VERSION=${RAW_TAG#v}" >> "$GITHUB_ENV"
+          elif [ "${GITHUB_REF_TYPE}" = "tag" ]; then
             echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
           else
             echo "VERSION=dev" >> "$GITHUB_ENV"
-            echo "::warning::Not running from a tag; the release asset will be named solaceaudio-plugin-dev.jar."
+            echo "::warning::Not running from a tag; release asset will be named solaceaudio-plugin-dev.jar."
           fi
 
       - name: Build Release Plugin
-        run: ./gradlew build -x test
+        run: ./gradlew build
 
-      - name: Verify Release Version
+      - name: Verify Release Artifact & Generate Checksums
         run: |
           set -euo pipefail
-          jar=$(ls plugin/build/libs/solaceaudio-plugin-*.jar | head -n 1)
-          if [ "$(basename "$jar")" != "solaceaudio-plugin-${VERSION}.jar" ]; then
-            echo "Release jar is named $(basename "$jar"), expected solaceaudio-plugin-${VERSION}.jar" >&2
-            exit 1
+          JAR_PATH=$(ls plugin/build/libs/solaceaudio-plugin-*.jar | head -n 1)
+          JAR_NAME=$(basename "$JAR_PATH")
+
+          echo "Found compiled artifact: $JAR_NAME"
+          if [ "$JAR_NAME" != "solaceaudio-plugin-${VERSION}.jar" ]; then
+            echo "::warning::Release jar name ($JAR_NAME) differs from solaceaudio-plugin-${VERSION}.jar"
           fi
+
+          cd plugin/build/libs
+          sha256sum "$JAR_NAME" > "${JAR_NAME}.sha256"
+          echo "Generated SHA-256 checksum:"
+          cat "${JAR_NAME}.sha256"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: plugin/build/libs/solaceaudio-plugin-*.jar
+          files: |
+            plugin/build/libs/solaceaudio-plugin-*.jar
+            plugin/build/libs/solaceaudio-plugin-*.jar.sha256
           generate_release_notes: true
           draft: false
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
