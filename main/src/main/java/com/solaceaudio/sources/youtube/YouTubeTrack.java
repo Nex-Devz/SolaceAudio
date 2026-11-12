@@ -268,7 +268,6 @@ public class YouTubeTrack extends DelegatedAudioTrack {
 
         if (targetFile == null) {
             log.debug("Cache miss for track {}", videoId);
-            com.solaceaudio.metrics.SolaceAudioMetrics.recordCacheRequest("disk", false);
             return false;
         }
 
@@ -283,7 +282,6 @@ public class YouTubeTrack extends DelegatedAudioTrack {
         }
 
         log.debug("Cache hit for track {}", videoId);
-        com.solaceaudio.metrics.SolaceAudioMetrics.recordCacheRequest("disk", true);
         try (FileInputStream fis = new FileInputStream(targetFile)) {
             targetFile.setLastModified(System.currentTimeMillis());
             if (sidecarFile.exists()) {

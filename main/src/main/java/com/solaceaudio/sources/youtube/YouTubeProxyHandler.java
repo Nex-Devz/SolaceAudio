@@ -255,10 +255,8 @@ public class YouTubeProxyHandler {
         StreamResult cached = streamCache.get(videoId);
         if (cached != null && !isStreamExpired(cached.url)) {
             log.debug("Stream cache hit for video {}", videoId);
-            com.solaceaudio.metrics.SolaceAudioMetrics.recordCacheRequest("stream", true);
             return cached;
         }
-        com.solaceaudio.metrics.SolaceAudioMetrics.recordCacheRequest("stream", false);
 
         StreamResult res = tryInnertubeClients(videoId);
         if (res == null) {
@@ -544,7 +542,6 @@ public class YouTubeProxyHandler {
                 StreamResult result = pickBestAudioFormat(formats, client);
                 if (result != null) {
                     candidate.markSuccess();
-                    com.solaceaudio.metrics.SolaceAudioMetrics.recordClientRequest(client.getClientName(), true);
                     return result;
                 } else if (isCipherServiceDown()) {
                     // The cipher service is shared by every client, so this says nothing about
@@ -555,12 +552,10 @@ public class YouTubeProxyHandler {
                     continue;
                 } else {
                     candidate.markFailure(DEFAULT_COOLDOWN_MS / 4);
-                    com.solaceaudio.metrics.SolaceAudioMetrics.recordClientRequest(client.getClientName(), false);
                 }
             } catch (Exception e) {
                 log.debug("Client {} threw exception while fetching player: {}", client.getClientName(), e.getMessage());
                 candidate.markFailure(DEFAULT_COOLDOWN_MS);
-                com.solaceaudio.metrics.SolaceAudioMetrics.recordClientRequest(client.getClientName(), false);
             }
         }
         return null;
@@ -1024,19 +1019,15 @@ public class YouTubeProxyHandler {
                     .POST(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(body)))
                     .build();
 
-            long startMs = System.currentTimeMillis();
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() == 200 && response.body() != null) {
                 JsonNode resJson = mapper.readTree(response.body());
                 if (resJson.has("resolved_url")) {
-                    com.solaceaudio.metrics.SolaceAudioMetrics.recordCipherRequest(true, System.currentTimeMillis() - startMs);
                     return resJson.get("resolved_url").asText();
                 }
             }
-            com.solaceaudio.metrics.SolaceAudioMetrics.recordCipherRequest(false, System.currentTimeMillis() - startMs);
             log.debug("Cipher service did not resolve the stream URL (HTTP {}).", response.statusCode());
         } catch (Exception e) {
-            com.solaceaudio.metrics.SolaceAudioMetrics.recordCipherRequest(false, 0);
             log.debug("Cipher service unreachable while resolving stream URL: {}", e.getMessage());
         }
         // Returning the unresolved URL here would hand the caller a throttled signature that
