@@ -4,6 +4,39 @@ All notable changes to SolaceAudio are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.25] - 2026-11-12
+
+### Added
+
+- **Prometheus & Micrometer Metrics Subsystem**: Embedded `SolaceAudioMetrics` facade automatically binds Lavalink v4's Spring Boot Actuator `MeterRegistry`, exporting:
+  - `solaceaudio_client_requests_total`: InnerTube client request counts partitioned by client and status.
+  - `solaceaudio_mirror_resolutions_total`: Cross-service mirror resolution counts partitioned by provider and status.
+  - `solaceaudio_cache_requests_total`: Hits and misses across stream cache, SponsorBlock, and local disk cache.
+  - `solaceaudio_cipher_requests_total` & `solaceaudio_cipher_duration_seconds`: Performance and latency tracking for remote cipher services.
+  - `solaceaudio_active_filters`: Live gauges monitoring active DSP filter instances.
+- **Zero-Transcode Opus Direct Pass-Through**: Added `plugins.solaceaudio.passthrough` configuration. When active and voice ducking is not engaged, PCM float conversion is completely bypassed, delivering raw format 251 Opus frames directly to Discord and slashing CPU usage by ~60%.
+- **Mid-Stream 403 Failover & Stale Cache Invalidation**: `YouTubeProxyHandler.invalidateStream()` automatically removes revoked or expired stream URLs from the stream cache, triggering fresh resolution from alternative InnerTube clients rather than aborting playback.
+- **Interrupted Disk Cache Cleanup**: Background cache writers now monitor thread interruption and immediately purge `.part` files on task cancellation or player skips.
+
+### Changed
+
+- Bumped `dev.arbjerg:lavaplayer` from `2.0.4` to `2.2.7`.
+- Bumped `dev.arbjerg.lavalink.gradle-plugin` from `1.0.15` to `1.1.2`.
+- Bumped `org.slf4j:slf4j-api` from `2.0.9` to `2.0.20`.
+- Bumped `softprops/action-gh-release` from `2` to `3`.
+
+### Fixed
+
+- **Memory Leak in SponsorBlock**: Replaced unbounded `ConcurrentHashMap` with a bounded LRU/TTL `MemoryCacheManager`, clamped negative skip targets, and added thread-safe category updates.
+- **Memory & State Leak in FilterFactory**: Replaced singleton active filter fields with concurrent sets and registered lifecycle `closeCallback` hooks to cleanly garbage-collect completed player pipelines.
+- **SilenceTrimFilter Latch & Stall**: Added in-place `NaN` and `Infinite` sample sanitization and capped dead-air trimming to 250 frames (~5s max) to prevent quiet or ambient tracks from stalling indefinitely.
+- **Ducking Gain Step Inversion**: Fixed step calculation using `Math.abs(normalVolume - targetVolume) / rampSamples` to prevent volume oscillation when target exceeds normal volume.
+- **Deezer Synchronized Lyric Durations**: Fixed line duration calculation to store span instead of end timestamp (`ms + duration`).
+- **ForkJoinPool Thread Starvation**: Removed nested blocking `.join()` in `TrackResolutionEngine` by exposing direct asynchronous futures in `AudioMirrorTrack` and added bounded 15-second timeouts.
+- **HTTP Socket Leaks in YouTubeTrack**: Explicitly closed response stream bodies on non-200/206 HTTP codes.
+- **Path Traversal Hardening**: Standardized base path checking to absolute normalized paths in `AtomicSafeCacheManager`.
+- **SSRF Vulnerability in Dynamic Config**: Validated dynamic `cipherUrl` updates against loopback, private subnets, and cloud metadata IPs (`169.254.169.254`) via `SecurityFilter.isSafeUrl`.
+
 ## [1.0.24] - 2026-11-04
 
 ### Fixed

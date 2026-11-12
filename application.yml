@@ -8,7 +8,7 @@ lavalink:
 
   plugins:
     # SolaceAudio Multi-Source Audio Engine
-    - dependency: "com.github.Nex-Devz.SolaceAudio:solaceaudio-plugin:1.0.24"
+    - dependency: "com.github.Nex-Devz.SolaceAudio:solaceaudio-plugin:1.0.25"
       repository: "https://jitpack.io"
 
     # Official YouTube source. SolaceAudio detects this plugin and layers its oEmbed metadata
@@ -70,6 +70,10 @@ plugins:
       skipInitialization: false
 
   solaceaudio:
+    # Zero-transcode Opus pass-through mode: skips PCM float conversion
+    # when no DSP audio filters (ducking) are active, reducing CPU usage by ~60%
+    passthrough: false
+
     sources:
       spotify: true
       jiosaavn: true
