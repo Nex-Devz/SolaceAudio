@@ -70,13 +70,17 @@ public class TrackResolutionEngine implements TrackResolutionHandler {
                 }).get(20, java.util.concurrent.TimeUnit.SECONDS);
 
                 if (loaded == null || loaded == AudioReference.NO_TRACK) {
+                    com.solaceaudio.metrics.SolaceAudioMetrics.recordMirrorResolution(candidate, "no_matches");
                     continue;
                 }
                 if (loaded instanceof AudioPlaylist playlist && playlist.getTracks().isEmpty()) {
+                    com.solaceaudio.metrics.SolaceAudioMetrics.recordMirrorResolution(candidate, "no_matches");
                     continue;
                 }
+                com.solaceaudio.metrics.SolaceAudioMetrics.recordMirrorResolution(candidate, "resolved");
                 return loaded;
             } catch (Throwable t) {
+                com.solaceaudio.metrics.SolaceAudioMetrics.recordMirrorResolution(candidate, "failed");
                 log.debug("Mirror provider resolution error for pattern [{}]: {}", candidate, t.getMessage());
             }
 

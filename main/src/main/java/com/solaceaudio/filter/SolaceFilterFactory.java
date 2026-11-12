@@ -22,12 +22,21 @@ public class SolaceFilterFactory implements PcmFilterFactory {
 
     private volatile boolean silenceTrimmingEnabled = true;
     private volatile boolean duckingEnabled = false;
+    private volatile boolean passthroughEnabled = false;
     private volatile float duckedVolume = 0.25f;
 
     private final Set<DuckingAudioFilter> activeDuckingFilters = Collections.newSetFromMap(new ConcurrentHashMap<>());
     private final Set<SilenceTrimFilter> activeSilenceFilters = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     public SolaceFilterFactory() {
+    }
+
+    public boolean isPassthroughEnabled() {
+        return passthroughEnabled;
+    }
+
+    public void setPassthroughEnabled(boolean enabled) {
+        this.passthroughEnabled = enabled;
     }
 
     public void setSilenceTrimmingEnabled(boolean enabled) {
@@ -69,6 +78,12 @@ public class SolaceFilterFactory implements PcmFilterFactory {
 
     @Override
     public List<AudioFilter> buildChain(AudioTrack track, AudioDataFormat format, UniversalPcmAudioFilter output) {
+        if (passthroughEnabled && !duckingEnabled) {
+            // Zero-transcode Opus pass-through mode: bypass DSP filter insertion,
+            // allowing Lavaplayer's native OpusPacketRouter to deliver raw Opus frames directly to Discord
+            return Collections.emptyList();
+        }
+
         List<AudioFilter> filters = new ArrayList<>();
         FloatPcmAudioFilter current = output;
 

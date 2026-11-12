@@ -83,8 +83,10 @@ public class SponsorBlockManager {
         String key = videoId.trim();
         List<Segment> cached = cache.get(key);
         if (cached != null) {
+            com.solaceaudio.metrics.SolaceAudioMetrics.recordCacheRequest("sponsorblock", true);
             return cached;
         }
+        com.solaceaudio.metrics.SolaceAudioMetrics.recordCacheRequest("sponsorblock", false);
         List<Segment> fetched = fetchSegments(key);
         if (fetched != null && !fetched.isEmpty()) {
             cache.put(key, fetched);

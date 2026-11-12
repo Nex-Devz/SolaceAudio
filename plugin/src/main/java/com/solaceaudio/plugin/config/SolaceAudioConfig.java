@@ -17,6 +17,15 @@ public class SolaceAudioConfig {
             "scsearch:" + QUERY_PATTERN,
             "bcsearch:" + QUERY_PATTERN
     };
+    private boolean passthrough = false;
+
+    public boolean isPassthrough() {
+        return passthrough;
+    }
+
+    public void setPassthrough(boolean passthrough) {
+        this.passthrough = passthrough;
+    }
 
     public String[] getProviders() {
         return providers;

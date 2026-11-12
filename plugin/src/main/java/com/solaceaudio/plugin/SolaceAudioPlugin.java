@@ -29,7 +29,9 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
 
     private static final Logger log = LoggerFactory.getLogger(SolaceAudioPlugin.class);
 
+    private final SolaceAudioConfig pluginConfig;
     private final SolaceAudioSourcesConfig sourcesConfig;
+    private com.solaceaudio.filter.SolaceFilterFactory filterFactory;
     private AudioPlayerManager manager;
     private JioSaavnAudioSourceManager jioSaavn;
     private GaanaAudioSourceManager gaana;
@@ -59,6 +61,7 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
         com.solaceaudio.plugin.config.AppleMusicConfig appleMusicConfig
     ) {
         log.info("Loading SolaceAudio plugin...");
+        this.pluginConfig = pluginConfig;
         this.sourcesConfig = sourcesConfig;
 
         if (sourcesConfig.isJiosaavn()) {
@@ -259,7 +262,11 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
 
     @org.springframework.context.annotation.Bean
     public com.solaceaudio.filter.SolaceFilterFactory solaceFilterFactory() {
-        return new com.solaceaudio.filter.SolaceFilterFactory();
+        this.filterFactory = new com.solaceaudio.filter.SolaceFilterFactory();
+        if (this.pluginConfig != null) {
+            this.filterFactory.setPassthroughEnabled(this.pluginConfig.isPassthrough());
+        }
+        return this.filterFactory;
     }
 
     @NotNull
@@ -460,6 +467,10 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
             if ((ytConfig.getCookie() != null || ytConfig.getCookieFile() != null) && this.youtube.getProxyHandler() != null) {
                 this.youtube.getProxyHandler().getYtMusicCookieAuth().loadCookie(ytConfig.getCookie(), ytConfig.getCookieFile());
             }
+        }
+
+        if (config.getPassthrough() != null && this.filterFactory != null) {
+            this.filterFactory.setPassthroughEnabled(config.getPassthrough());
         }
     }
 

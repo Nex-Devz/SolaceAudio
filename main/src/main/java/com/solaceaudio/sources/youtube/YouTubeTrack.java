@@ -268,6 +268,7 @@ public class YouTubeTrack extends DelegatedAudioTrack {
 
         if (targetFile == null) {
             log.debug("Cache miss for track {}", videoId);
+            com.solaceaudio.metrics.SolaceAudioMetrics.recordCacheRequest("disk", false);
             return false;
         }
 
@@ -282,6 +283,7 @@ public class YouTubeTrack extends DelegatedAudioTrack {
         }
 
         log.debug("Cache hit for track {}", videoId);
+        com.solaceaudio.metrics.SolaceAudioMetrics.recordCacheRequest("disk", true);
         try (FileInputStream fis = new FileInputStream(targetFile)) {
             targetFile.setLastModified(System.currentTimeMillis());
             if (sidecarFile.exists()) {
@@ -310,11 +312,28 @@ public class YouTubeTrack extends DelegatedAudioTrack {
             return false;
         }
 
-        HttpClient client = HttpClient.newBuilder()
-                .followRedirects(HttpClient.Redirect.ALWAYS)
-                .connectTimeout(Duration.ofSeconds(10))
-                .build();
+        HttpClient client = sourceManager.getProxyHandler().getHttpClient();
+        if (client == null) {
+            client = HttpClient.newBuilder()
+                    .followRedirects(HttpClient.Redirect.ALWAYS)
+                    .connectTimeout(Duration.ofSeconds(10))
+                    .build();
+        }
 
+        boolean played = attemptStream(client, stream, executor);
+        if (!played) {
+            // Mid-stream or initial failure on cached stream: invalidate and retry once with fresh stream
+            sourceManager.getProxyHandler().invalidateStream(videoId);
+            YouTubeProxyHandler.StreamResult freshStream = sourceManager.getProxyHandler().getStream(videoId);
+            if (freshStream != null && freshStream.url != null && !freshStream.url.equals(stream.url)) {
+                log.debug("Retrying track {} with fresh stream after fallback exhaustion", videoId);
+                played = attemptStream(client, freshStream, executor);
+            }
+        }
+        return played;
+    }
+
+    private boolean attemptStream(HttpClient client, YouTubeProxyHandler.StreamResult stream, LocalAudioTrackExecutor executor) {
         String ua = (stream.userAgent != null && !stream.userAgent.isEmpty()) ? stream.userAgent : DEFAULT_UA;
 
         List<String> urlsToTry = new ArrayList<>();
@@ -378,10 +397,13 @@ public class YouTubeTrack extends DelegatedAudioTrack {
                 return;
             }
 
-            HttpClient client = HttpClient.newBuilder()
-                    .followRedirects(HttpClient.Redirect.ALWAYS)
-                    .connectTimeout(Duration.ofSeconds(10))
-                    .build();
+            HttpClient client = sourceManager.getProxyHandler().getHttpClient();
+            if (client == null) {
+                client = HttpClient.newBuilder()
+                        .followRedirects(HttpClient.Redirect.ALWAYS)
+                        .connectTimeout(Duration.ofSeconds(10))
+                        .build();
+            }
 
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(streamUrl))
@@ -400,6 +422,12 @@ public class YouTubeTrack extends DelegatedAudioTrack {
                         byte[] buffer = new byte[8192];
                         int bytesRead;
                         while ((bytesRead = is.read(buffer)) != -1) {
+                            if (Thread.currentThread().isInterrupted()) {
+                                try {
+                                    partFile.delete();
+                                } catch (Exception ignored) {}
+                                return;
+                            }
                             fos.write(buffer, 0, bytesRead);
                         }
                         fos.flush();

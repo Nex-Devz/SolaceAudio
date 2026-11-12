@@ -7,6 +7,15 @@ public class Config {
     private SpotifyConfig spotify;
     private PandoraConfig pandora;
     private YouTubeConfig youtube;
+    private Boolean passthrough;
+
+    public Boolean getPassthrough() {
+        return this.passthrough;
+    }
+
+    public void setPassthrough(Boolean passthrough) {
+        this.passthrough = passthrough;
+    }
 
     public GaanaConfig getGaana() {
         return this.gaana;

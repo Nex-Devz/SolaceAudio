@@ -56,6 +56,10 @@ public class MemoryCacheManager<T> {
         if (key != null) cacheMap.remove(key.trim().toLowerCase());
     }
 
+    public synchronized void remove(String key) {
+        invalidate(key);
+    }
+
     public synchronized void clear() {
         cacheMap.clear();
     }
