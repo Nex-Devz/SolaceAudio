@@ -29,7 +29,7 @@ public class MemoryCacheManager<T> {
         this.cacheMap = new LinkedHashMap<>(this.maxCapacity, 0.75f, true) {
             @Override
             protected boolean removeEldestEntry(Map.Entry<String, CacheEntry<T>> eldest) {
-                return size() > MemoryCacheManager.this.maxCapacity;
+                return super.size() > MemoryCacheManager.this.maxCapacity;
             }
         };
     }

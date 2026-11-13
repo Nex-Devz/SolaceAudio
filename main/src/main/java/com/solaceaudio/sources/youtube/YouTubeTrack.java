@@ -127,7 +127,7 @@ public class YouTubeTrack extends DelegatedAudioTrack {
         InternalAudioTrack fallback = null;
         if (originalTrack instanceof InternalAudioTrack) {
             fallback = (InternalAudioTrack) originalTrack;
-        } else {
+        } else if (sourceManager != null) {
             try {
                 AudioSourceManager ytSource = sourceManager.getOriginalYouTubeSource();
                 if (ytSource != null) {
@@ -147,7 +147,7 @@ public class YouTubeTrack extends DelegatedAudioTrack {
 
         if (fallback != null) {
             try {
-                if (sourceManager.isLocalDiskCache()) {
+                if (sourceManager != null && sourceManager.isLocalDiskCache()) {
                     triggerBackgroundCache();
                 }
                 processDelegate(fallback, executor);
@@ -158,7 +158,7 @@ public class YouTubeTrack extends DelegatedAudioTrack {
             }
         }
 
-        if (sourceManager.getProxyHandler() != null) {
+        if (sourceManager != null && sourceManager.getProxyHandler() != null) {
             try {
                 if (tryProxyStream(executor)) {
                     return;
@@ -283,9 +283,15 @@ public class YouTubeTrack extends DelegatedAudioTrack {
 
         log.debug("Cache hit for track {}", videoId);
         try (FileInputStream fis = new FileInputStream(targetFile)) {
-            targetFile.setLastModified(System.currentTimeMillis());
+            boolean modified = targetFile.setLastModified(System.currentTimeMillis());
             if (sidecarFile.exists()) {
-                sidecarFile.setLastModified(System.currentTimeMillis());
+                boolean sidecarModified = sidecarFile.setLastModified(System.currentTimeMillis());
+                if (!sidecarModified) {
+                    log.trace("Could not update last modified for sidecar {}", sidecarFile.getName());
+                }
+            }
+            if (!modified) {
+                log.trace("Could not update last modified for cache file {}", targetFile.getName());
             }
             if (isWebm) {
                 processDelegate(new MatroskaAudioTrack(trackInfo, new NonSeekableInputStream(fis)), executor);

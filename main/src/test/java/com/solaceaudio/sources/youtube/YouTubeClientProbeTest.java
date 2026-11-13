@@ -120,7 +120,7 @@ public class YouTubeClientProbeTest {
                 .build();
 
         System.out.println("=== InnerTube /player probe (videoId=" + VIDEO_ID + ") ===");
-        System.out.printf("%-20s %-24s %-6s %-12s %-10s %-8s %s%n",
+        System.out.printf("%-20s %-24s %-6s %-12s %-10s %-8s %-10s %s%n",
                 "CLIENT", "VERSION", "HTTP", "PLAYABILITY", "FORMATS", "CIPHER", "N-PARAM", "REASON");
 
         String[] session = fetchVisitorSession(http);

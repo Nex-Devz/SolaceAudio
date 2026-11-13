@@ -32,6 +32,7 @@ public final class DeezerCipher {
      */
     public static byte[] deriveKey(String songId, String masterKey) {
         try {
+            // codeql[java/potentially-weak-cryptographic-algorithm] External protocol requirement: Deezer master key chunk derivation requires MD5
             MessageDigest md5 = MessageDigest.getInstance("MD5");
             byte[] idDigest = md5.digest(songId.getBytes(StandardCharsets.US_ASCII));
 
@@ -63,6 +64,7 @@ public final class DeezerCipher {
         }
         try {
             Cipher cipher = Cipher.getInstance("Blowfish/CBC/NoPadding");
+            // codeql[java/static-initialization-vector] External protocol requirement: Deezer audio chunk decryption specifies this fixed static IV
             cipher.init(Cipher.DECRYPT_MODE, secretKeySpec, new IvParameterSpec(STATIC_IV));
             byte[] decrypted = cipher.doFinal(data, offset, CHUNK_SIZE);
             System.arraycopy(decrypted, 0, data, offset, CHUNK_SIZE);
