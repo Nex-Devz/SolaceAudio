@@ -104,6 +104,16 @@ public class YouTubeSourceManager implements AudioSourceManager {
         this(oembed, mirror, mirrorProviders, localDiskCache, diskCachePath, cipherUrl, maxDiskCacheMb, potokenUrl, potokenVisitorData, potoken, null, null, audioPlayerManager);
     }
 
+    private static File getSafeCacheDirectory(String path) {
+        String cleanPath = (path != null && !path.isBlank()) ? path : "youtube-cache";
+        File dir = new File(cleanPath).getAbsoluteFile();
+        try {
+            return dir.getCanonicalFile();
+        } catch (IOException e) {
+            return dir;
+        }
+    }
+
     public YouTubeSourceManager(
             boolean oembed,
             boolean mirror,
@@ -122,19 +132,19 @@ public class YouTubeSourceManager implements AudioSourceManager {
         this.mirror = mirror;
         this.audioPlayerManager = audioPlayerManager;
         this.localDiskCache = localDiskCache;
-        this.diskCachePath = diskCachePath != null && !diskCachePath.isEmpty() ? diskCachePath : "youtube-cache";
+        File safeDir = getSafeCacheDirectory(diskCachePath);
+        this.diskCachePath = safeDir.getPath();
         this.cipherUrl = cipherUrl != null && !cipherUrl.isEmpty() ? cipherUrl : "https://cipher.kikkia.dev";
-        this.maxDiskCacheMb = maxDiskCacheMb;
+        this.maxDiskCacheMb = Math.max(0L, Math.min(maxDiskCacheMb, 1_000_000L));
         this.proxyHandler = new YouTubeProxyHandler(this.cipherUrl, potokenUrl, potokenVisitorData, potoken, cookie, cookieFile);
 
         this.mirrorProviders = resolveMirrorProviders(mirrorProviders);
 
         if (this.localDiskCache) {
-            File cacheDir = new File(this.diskCachePath);
-            if (!cacheDir.exists()) {
-                cacheDir.mkdirs();
+            if (!safeDir.exists()) {
+                safeDir.mkdirs();
             }
-            startCacheCleanupTask(cacheDir);
+            startCacheCleanupTask(safeDir);
         }
     }
 
@@ -163,7 +173,8 @@ public class YouTubeSourceManager implements AudioSourceManager {
     }
 
     public void enforceLruDiskCacheQuota(File cacheDir) {
-        if (maxDiskCacheMb <= 0 || cacheDir == null || !cacheDir.exists()) {
+        long safeMaxMb = Math.max(0L, Math.min(maxDiskCacheMb, 1_000_000L));
+        if (safeMaxMb <= 0 || cacheDir == null || !cacheDir.exists()) {
             return;
         }
 
@@ -178,7 +189,7 @@ public class YouTubeSourceManager implements AudioSourceManager {
                 }
             }
 
-            long maxBytes = maxDiskCacheMb * 1024L * 1024L;
+            long maxBytes = safeMaxMb * 1024L * 1024L;
             if (totalBytes <= maxBytes) {
                 return;
             }
@@ -196,10 +207,13 @@ public class YouTubeSourceManager implements AudioSourceManager {
                     deletedFiles++;
                     if (name.endsWith(".webm") || name.endsWith(".m4a")) {
                         String base = name.substring(0, name.lastIndexOf('.'));
-                        File sidecar = new File(cacheDir, base + ".json");
-                        if (sidecar.exists()) {
-                            totalBytes -= sidecar.length();
-                            sidecar.delete();
+                        String safeBase = base.replaceAll("[^a-zA-Z0-9_-]", "");
+                        if (!safeBase.isEmpty()) {
+                            File sidecar = new File(cacheDir, safeBase + ".json");
+                            if (sidecar.exists() && sidecar.isFile() && sidecar.getParentFile().equals(cacheDir)) {
+                                totalBytes -= sidecar.length();
+                                sidecar.delete();
+                            }
                         }
                     }
                 }
@@ -278,7 +292,7 @@ public class YouTubeSourceManager implements AudioSourceManager {
     public void setLocalDiskCache(boolean localDiskCache) {
         this.localDiskCache = localDiskCache;
         if (localDiskCache) {
-            File cacheDir = new File(this.diskCachePath);
+            File cacheDir = getSafeCacheDirectory(this.diskCachePath);
             if (!cacheDir.exists()) {
                 cacheDir.mkdirs();
             }
@@ -290,12 +304,12 @@ public class YouTubeSourceManager implements AudioSourceManager {
     }
 
     public void setDiskCachePath(String diskCachePath) {
-        if (diskCachePath != null && !diskCachePath.isEmpty()) {
-            this.diskCachePath = diskCachePath;
+        if (diskCachePath != null && !diskCachePath.isBlank()) {
+            File safeDir = getSafeCacheDirectory(diskCachePath);
+            this.diskCachePath = safeDir.getPath();
             if (this.localDiskCache) {
-                File cacheDir = new File(this.diskCachePath);
-                if (!cacheDir.exists()) {
-                    cacheDir.mkdirs();
+                if (!safeDir.exists()) {
+                    safeDir.mkdirs();
                 }
             }
         }

@@ -48,14 +48,16 @@ public class YtMusicCookieAuth {
         }
 
         if (loaded == null && customFilePath != null && !customFilePath.isBlank()) {
-            Path p = Paths.get(customFilePath);
-            if (Files.exists(p)) {
-                try {
+            try {
+                Path p = Paths.get(customFilePath).normalize().toAbsolutePath();
+                File f = p.toFile();
+                if (f.exists() && f.isFile()) {
                     loaded = sanitizeCookieString(Files.readString(p, StandardCharsets.UTF_8));
-                    log.info("[YtMusicCookieAuth] Loaded YouTube cookie from: {}", customFilePath);
-                } catch (IOException e) {
-                    log.warn("[YtMusicCookieAuth] Failed to read cookie file: {}", customFilePath, e);
+                    String safeName = f.getName().replaceAll("[\\r\\n]", "");
+                    log.info("[YtMusicCookieAuth] Loaded YouTube cookie from: {}", safeName);
                 }
+            } catch (Exception e) {
+                log.warn("[YtMusicCookieAuth] Failed to read cookie file: {}", e.getMessage());
             }
         }
 
@@ -231,6 +233,7 @@ public class YtMusicCookieAuth {
 
     public static String computeSapisidHash(String sapisid, long timestamp) {
         try {
+            // codeql[java/potentially-weak-cryptographic-algorithm] External protocol requirement: Google/YouTube internal auth specifically requires SHA-1 SAPISIDHASH
             MessageDigest sha1 = MessageDigest.getInstance("SHA-1");
             String payload = timestamp + " " + sapisid + " " + YTM_ORIGIN;
             byte[] digest = sha1.digest(payload.getBytes(StandardCharsets.UTF_8));

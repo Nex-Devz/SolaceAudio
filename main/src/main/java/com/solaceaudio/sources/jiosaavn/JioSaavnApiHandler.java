@@ -142,6 +142,7 @@ public class JioSaavnApiHandler {
         }
         try {
             byte[] encryptedBytes = Base64.getDecoder().decode(encryptedUrl);
+            // codeql[java/weak-cryptographic-algorithm] External protocol requirement: JioSaavn CDN streaming requires DES-ECB decryption
             SecretKeySpec keySpec = new SecretKeySpec(DES_KEY.getBytes(StandardCharsets.UTF_8), "DES");
             Cipher cipher = Cipher.getInstance("DES/ECB/PKCS5Padding");
             cipher.init(Cipher.DECRYPT_MODE, keySpec);
@@ -175,12 +176,14 @@ public class JioSaavnApiHandler {
             if (response.statusCode() >= 200 && response.statusCode() < 300) {
                 return objectMapper.readTree(response.body());
             } else {
-                log.warn("JioSaavn API non-200 response [{}] for URL: {}", response.statusCode(), fullUrl);
+                URI u = URI.create(fullUrl);
+                String safePath = u.getPath() != null ? u.getPath() : "/";
+                log.warn("JioSaavn API non-200 response [{}] for endpoint: {}", response.statusCode(), safePath);
                 return null;
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new IOException("Request interrupted for: " + fullUrl, e);
+            throw new IOException("Request interrupted for JioSaavn API", e);
         }
     }
 
