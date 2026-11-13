@@ -92,17 +92,33 @@ public class JioSaavnAudioTrack extends DelegatedAudioTrack {
                 data = data.get(0);
             }
 
+            String configuredQuality = sourceManager.getQuality();
+            if (configuredQuality == null || configuredQuality.isBlank()) {
+                configuredQuality = "320kbps";
+            } else {
+                configuredQuality = configuredQuality.toLowerCase().trim();
+                if (!configuredQuality.endsWith("kbps")) {
+                    configuredQuality += "kbps";
+                }
+            }
+
             if (data.has("downloadUrl") && data.get("downloadUrl").isArray()) {
                 JsonNode downloadArr = data.get("downloadUrl");
-                String bestUrl = null;
+                String exactUrl = null;
+                String backupUrl = null;
                 for (JsonNode item : downloadArr) {
-                    String q = item.path("quality").asText();
+                    String q = item.path("quality").asText().toLowerCase().trim();
                     String u = item.path("link").asText();
-                    if ("320kbps".equalsIgnoreCase(q)) return u;
-                    if ("160kbps".equalsIgnoreCase(q)) bestUrl = u;
-                    if (bestUrl == null) bestUrl = u;
+                    if (configuredQuality.equalsIgnoreCase(q)) {
+                        exactUrl = u;
+                        break;
+                    }
+                    if ("320kbps".equalsIgnoreCase(q) && backupUrl == null) backupUrl = u;
+                    if ("160kbps".equalsIgnoreCase(q) && backupUrl == null) backupUrl = u;
+                    if (backupUrl == null) backupUrl = u;
                 }
-                if (bestUrl != null && !bestUrl.isBlank()) return bestUrl;
+                if (exactUrl != null && !exactUrl.isBlank()) return exactUrl;
+                if (backupUrl != null && !backupUrl.isBlank()) return backupUrl;
             }
 
             String encrypted = null;
@@ -115,7 +131,11 @@ public class JioSaavnAudioTrack extends DelegatedAudioTrack {
             if (encrypted != null && !encrypted.isBlank()) {
                 String decrypted = JioSaavnApiHandler.decryptMediaUrl(encrypted);
                 if (decrypted != null) {
-                    return decrypted.replaceFirst("_(?:96|160|48)\\.mp4", "_320.mp4");
+                    String bitNum = "320";
+                    if (configuredQuality.startsWith("160")) bitNum = "160";
+                    else if (configuredQuality.startsWith("96")) bitNum = "96";
+                    else if (configuredQuality.startsWith("48")) bitNum = "48";
+                    return decrypted.replaceFirst("_(?:96|160|48|320)\\.mp4", "_" + bitNum + ".mp4");
                 }
             }
 

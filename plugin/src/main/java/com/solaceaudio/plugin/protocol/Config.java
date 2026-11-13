@@ -2,6 +2,7 @@ package com.solaceaudio.plugin.protocol;
 
 public class Config {
 
+    private JioSaavnConfig jiosaavn;
     private GaanaConfig gaana;
     private AmazonMusicConfig amazonmusic;
     private SpotifyConfig spotify;
@@ -15,6 +16,14 @@ public class Config {
 
     public void setPassthrough(Boolean passthrough) {
         this.passthrough = passthrough;
+    }
+
+    public JioSaavnConfig getJiosaavn() {
+        return this.jiosaavn;
+    }
+
+    public void setJiosaavn(JioSaavnConfig jiosaavn) {
+        this.jiosaavn = jiosaavn;
     }
 
     public GaanaConfig getGaana() {
@@ -280,6 +289,27 @@ public class Config {
 
         public void setCookieFile(String cookieFile) {
             this.cookieFile = cookieFile;
+        }
+    }
+
+    public static class JioSaavnConfig {
+        private String quality;
+        private int playlistLoadLimit;
+
+        public String getQuality() {
+            return this.quality;
+        }
+
+        public void setQuality(String quality) {
+            this.quality = quality;
+        }
+
+        public int getPlaylistLoadLimit() {
+            return this.playlistLoadLimit;
+        }
+
+        public void setPlaylistLoadLimit(int playlistLoadLimit) {
+            this.playlistLoadLimit = playlistLoadLimit;
         }
     }
 }

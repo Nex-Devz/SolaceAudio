@@ -9,6 +9,7 @@ public class JioSaavnConfig {
 
     private String apiUrl = "https://saavn.dev";
     private int playlistLoadLimit = 50;
+    private String quality = "320kbps";
 
     public String getApiUrl() {
         return apiUrl;
@@ -24,5 +25,13 @@ public class JioSaavnConfig {
 
     public void setPlaylistLoadLimit(int playlistLoadLimit) {
         this.playlistLoadLimit = playlistLoadLimit;
+    }
+
+    public String getQuality() {
+        return quality;
+    }
+
+    public void setQuality(String quality) {
+        this.quality = quality;
     }
 }

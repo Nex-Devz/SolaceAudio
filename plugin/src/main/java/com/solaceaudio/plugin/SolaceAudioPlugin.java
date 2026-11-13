@@ -69,6 +69,9 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
             if (jioSaavnConfig.getPlaylistLoadLimit() > 0) {
                 this.jioSaavn.setPlaylistLoadLimit(jioSaavnConfig.getPlaylistLoadLimit());
             }
+            if (jioSaavnConfig.getQuality() != null && !jioSaavnConfig.getQuality().isBlank()) {
+                this.jioSaavn.setQuality(jioSaavnConfig.getQuality());
+            }
         }
         if (sourcesConfig.isGaana()) {
             this.gaana = new GaanaAudioSourceManager(gaanaConfig.getApiUrl(), unused -> manager);
@@ -380,6 +383,16 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
 
     @PatchMapping("/v4/SolaceAudio/config")
     public void updateConfig(@RequestBody Config config) {
+        var jioSaavnConfig = config.getJiosaavn();
+        if (jioSaavnConfig != null && this.jioSaavn != null) {
+            if (jioSaavnConfig.getPlaylistLoadLimit() > 0) {
+                this.jioSaavn.setPlaylistLoadLimit(jioSaavnConfig.getPlaylistLoadLimit());
+            }
+            if (jioSaavnConfig.getQuality() != null && !jioSaavnConfig.getQuality().isBlank()) {
+                this.jioSaavn.setQuality(jioSaavnConfig.getQuality());
+            }
+        }
+
         var gaanaConfig = config.getGaana();
         if (gaanaConfig != null && this.gaana != null) {
             if (gaanaConfig.getPlaylistLoadLimit() > 0) {

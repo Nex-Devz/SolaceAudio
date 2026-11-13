@@ -106,9 +106,11 @@ plugins:
       artistLoadLimit: 50
 
     jiosaavn:
-      # Official API with in-process DES/320kbps direct CDN streaming (Zero proxy needed!)
+      # Official API with in-process DES direct CDN streaming (Zero proxy needed!)
       apiUrl: "https://www.jiosaavn.com/api.php"
       playlistLoadLimit: 50
+      # Audio streaming bitrate: "320kbps" (Hi-Fi), "160kbps" (Balanced - saves 50% bandwidth), "96kbps", or "48kbps"
+      quality: "320kbps"
 
     gaana:
       # Public endpoint or self-host via https://github.com/notdeltaxd/Gaana-API on Vercel

@@ -36,6 +36,7 @@ public class JioSaavnAudioSourceManager implements AudioSourceManager {
     private final JioSaavnApiHandler api;
     private final HttpInterfaceManager httpInterfaceManager;
     private int playlistLoadLimit = 50;
+    private String quality = "320kbps";
 
     public JioSaavnAudioSourceManager(String apiUrl) {
         this.api = new JioSaavnApiHandler(apiUrl);
@@ -52,6 +53,16 @@ public class JioSaavnAudioSourceManager implements AudioSourceManager {
 
     public void setPlaylistLoadLimit(int playlistLoadLimit) {
         this.playlistLoadLimit = playlistLoadLimit;
+    }
+
+    public String getQuality() {
+        return quality;
+    }
+
+    public void setQuality(String quality) {
+        if (quality != null && !quality.isBlank()) {
+            this.quality = quality.toLowerCase().trim();
+        }
     }
 
     @Override
