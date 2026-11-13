@@ -4,6 +4,13 @@ All notable changes to SolaceAudio are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.28] - 2026-11-13
+
+### Added
+
+- **JioSaavn Multi-Bitrate Quality Selector**: Added `plugins.solaceaudio.jiosaavn.quality` configuration supporting `"320kbps"` (Hi-Fi default), `"160kbps"` (Balanced, saves 50% node bandwidth), `"96kbps"`, and `"48kbps"`. Supports both API `downloadUrl` array selection and DES-decrypted direct CDN URL replacement (`_320.mp4`, `_160.mp4`, `_96.mp4`, `_48.mp4`), with live dynamic updates via `PATCH /v4/SolaceAudio/config`.
+- **Smart YouTube Client Rotation with Mid-Stream Cooldown**: When a YouTube stream URL returns HTTP 403 / 429 / 401, `YouTubeTrack` marks the producing client with an automatic 60-second cooldown via `YouTubeProxyHandler.recordClientFailure()` and rotates visitor sessions. Immediate mid-stream failover seamlessly retries using the next healthy client in the pool (`AndroidVrClient`, `VisionOsClient`, `TvHtml5Client`, etc.) without freezing playback.
+
 ## [1.0.27] - 2026-11-13
 
 ### Security & Hardening
