@@ -4,6 +4,17 @@ All notable changes to SolaceAudio are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.27] - 2026-11-13
+
+### Security & Hardening
+
+- **Path Injection Prevention (`java/path-injection`)**: Added `getSafeCacheDirectory()` with canonical path normalization in `YouTubeSourceManager` and safe regular file validation in `YtMusicCookieAuth`. Evicted cache sidecar filenames are strictly alphanumeric validated with parent directory bounds checks to prevent path traversal attacks.
+- **Tainted Arithmetic Guard (`java/tainted-arithmetic`)**: Clamped `maxDiskCacheMb` in `YouTubeSourceManager` using `Math.max(0L, Math.min(..., 1_000_000L))` to guarantee arithmetic safety and prevent integer overflow/underflow during cache byte calculations.
+- **Sensitive Log Information Masking (`java/sensitive-log`)**: Sanitized error logging in `JioSaavnApiHandler` to log only endpoint paths instead of raw request URLs with query parameters.
+- **Polynomial ReDoS Elimination (`java/polynomial-redos`)**: Replaced non-atomic regex quantifiers with possessive quantifiers (`*+`, `++`) in LRCLIB title and feature cleaning patterns, eliminating quadratic/exponential backtracking on crafted track titles.
+- **Log Injection Sanitization (`java/log-injection`)**: Stripped newline and carriage return characters from user-controlled metadata before writing to log streams in `SolaceAudioPlugin`, `LrcLibLyricsManager`, `GeniusLyricsManager`, and `YtMusicCookieAuth`.
+- **Null Safety & Code Quality**: Added explicit null checks for `sourceManager` in `YouTubeTrack`, prevented ambiguous `size()` resolution in `MemoryCacheManager`, captured return values of `File.setLastModified`, and fixed argument formatting in `YouTubeClientProbeTest`.
+
 ## [1.0.26] - 2026-11-12
 
 ### Fixed
