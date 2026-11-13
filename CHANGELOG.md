@@ -4,6 +4,14 @@ All notable changes to SolaceAudio are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.29] - 2026-11-13
+
+### Added
+
+- **JioSaavn Fallback in Priority Mirror Ladder**: Added `"jssearch:{query}"` directly into `TrackResolutionEngine.DEFAULT_PROVIDERS` and `SolaceAudioConfig.providers`. When external metadata sources (Spotify, Amazon Music, Apple Music) attempt to resolve tracks and YouTube returns HTTP 429 / bot detection blocks, the engine immediately falls back to JioSaavn's direct 320kbps CD-quality CDN stream, ensuring zero playback disruption on datacenter nodes.
+- **Apple Music iTunes Store Fallback Engine**: Enhanced `AppleMusicAudioSourceManager` with automatic fallback to Apple's public iTunes Store API (`https://itunes.apple.com/search` and `/lookup`). If developer storefront token generation fails or catalog endpoints return errors, search and track lookups resolve seamlessly with zero authentication, zero rate limits, and full artwork/metadata extraction.
+- **Regression Test Suite**: Added `TrackResolutionEngineTest` verifying mirror ladder resolution and provider configuration preservation, along with `AppleMusicFallbackTest` validating iTunes API fallback.
+
 ## [1.0.28] - 2026-11-13
 
 ### Added
