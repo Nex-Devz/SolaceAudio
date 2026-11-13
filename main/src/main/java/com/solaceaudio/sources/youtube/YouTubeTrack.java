@@ -357,7 +357,12 @@ public class YouTubeTrack extends DelegatedAudioTrack {
             try {
                 HttpResponse<InputStream> response = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
                 if (response.statusCode() != 200 && response.statusCode() != 206) {
-                    log.debug("Stream fetch returned HTTP {} for {} on url {}, trying fallback format", response.statusCode(), videoId, currentUrl);
+                    log.debug("Stream fetch returned HTTP {} for {} on url {}, client: {}", response.statusCode(), videoId, currentUrl, stream.source);
+                    if (response.statusCode() == 403 || response.statusCode() == 429 || response.statusCode() == 401) {
+                        if (stream.source != null && !stream.source.isBlank()) {
+                            sourceManager.getProxyHandler().recordClientFailure(stream.source, 60_000L);
+                        }
+                    }
                     try {
                         response.body().close();
                     } catch (Exception ignored) {

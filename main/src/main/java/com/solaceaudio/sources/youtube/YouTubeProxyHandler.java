@@ -243,6 +243,18 @@ public class YouTubeProxyHandler {
         }
     }
 
+    public void recordClientFailure(String clientName, long cooldownMs) {
+        if (clientName == null || clientName.isBlank()) return;
+        for (ClientHealth ch : clientPool) {
+            if (clientName.equalsIgnoreCase(ch.getClient().getClientName())) {
+                log.info("[YouTubeProxyHandler] Marking client {} as failed mid-stream, applying cooldown of {}ms", clientName, cooldownMs);
+                ch.markFailure(cooldownMs);
+                rotateVisitorSession();
+                break;
+            }
+        }
+    }
+
     public HttpClient getHttpClient() {
         return httpClient;
     }
