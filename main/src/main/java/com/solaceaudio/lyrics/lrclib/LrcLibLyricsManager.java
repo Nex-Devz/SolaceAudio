@@ -37,13 +37,13 @@ public class LrcLibLyricsManager implements AudioLyricsManager {
     private static final Pattern TIME_TAG_PATTERN = Pattern.compile("\\[(\\d+):(\\d{2}(?:\\.\\d+)?)\\]");
 
     private static final Pattern[] CLEAN_PATTERNS = new Pattern[]{
-            Pattern.compile("(?i)\\s*\\([^)]*(?:official|lyrics?|video|audio|mv|visualizer|color\\s*coded|hd|4k|prod\\.)[^)]*\\)"),
-            Pattern.compile("(?i)\\s*\\[[^]]*(?:official|lyrics?|video|audio|mv|visualizer|color\\s*coded|hd|4k|prod\\.)[^]]*\\]"),
-            Pattern.compile("(?i)\\s*-\\s*Topic$"),
+            Pattern.compile("(?i)\\s*+\\([^)]*+(?:official|lyrics?+|video|audio|mv|visualizer|color\\s*+coded|hd|4k|prod\\.)[^)]*+\\)"),
+            Pattern.compile("(?i)\\s*+\\[[^]]*+(?:official|lyrics?+|video|audio|mv|visualizer|color\\s*+coded|hd|4k|prod\\.)[^]]*+\\]"),
+            Pattern.compile("(?i)\\s*+-\\s*+Topic$"),
             Pattern.compile("(?i)VEVO$")
     };
 
-    private static final Pattern FEAT_PATTERN = Pattern.compile("(?i)\\s*(\\((?:ft\\.?|feat\\.?|featuring)\\s+[^)]+\\)|\\[(?:ft\\.?|feat\\.?|featuring)\\s+[^]]+\\])");
+    private static final Pattern FEAT_PATTERN = Pattern.compile("(?i)\\s*+(\\((?:ft\\.?|feat\\.?|featuring)\\s++[^)]++\\)|\\[(?:ft\\.?|feat\\.?|featuring)\\s++[^]]++\\])");
 
     private final HttpClient httpClient;
     private final ObjectMapper mapper;
@@ -93,7 +93,9 @@ public class LrcLibLyricsManager implements AudioLyricsManager {
                     return lyrics;
                 }
             } catch (Exception e) {
-                log.debug("Direct LRCLIB exact match miss for '{} - {}': {}", cleanedTitle, cleanedAuthor, e.getMessage());
+                String safeTitle = cleanedTitle != null ? cleanedTitle.replaceAll("[\\r\\n]", "") : "";
+                String safeAuthor = cleanedAuthor != null ? cleanedAuthor.replaceAll("[\\r\\n]", "") : "";
+                log.debug("Direct LRCLIB exact match miss for '{} - {}': {}", safeTitle, safeAuthor, e.getMessage());
             }
         }
 
@@ -104,7 +106,8 @@ public class LrcLibLyricsManager implements AudioLyricsManager {
                     : cleanedTitle;
             return querySearch(query.trim(), cleanedTitle, cleanedAuthor);
         } catch (Exception e) {
-            log.warn("Failed to fetch lyrics from LRCLIB for query '{}': {}", title, e.getMessage());
+            String safeQuery = title != null ? title.replaceAll("[\\r\\n]", "") : "";
+            log.warn("Failed to fetch lyrics from LRCLIB for query '{}': {}", safeQuery, e.getMessage());
             return null;
         }
     }

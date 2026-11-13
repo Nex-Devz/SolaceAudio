@@ -227,7 +227,9 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
                 continue;
             }
             com.solaceaudio.sources.youtube.clients.InnerTubeClient.setVersionOverride(entry.getKey(), entry.getValue());
-            log.info("YouTube client version override applied: {} -> {}", entry.getKey(), entry.getValue());
+            String safeKey = entry.getKey().replaceAll("[\\r\\n]", "");
+            String safeVal = entry.getValue().replaceAll("[\\r\\n]", "");
+            log.info("YouTube client version override applied: {} -> {}", safeKey, safeVal);
         }
     }
 
@@ -455,7 +457,8 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
                 if (com.solaceaudio.security.SecurityFilter.isSafeUrl(ytConfig.getCipherUrl())) {
                     this.youtube.setCipherUrl(ytConfig.getCipherUrl());
                 } else {
-                    log.warn("Blocked potentially unsafe cipherUrl update (SSRF protection): {}", ytConfig.getCipherUrl());
+                    String safeUrl = ytConfig.getCipherUrl().replaceAll("[\\r\\n]", "");
+                    log.warn("Blocked potentially unsafe cipherUrl update (SSRF protection): {}", safeUrl);
                 }
             }
             if (ytConfig.getClientVersions() != null && !ytConfig.getClientVersions().isEmpty()) {
