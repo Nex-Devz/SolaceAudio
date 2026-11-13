@@ -213,8 +213,9 @@ plugins:
       - "dzisrc:{isrc}"        # Priority 1: Exact studio ISRC match on Deezer
       - "ytsearch:\"{isrc}\""  # Priority 2: Direct ISRC track search on YouTube
       - "ytsearch:{query}"     # Priority 3: Sanitized artist + title query
-      - "scsearch:{query}"     # Priority 4: SoundCloud streaming fallback
-      - "bcsearch:{query}"     # Priority 5: Bandcamp catalog fallback
+      - "jssearch:{query}"     # Priority 4: JioSaavn 320kbps CDN fallback (Zero rate limits / bypasses datacenter blocks)
+      - "scsearch:{query}"     # Priority 5: SoundCloud streaming fallback
+      - "bcsearch:{query}"     # Priority 6: Bandcamp catalog fallback
 
     youtube:
       oembed: true             # Lightweight metadata resolution fallback (bypasses datacenter bot blocks)

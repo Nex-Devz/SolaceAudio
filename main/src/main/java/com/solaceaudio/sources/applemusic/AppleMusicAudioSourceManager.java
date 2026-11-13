@@ -194,42 +194,130 @@ public class AppleMusicAudioSourceManager extends MirroringSourceManager {
     }
 
     public AudioItem getSearch(String query) throws Exception {
-        String token = getDeveloperToken();
-        String url = API_BASE + countryCode + "/search?term=" + URLEncoder.encode(query, StandardCharsets.UTF_8) + "&types=songs&limit=25";
+        try {
+            String token = getDeveloperToken();
+            String url = API_BASE + countryCode + "/search?term=" + URLEncoder.encode(query, StandardCharsets.UTF_8) + "&types=songs&limit=25";
 
-        JsonNode root = fetchApiJson(url, token);
-        if (root == null) return AudioReference.NO_TRACK;
-
-        JsonNode songItems = root.path("results").path("songs").path("data");
-        if (!songItems.isArray() || songItems.isEmpty()) {
-            return AudioReference.NO_TRACK;
-        }
-
-        List<AudioTrack> tracks = new ArrayList<>();
-        for (JsonNode song : songItems) {
-            AudioTrack track = parseTrack(song);
-            if (track != null) {
-                tracks.add(track);
+            JsonNode root = fetchApiJson(url, token);
+            if (root != null) {
+                JsonNode songItems = root.path("results").path("songs").path("data");
+                if (songItems.isArray() && !songItems.isEmpty()) {
+                    List<AudioTrack> tracks = new ArrayList<>();
+                    for (JsonNode song : songItems) {
+                        AudioTrack track = parseTrack(song);
+                        if (track != null) {
+                            tracks.add(track);
+                        }
+                    }
+                    if (!tracks.isEmpty()) {
+                        return new BasicAudioPlaylist("Search results for: " + query, tracks, null, true);
+                    }
+                }
             }
+        } catch (Exception e) {
+            log.debug("Apple Music catalog search failed ({}), trying iTunes fallback", e.getMessage());
         }
+        return getItunesSearch(query);
+    }
 
-        return new BasicAudioPlaylist("Search results for: " + query, tracks, null, true);
+    public AudioItem getItunesSearch(String query) {
+        try {
+            String url = "https://itunes.apple.com/search?term=" + enc(query) + "&entity=song&limit=25";
+            HttpRequest req = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+                    .timeout(Duration.ofSeconds(10))
+                    .GET().build();
+
+            HttpResponse<String> res = httpClient.send(req, HttpResponse.BodyHandlers.ofString());
+            if (res.statusCode() == 200 && res.body() != null) {
+                JsonNode root = objectMapper.readTree(res.body());
+                JsonNode results = root.path("results");
+                if (results.isArray() && !results.isEmpty()) {
+                    List<AudioTrack> tracks = new ArrayList<>();
+                    for (JsonNode it : results) {
+                        String title = it.path("trackName").asText(null);
+                        if (title == null || title.isBlank()) continue;
+                        String artist = it.path("artistName").asText("Unknown Artist");
+                        long duration = it.path("trackTimeMillis").asLong(0);
+                        String id = String.valueOf(it.path("trackId").asLong());
+                        String trackUrl = it.path("trackViewUrl").asText("https://music.apple.com");
+                        String artwork = it.path("artworkUrl100").asText(null);
+                        if (artwork != null) {
+                            artwork = artwork.replace("100x100bb.jpg", "600x600bb.jpg");
+                        }
+                        String albumName = it.path("collectionName").asText(null);
+                        String previewUrl = it.path("previewUrl").asText(null);
+
+                        AudioTrackInfo info = new AudioTrackInfo(title, artist, duration, id, false, trackUrl, artwork, null);
+                        tracks.add(new AppleMusicAudioTrack(info, albumName, null, null, null, previewUrl, false, this));
+                    }
+                    if (!tracks.isEmpty()) {
+                        return new BasicAudioPlaylist("Search results for: " + query, tracks, null, true);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.debug("iTunes search fallback failed: {}", e.getMessage());
+        }
+        return AudioReference.NO_TRACK;
     }
 
     public AudioItem getSong(String storefront, String id) throws Exception {
-        String token = getDeveloperToken();
-        String market = storefront != null && !storefront.isBlank() ? storefront : countryCode;
-        String url = API_BASE + market + "/songs/" + enc(id);
+        try {
+            String token = getDeveloperToken();
+            String market = storefront != null && !storefront.isBlank() ? storefront : countryCode;
+            String url = API_BASE + market + "/songs/" + enc(id);
 
-        JsonNode root = fetchApiJson(url, token);
-        if (root == null) return AudioReference.NO_TRACK;
-
-        JsonNode data = root.path("data");
-        if (!data.isArray() || data.isEmpty()) {
-            return AudioReference.NO_TRACK;
+            JsonNode root = fetchApiJson(url, token);
+            if (root != null) {
+                JsonNode data = root.path("data");
+                if (data.isArray() && !data.isEmpty()) {
+                    return parseTrack(data.get(0));
+                }
+            }
+        } catch (Exception e) {
+            log.debug("Apple Music catalog song fetch failed ({}), trying iTunes lookup", e.getMessage());
         }
+        return getItunesSong(id);
+    }
 
-        return parseTrack(data.get(0));
+    public AudioItem getItunesSong(String id) {
+        try {
+            String url = "https://itunes.apple.com/lookup?id=" + enc(id);
+            HttpRequest req = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+                    .timeout(Duration.ofSeconds(10))
+                    .GET().build();
+
+            HttpResponse<String> res = httpClient.send(req, HttpResponse.BodyHandlers.ofString());
+            if (res.statusCode() == 200 && res.body() != null) {
+                JsonNode root = objectMapper.readTree(res.body());
+                JsonNode results = root.path("results");
+                if (results.isArray() && !results.isEmpty()) {
+                    JsonNode it = results.get(0);
+                    String title = it.path("trackName").asText(null);
+                    if (title != null && !title.isBlank()) {
+                        String artist = it.path("artistName").asText("Unknown Artist");
+                        long duration = it.path("trackTimeMillis").asLong(0);
+                        String trackUrl = it.path("trackViewUrl").asText("https://music.apple.com");
+                        String artwork = it.path("artworkUrl100").asText(null);
+                        if (artwork != null) {
+                            artwork = artwork.replace("100x100bb.jpg", "600x600bb.jpg");
+                        }
+                        String albumName = it.path("collectionName").asText(null);
+                        String previewUrl = it.path("previewUrl").asText(null);
+
+                        AudioTrackInfo info = new AudioTrackInfo(title, artist, duration, id, false, trackUrl, artwork, null);
+                        return new AppleMusicAudioTrack(info, albumName, null, null, null, previewUrl, false, this);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.debug("iTunes lookup fallback failed: {}", e.getMessage());
+        }
+        return AudioReference.NO_TRACK;
     }
 
     public AudioItem getAlbum(String storefront, String id) throws Exception {

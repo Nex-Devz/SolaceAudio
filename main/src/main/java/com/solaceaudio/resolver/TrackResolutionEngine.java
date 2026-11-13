@@ -18,6 +18,7 @@ public class TrackResolutionEngine implements TrackResolutionHandler {
     private static final String[] DEFAULT_PROVIDERS = {
             "ytsearch:\"" + ISRC_PATTERN + "\"",
             "ytsearch:" + QUERY_PATTERN,
+            "jssearch:" + QUERY_PATTERN,
             "scsearch:" + QUERY_PATTERN,
             "bcsearch:" + QUERY_PATTERN
     };
