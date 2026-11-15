@@ -4,6 +4,12 @@ All notable changes to SolaceAudio are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.32] - 2026-11-15
+
+### Fixed
+
+- **Lavalink LavaLyrics Route Collision**: Added `@ConditionalOnMissingClass` and `@ConditionalOnProperty` to `LyricsController` and `SolaceLyricsManager`. When `lavalyrics-plugin` is installed alongside SolaceAudio, SolaceAudio automatically yields the `/v4/lyrics` REST endpoints to `lavalyrics` without throwing Spring `Ambiguous mapping` route collision errors, while continuing to supply its multi-provider lyrics (LRCLIB, Deezer, Genius, Spotify) directly into `lavalyrics`.
+
 ## [1.0.31] - 2026-11-15
 
 ### Added
@@ -158,6 +164,7 @@ versioned release artifacts; 1.0.23 artifacts on JitPack are unaffected.
 - Mirror fallback now warns when it is enabled but no mirror source is
   registered.
 
+[1.0.32]: https://github.com/Nex-Devz/SolaceAudio/releases/tag/1.0.32
 [1.0.31]: https://github.com/Nex-Devz/SolaceAudio/releases/tag/1.0.31
 [1.0.30]: https://github.com/Nex-Devz/SolaceAudio/releases/tag/1.0.30
 [1.0.29]: https://github.com/Nex-Devz/SolaceAudio/releases/tag/1.0.29

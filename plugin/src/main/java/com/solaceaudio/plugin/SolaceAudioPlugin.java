@@ -287,6 +287,7 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
     }
 
     @org.springframework.context.annotation.Bean
+    @org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(prefix = "plugins.solaceaudio.lyrics", name = "enabled", havingValue = "true", matchIfMissing = true)
     public com.solaceaudio.lyrics.SolaceLyricsManager solaceLyricsManager() {
         var lyricsMgr = new com.solaceaudio.lyrics.SolaceLyricsManager();
         if (this.spotify != null) {

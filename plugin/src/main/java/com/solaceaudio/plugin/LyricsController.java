@@ -12,6 +12,8 @@ import dev.arbjerg.lavalink.api.ISocketContext;
 import dev.arbjerg.lavalink.api.ISocketServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +21,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController("solaceAudioLyricsController")
+@ConditionalOnProperty(prefix = "plugins.solaceaudio.lyrics", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnMissingClass("com.github.topi314.lavalyrics.plugin.AudioLyricsRestHandler")
 public class LyricsController {
 
     private static final Logger log = LoggerFactory.getLogger(LyricsController.class);
