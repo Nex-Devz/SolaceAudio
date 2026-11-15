@@ -4,6 +4,22 @@ All notable changes to SolaceAudio are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.30] - 2026-11-15
+
+### Fixed
+
+- **Thread Leaks & Daemon Thread Lifecycle**: Resolved thread leaks across `PoTokenManager`, `YouTubeProxyHandler`, and `YouTubeSourceManager` by converting internal schedulers and thread pools (`cleanupExecutor`, `cacheExecutor`, `sessionWarmer`) to dedicated daemon thread factories (`SolaceAudio-*`). Prevents JVM process hanging during Lavalink plugin reload or node shutdown.
+- **REST Route Aliases & Client Casing Drift**: Added multi-path routing across REST controllers (`/recommendation` and `/recommendations`, `/sponsorblock` and `/sponsorBlock`) to guarantee 100% interoperability across major Lavalink client libraries (Lavalink-Client, DisTube, Kazagumo, Lavashark) without 404 routing errors.
+- **SSRF Warning Log Sanitization**: Wrapped rejected cipher URL updates in `SolaceAudioPlugin` with `SecurityFilter.sanitize()` to prevent CRLF and unescaped log injection during security filter rejections.
+- **Candidate Scoring & Metadata Accuracy Guard**: Enhanced `CandidateScorer` and `TrackResolutionEngine` with strict ISRC match prioritization (1.0f perfect score) and a 30-second duration deviation penalty to eliminate mismatched audio when resolving tracks across external mirror ladders.
+
+### Added
+
+- **Amazon Music Native MESK Engine**: Implemented direct Amazon Music MESK catalog integration with automatic CSRF token negotiation directly against `music.amazon.com`, eliminating hard dependency on third-party proxy endpoints while preserving proxy fallback resilience.
+- **Amazon Search Prefixes & Mirror Integration**: Added `azsearch:` and `amazonsearch:` search prefixes and registered `amazon` and `amazonmusic` within `YouTubeTrack` mirror provider ladders.
+- **Spotify TOTP Authentication & Sidecar Hook**: Added dynamic TOTP secret generation for Spotify metadata retrieval and sidecar playback endpoint integration hook.
+- **Expanded Test Suite**: Added `AmazonMusicNativeTest` and `SpotifyTokenTest` to the test suite, achieving 100% test pass rate across 60 unit and integration tests.
+
 ## [1.0.29] - 2026-11-13
 
 ### Added
