@@ -90,62 +90,74 @@ plugins:
       applemusic: true
 
     providers:
+      # Resolution mirror ladder tried in order when resolving external tracks:
+      - "spsearch:\"{isrc}\""
+      - "spsearch:{query}"
       - "dzisrc:{isrc}"
+      - "dzsearch:{query}"
       - "ytsearch:\"{isrc}\""
       - "ytsearch:{query}"
+      - "jssearch:\"{isrc}\""
       - "jssearch:{query}"
       - "azsearch:{query}"
+      - "scsearch:{query}"
       - "bcsearch:{query}"
 
     spotify:
       countryCode: "US"
-      playlistLoadLimit: 6
-      albumLoadLimit: 6
+      playlistLoadLimit: 100 # Maximum tracks fetched per playlist
+      albumLoadLimit: 50
       resolveArtistsInSearch: true
       localFiles: false
+      # OPTIONAL: Web player 'sp_dc' cookie from open.spotify.com.
+      # SolaceAudio works 100% WITHOUT credentials via built-in anonymous token negotiation.
+      # Adding spDc unlocks Spotify Canvas, synchronized lyrics, and personalized playlists.
       spDc: ""
 
     applemusic:
       countryCode: "us"
-      playlistLoadLimit: 50
+      playlistLoadLimit: 100
       albumLoadLimit: 50
       artistLoadLimit: 50
 
     jiosaavn:
       # Official API with in-process DES direct CDN streaming (Zero proxy needed!)
       apiUrl: "https://www.jiosaavn.com/api.php"
-      playlistLoadLimit: 50
-      # Audio streaming bitrate: "320kbps" (Hi-Fi), "160kbps" (Balanced - saves 50% bandwidth), "96kbps", or "48kbps"
+      playlistLoadLimit: 100
+      # Audio streaming bitrate: "320kbps" (Maximum Hi-Fi CD Quality), "160kbps" (Balanced), "96kbps", or "48kbps"
       quality: "320kbps"
 
     gaana:
       # Public endpoint or self-host via https://github.com/notdeltaxd/Gaana-API on Vercel
       apiUrl: "https://gaana-plugin-api.vercel.app/api"
-      playlistLoadLimit: 50
+      playlistLoadLimit: 100
       albumLoadLimit: 50
       artistLoadLimit: 50
-      searchLimit: 25
+      searchLimit: 50
 
     amazonmusic:
-      # Self-hosted via https://github.com/Nex-Devz/amazon-music-api on Vercel
+      # Built-in native MESK catalog engine with zero external proxy requirement!
+      # Backup proxy: https://github.com/Nex-Devz/amazon-music-api deployed on Vercel
       apiUrl: "https://amazon-music-api-dun.vercel.app/api"
-      playlistLoadLimit: 50
+      playlistLoadLimit: 100
       albumLoadLimit: 50
       artistLoadLimit: 50
 
     deezer:
       # Official public API with native Blowfish-CBC stream decryption (Zero proxy needed!)
       apiUrl: "https://api.deezer.com"
-      arl: "" # Optional Deezer ARL cookie for authenticated HiFi streaming
+      # OPTIONAL: Deezer web 'arl' cookie for authenticated direct Hi-Fi FLAC/MP3 streaming.
+      # SolaceAudio works out-of-the-box without credentials via public 128kbps streams.
+      arl: ""
       masterKey: "g4el58wc0zvf9na1"
-      playlistLoadLimit: 50
+      playlistLoadLimit: 100
       albumLoadLimit: 50
       artistLoadLimit: 50
-      searchLimit: 25
+      searchLimit: 50
 
     pandora:
       csrfToken: ""
-      searchLimit: 10
+      searchLimit: 25
 
     flowerytts:
       voice: "en-US-Standard-A"
@@ -157,38 +169,27 @@ plugins:
       # Intelligent mirror fallback if direct YouTube playback is blocked on host IP
       mirror: true
       # Mirror providers are tried in order when direct YouTube playback fails. Leave empty to
-      # use the built-in cross-service list (Spotify, Deezer, JioSaavn, Apple Music), which are
-      # the only providers that can rescue a track when YouTube itself is unreachable.
-      # Supported placeholders: %QUERY% / {query} and %ISRC% / {isrc}.
+      # use the built-in cross-service list (Spotify, Deezer, JioSaavn, Apple Music, Amazon Music).
       mirrorProviders: []
-      # Use SolaceAudio's built-in YouTube source instead of the official plugin above.
-      # The official plugin tracks YouTube's client changes far more closely, so the built-in
-      # source is a fallback rather than the default.
       nativeSource: false
-      # Override the InnerTube client version strings, keyed by client name. YouTube rejects
-      # outdated client versions without notice, and these can be corrected from configuration
-      # instead of waiting for a plugin release.
-      # clientVersions:
-      #   ANDROID: "21.02.35"
-      #   IOS: "21.32.4"
       localDiskCache: true
       diskCachePath: "youtube-cache"
       maxDiskCacheMb: 10240
       cipherUrl: "https://cipher.kikkia.dev"
-      # Burner cookie file (recommended for datacenter IPs - bypasses PoToken requirements)
+      # OPTIONAL: Burner cookie file (recommended for datacenter IPs to bypass PoToken / bot checks)
       cookieFile: "ytburner.txt"
       # Free 24/7 Auto-rotated PoToken generator (hosted on Vercel)
       potokenUrl: "https://potoken-generator.vercel.app/token"
-      # Optional: Static manual PoToken & Visitor Data fallback
       potokenVisitorData: ""
       potoken: ""
 
     lastfm:
+      # OPTIONAL: Free API key from https://www.last.fm/api/account/create for scrobbling and recommendations
       apiKey: ""
 
     lyrics:
       enabled: true
-      # Fallback chain for synchronized and plain-text lyrics (no API keys required!)
+      # High-speed fallback chain for synchronized and plain-text lyrics (Zero API keys needed!)
       sources:
         - "lrclib"
         - "deezer"

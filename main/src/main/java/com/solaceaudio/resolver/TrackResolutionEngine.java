@@ -16,10 +16,15 @@ public class TrackResolutionEngine implements TrackResolutionHandler {
     public static final String QUERY_PATTERN = "{query}";
 
     private static final String[] DEFAULT_PROVIDERS = {
+            "spsearch:\"" + ISRC_PATTERN + "\"",
+            "spsearch:" + QUERY_PATTERN,
+            "dzisrc:" + ISRC_PATTERN,
+            "dzsearch:" + QUERY_PATTERN,
             "ytsearch:\"" + ISRC_PATTERN + "\"",
             "ytsearch:" + QUERY_PATTERN,
             "jssearch:\"" + ISRC_PATTERN + "\"",
             "jssearch:" + QUERY_PATTERN,
+            "azsearch:" + QUERY_PATTERN,
             "scsearch:" + QUERY_PATTERN,
             "bcsearch:" + QUERY_PATTERN
     };
@@ -46,6 +51,26 @@ public class TrackResolutionEngine implements TrackResolutionHandler {
             if (template == null || template.isBlank()) continue;
 
             String candidate = template;
+
+            // Avoid resolving a track through its own source (e.g. Spotify track resolving via spsearch)
+            if (mirrorTrack.getSourceManager() != null) {
+                String sourceName = mirrorTrack.getSourceManager().getSourceName();
+                if ("spotify".equalsIgnoreCase(sourceName) && candidate.startsWith("spsearch:")) {
+                    continue;
+                }
+                if ("deezer".equalsIgnoreCase(sourceName) && (candidate.startsWith("dzsearch:") || candidate.startsWith("dzisrc:"))) {
+                    continue;
+                }
+                if ("jiosaavn".equalsIgnoreCase(sourceName) && candidate.startsWith("jssearch:")) {
+                    continue;
+                }
+                if ("amazonmusic".equalsIgnoreCase(sourceName) && (candidate.startsWith("azsearch:") || candidate.startsWith("amazonsearch:"))) {
+                    continue;
+                }
+                if ("applemusic".equalsIgnoreCase(sourceName) && candidate.startsWith("amsearch:")) {
+                    continue;
+                }
+            }
 
             if (candidate.contains(ISRC_PATTERN)) {
                 String isrc = track.getInfo().isrc;

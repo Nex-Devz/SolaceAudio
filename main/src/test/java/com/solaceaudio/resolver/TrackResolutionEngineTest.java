@@ -18,14 +18,23 @@ public class TrackResolutionEngineTest {
         String[] providers = (String[]) providersField.get(engine);
 
         boolean hasJioSaavn = false;
+        boolean hasSpotify = false;
+        boolean hasDeezer = false;
         for (String provider : providers) {
             if (provider.startsWith("jssearch:")) {
                 hasJioSaavn = true;
-                break;
+            }
+            if (provider.startsWith("spsearch:")) {
+                hasSpotify = true;
+            }
+            if (provider.startsWith("dzisrc:") || provider.startsWith("dzsearch:")) {
+                hasDeezer = true;
             }
         }
 
         assertTrue(hasJioSaavn, "DEFAULT_PROVIDERS must include jssearch fallback for reliable audio resolution");
+        assertTrue(hasSpotify, "DEFAULT_PROVIDERS must include spsearch fallback");
+        assertTrue(hasDeezer, "DEFAULT_PROVIDERS must include deezer fallback");
     }
 
     @Test

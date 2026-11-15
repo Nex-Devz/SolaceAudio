@@ -18,6 +18,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - **Amazon Music Native MESK Engine**: Implemented direct Amazon Music MESK catalog integration with automatic CSRF token negotiation directly against `music.amazon.com`, eliminating hard dependency on third-party proxy endpoints while preserving proxy fallback resilience.
 - **Amazon Search Prefixes & Mirror Integration**: Added `azsearch:` and `amazonsearch:` search prefixes and registered `amazon` and `amazonmusic` within `YouTubeTrack` mirror provider ladders.
 - **Spotify TOTP Authentication & Sidecar Hook**: Added dynamic TOTP secret generation for Spotify metadata retrieval and sidecar playback endpoint integration hook.
+- **Spotify & Deezer in Default Mirror Providers Ladder**: Added `"spsearch:\"{isrc}\""`, `"spsearch:{query}"`, and Deezer ISRC/query patterns directly into `DEFAULT_PROVIDERS` and `application.yml`, complete with self-source loop prevention to ensure seamless cross-service audio fallback without recursion.
 - **Expanded Test Suite**: Added `AmazonMusicNativeTest` and `SpotifyTokenTest` to the test suite, achieving 100% test pass rate across 60 unit and integration tests.
 
 ## [1.0.29] - 2026-11-13
