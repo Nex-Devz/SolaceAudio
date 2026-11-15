@@ -148,5 +148,11 @@ versioned release artifacts; 1.0.23 artifacts on JitPack are unaffected.
 - Mirror fallback now warns when it is enabled but no mirror source is
   registered.
 
+[1.0.30]: https://github.com/Nex-Devz/SolaceAudio/releases/tag/1.0.30
+[1.0.29]: https://github.com/Nex-Devz/SolaceAudio/releases/tag/1.0.29
+[1.0.28]: https://github.com/Nex-Devz/SolaceAudio/releases/tag/1.0.28
+[1.0.27]: https://github.com/Nex-Devz/SolaceAudio/releases/tag/1.0.27
+[1.0.26]: https://github.com/Nex-Devz/SolaceAudio/releases/tag/1.0.26
+[1.0.25]: https://github.com/Nex-Devz/SolaceAudio/releases/tag/1.0.25
 [1.0.24]: https://github.com/Nex-Devz/SolaceAudio/releases/tag/1.0.24
 [1.0.23]: https://github.com/Nex-Devz/SolaceAudio/releases/tag/1.0.23

@@ -7,16 +7,18 @@ lavalink:
   defaultPluginSnapshotRepository: "https://maven.lavalink.dev/snapshots"
 
   plugins:
-    # SolaceAudio Multi-Source Audio Engine
+    # SolaceAudio Multi-Source Audio Engine (JioSaavn, Spotify, Deezer, Apple Music, Amazon, Gaana)
     - dependency: "com.github.Nex-Devz.SolaceAudio:solaceaudio-plugin:1.0.30"
       repository: "https://jitpack.io"
 
     # Official YouTube source. SolaceAudio detects this plugin and layers its oEmbed metadata
-    # repair, mirror fallback and disk cache on top of it. It is pinned to a snapshot build on
-    # purpose: the 1.18.x release line still ships InnerTube client versions that YouTube
-    # rejects with HTTP 400, which breaks playback.
+    # repair, mirror fallback and disk cache on top of it.
     - dependency: "dev.lavalink.youtube:youtube-plugin:2be8e542d3f6f178e048dca565892684c2e40177"
       snapshot: true
+
+    # LavaLyrics: Synchronized & plain-text lyrics API (natively integrated with SolaceAudio)
+    - dependency: "com.github.topi314.lavalyrics:lavalyrics-plugin:1.0.0"
+      repository: "https://maven.lavalink.dev/releases"
 
   server:
     password: "youshallnotpass"
@@ -30,10 +32,12 @@ lavalink:
       local: false
     bufferDurationMs: 400
     frameBufferDurationMs: 5000
-    opusEncodingQuality: 10
-    resamplingQuality: HIGH
+    opusEncodingQuality: 10 # Maximum Opus encoding quality (Hi-Fi 10/10)
+    resamplingQuality: HIGH # High-fidelity polyphase/sinc audio resampling
     trackStuckThresholdMs: 10000
-    playerUpdateInterval: 5
+    useSeekGhosting: true # Smooth seek transitions without audio pops
+    playerUpdateInterval: 5 # Real-time player progress updates in seconds
+    youtubePlaylistLoadLimit: 100
 
 plugins:
   # Official YouTube source (dev.lavalink.youtube). SolaceAudio detects this plugin at startup
@@ -89,6 +93,8 @@ plugins:
       - "dzisrc:{isrc}"
       - "ytsearch:\"{isrc}\""
       - "ytsearch:{query}"
+      - "jssearch:{query}"
+      - "azsearch:{query}"
       - "bcsearch:{query}"
 
     spotify:
