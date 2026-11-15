@@ -56,8 +56,16 @@ public class YouTubeSourceManager implements AudioSourceManager {
             .connectTimeout(Duration.ofSeconds(10))
             .build();
     private final ObjectMapper mapper = new ObjectMapper();
-    private final ScheduledExecutorService cleanupExecutor = Executors.newSingleThreadScheduledExecutor();
-    private final ExecutorService cacheExecutor = Executors.newFixedThreadPool(3);
+    private final ScheduledExecutorService cleanupExecutor = Executors.newSingleThreadScheduledExecutor(r -> {
+        Thread t = new Thread(r, "SolaceAudio-YouTube-Cleanup");
+        t.setDaemon(true);
+        return t;
+    });
+    private final ExecutorService cacheExecutor = Executors.newFixedThreadPool(3, r -> {
+        Thread t = new Thread(r, "SolaceAudio-YouTube-CacheWorker");
+        t.setDaemon(true);
+        return t;
+    });
 
     public YouTubeSourceManager(
             boolean oembed,

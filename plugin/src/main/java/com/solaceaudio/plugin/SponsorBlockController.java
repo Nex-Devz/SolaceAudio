@@ -34,7 +34,7 @@ public class SponsorBlockController {
         this.plugin = plugin;
     }
 
-    @GetMapping("/v4/sessions/{sessionId}/players/{guildId}/sponsorblock")
+    @GetMapping({"/v4/sessions/{sessionId}/players/{guildId}/sponsorblock", "/v4/sessions/{sessionId}/players/{guildId}/sponsorBlock"})
     public ResponseEntity<Object> getSponsorBlock(
             @PathVariable("sessionId") String sessionId,
             @PathVariable("guildId") String guildId
@@ -88,7 +88,7 @@ public class SponsorBlockController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/v4/sessions/{sessionId}/players/{guildId}/sponsorblock")
+    @PostMapping({"/v4/sessions/{sessionId}/players/{guildId}/sponsorblock", "/v4/sessions/{sessionId}/players/{guildId}/sponsorBlock"})
     public ResponseEntity<Object> updateSponsorBlock(
             @PathVariable("sessionId") String sessionId,
             @PathVariable("guildId") String guildId,

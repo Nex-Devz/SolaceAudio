@@ -21,6 +21,25 @@ public class SolaceAudioSpotifyConfig {
         this.spDc = spDc;
     }
 
+    private boolean nativePlayback = false;
+    private String sidecarUrl = "http://127.0.0.1:3678";
+
+    public boolean isNativePlayback() {
+        return nativePlayback;
+    }
+
+    public void setNativePlayback(boolean nativePlayback) {
+        this.nativePlayback = nativePlayback;
+    }
+
+    public String getSidecarUrl() {
+        return sidecarUrl;
+    }
+
+    public void setSidecarUrl(String sidecarUrl) {
+        this.sidecarUrl = sidecarUrl;
+    }
+
     public String getCountryCode() {
         return countryCode;
     }

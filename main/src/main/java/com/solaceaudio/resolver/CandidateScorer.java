@@ -12,6 +12,15 @@ public final class CandidateScorer {
     public static int score(AudioTrackInfo target, AudioTrackInfo candidate) {
         if (target == null || candidate == null) return -100;
 
+        // 1. ISRC exact match check: International Standard Recording Code is authoritative
+        if (target.isrc != null && !target.isrc.isBlank() && candidate.isrc != null && !candidate.isrc.isBlank()) {
+            String cleanTargetIsrc = target.isrc.replace("-", "").trim();
+            String cleanCandIsrc = candidate.isrc.replace("-", "").trim();
+            if (cleanTargetIsrc.equalsIgnoreCase(cleanCandIsrc)) {
+                return 150; // Exact ISRC match guarantees identical master recording
+            }
+        }
+
         String normTargetTitle = TrackNormalizer.normalize(target.title);
         String normCandTitle = TrackNormalizer.normalize(candidate.title);
 
@@ -70,6 +79,12 @@ public final class CandidateScorer {
             } else if (deltaMs <= 10000) {
                 score += 10;
             } else if (deltaMs > 30000) {
+                // Strict duration guard: prevent matching full albums, extended live sets, or 10m+ videos to standard tracks
+                if (deltaMs > 60000 && !TrackNormalizer.containsMarker(target.title, "live")
+                        && !TrackNormalizer.containsMarker(target.title, "mix")
+                        && !TrackNormalizer.containsMarker(target.title, "extended")) {
+                    return -100;
+                }
                 score -= 40; 
             }
         }

@@ -18,6 +18,7 @@ public class TrackResolutionEngine implements TrackResolutionHandler {
     private static final String[] DEFAULT_PROVIDERS = {
             "ytsearch:\"" + ISRC_PATTERN + "\"",
             "ytsearch:" + QUERY_PATTERN,
+            "jssearch:\"" + ISRC_PATTERN + "\"",
             "jssearch:" + QUERY_PATTERN,
             "scsearch:" + QUERY_PATTERN,
             "bcsearch:" + QUERY_PATTERN
@@ -73,9 +74,31 @@ public class TrackResolutionEngine implements TrackResolutionHandler {
                 if (loaded == null || loaded == AudioReference.NO_TRACK) {
                     continue;
                 }
-                if (loaded instanceof AudioPlaylist playlist && playlist.getTracks().isEmpty()) {
+
+                if (loaded instanceof AudioPlaylist playlist) {
+                    var tracks = playlist.getTracks();
+                    if (tracks.isEmpty()) {
+                        continue;
+                    }
+                    AudioTrack bestCandidate = CandidateScorer.selectBest(mirrorTrack.getInfo(), tracks);
+                    if (bestCandidate != null) {
+                        return bestCandidate;
+                    }
+                    log.debug("No tracks in provider [{}] met candidate score threshold for [{}], trying next",
+                            searchKey, mirrorTrack.getInfo().title);
                     continue;
                 }
+
+                if (loaded instanceof AudioTrack singleTrack) {
+                    int score = CandidateScorer.score(mirrorTrack.getInfo(), singleTrack.getInfo());
+                    if (score >= 15) {
+                        return singleTrack;
+                    }
+                    log.debug("Single track from [{}] failed score threshold ({}) for [{}], trying next",
+                            searchKey, score, mirrorTrack.getInfo().title);
+                    continue;
+                }
+
                 return loaded;
             } catch (Throwable t) {
                 log.debug("Mirror provider resolution error for pattern [{}]: {}", candidate, t.getMessage());

@@ -12,3 +12,6 @@ out/
 .project
 .classpath
 skill.md
+.audit-probes/
+research-spotify/
+

@@ -65,7 +65,8 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
         this.sourcesConfig = sourcesConfig;
 
         if (sourcesConfig.isJiosaavn()) {
-            this.jioSaavn = new JioSaavnAudioSourceManager(jioSaavnConfig.getApiUrl());
+            String safeApiUrl = checkSafeUrl(jioSaavnConfig.getApiUrl(), "https://www.jiosaavn.com/api.php", "jiosaavn");
+            this.jioSaavn = new JioSaavnAudioSourceManager(safeApiUrl);
             if (jioSaavnConfig.getPlaylistLoadLimit() > 0) {
                 this.jioSaavn.setPlaylistLoadLimit(jioSaavnConfig.getPlaylistLoadLimit());
             }
@@ -74,7 +75,8 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
             }
         }
         if (sourcesConfig.isGaana()) {
-            this.gaana = new GaanaAudioSourceManager(gaanaConfig.getApiUrl(), unused -> manager);
+            String safeApiUrl = checkSafeUrl(gaanaConfig.getApiUrl(), "https://gaana-plugin-api.vercel.app/api", "gaana");
+            this.gaana = new GaanaAudioSourceManager(safeApiUrl, unused -> manager);
             if (gaanaConfig.getPlaylistLoadLimit() > 0) {
                 this.gaana.setPlaylistLoadLimit(gaanaConfig.getPlaylistLoadLimit());
             }
@@ -86,7 +88,8 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
             }
         }
         if (sourcesConfig.isAmazonmusic()) {
-            this.amazonMusic = new AmazonMusicAudioSourceManager(pluginConfig.getProviders(), amazonMusicConfig.getApiUrl(), unused -> manager);
+            String safeApiUrl = checkSafeUrl(amazonMusicConfig.getApiUrl(), "", "amazonmusic");
+            this.amazonMusic = new AmazonMusicAudioSourceManager(pluginConfig.getProviders(), safeApiUrl, unused -> manager);
             if (amazonMusicConfig.getPlaylistLoadLimit() > 0) {
                 this.amazonMusic.setPlaylistLoadLimit(amazonMusicConfig.getPlaylistLoadLimit());
             }
@@ -111,6 +114,12 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
             if (spotifyConfig.isLocalFiles()) {
                 this.spotify.setLocalFiles(spotifyConfig.isLocalFiles());
             }
+            if (spotifyConfig.isNativePlayback()) {
+                this.spotify.setNativePlaybackEnabled(true);
+                if (spotifyConfig.getSidecarUrl() != null && !spotifyConfig.getSidecarUrl().isBlank()) {
+                    this.spotify.setSidecarUrl(spotifyConfig.getSidecarUrl());
+                }
+            }
         }
         if (sourcesConfig.isPandora()) {
             this.pandora = new PandoraAudioSourceManager(pluginConfig.getProviders(), pandoraConfig.getCsrfToken(), unused -> manager);
@@ -120,15 +129,17 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
         }
         if (sourcesConfig.isYoutube()) {
             this.nativeYoutubeSource = youtubeConfig.isNativeSource();
+            String safeCipherUrl = checkSafeUrl(youtubeConfig.getCipherUrl(), null, "youtube cipher");
+            String safePotokenUrl = checkSafeUrl(youtubeConfig.getPotokenUrl(), null, "youtube potoken");
             this.youtube = new YouTubeSourceManager(
                 youtubeConfig.isOembed(),
                 youtubeConfig.isMirror(),
                 youtubeConfig.getMirrorProviders(),
                 youtubeConfig.isLocalDiskCache(),
                 youtubeConfig.getDiskCachePath(),
-                youtubeConfig.getCipherUrl(),
+                safeCipherUrl,
                 youtubeConfig.getMaxDiskCacheMb(),
-                youtubeConfig.getPotokenUrl(),
+                safePotokenUrl,
                 youtubeConfig.getPotokenVisitorData(),
                 youtubeConfig.getPotoken(),
                 youtubeConfig.getCookie(),
@@ -150,8 +161,9 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
         }
 
         if (sourcesConfig.isDeezer()) {
+            String safeDeezerApi = checkSafeUrl(deezerConfig.getApiUrl(), "https://api.deezer.com", "deezer");
             this.deezer = new com.solaceaudio.sources.deezer.DeezerAudioSourceManager(
-                deezerConfig.getApiUrl(),
+                safeDeezerApi,
                 deezerConfig.getArl(),
                 deezerConfig.getMasterKey(),
                 deezerConfig.getPlaylistLoadLimit(),
@@ -381,7 +393,7 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
         }
     }
 
-    @PatchMapping("/v4/SolaceAudio/config")
+    @PatchMapping({"/v4/SolaceAudio/config", "/v4/solaceaudio/config"})
     public void updateConfig(@RequestBody Config config) {
         var jioSaavnConfig = config.getJiosaavn();
         if (jioSaavnConfig != null && this.jioSaavn != null) {
@@ -470,7 +482,7 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
                 if (com.solaceaudio.security.SecurityFilter.isSafeUrl(ytConfig.getCipherUrl())) {
                     this.youtube.setCipherUrl(ytConfig.getCipherUrl());
                 } else {
-                    String safeUrl = ytConfig.getCipherUrl().replaceAll("[\\r\\n]", "");
+                    String safeUrl = com.solaceaudio.security.SecurityFilter.sanitize(ytConfig.getCipherUrl().replaceAll("[\\r\\n]", ""));
                     log.warn("Blocked potentially unsafe cipherUrl update (SSRF protection): {}", safeUrl);
                 }
             }
@@ -490,7 +502,7 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
         }
     }
 
-    @GetMapping("/v4/SolaceAudio/youtube/suggest")
+    @GetMapping({"/v4/SolaceAudio/youtube/suggest", "/v4/solaceaudio/youtube/suggest"})
     public List<String> getSearchSuggestions(
             @RequestParam(value = "query", required = false) String query,
             @RequestParam(value = "q", required = false) String q) {
@@ -499,5 +511,17 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
             return this.youtube.getProxyHandler().getSearchSuggestions(searchQuery);
         }
         return Collections.emptyList();
+    }
+
+    private static String checkSafeUrl(String url, String defaultUrl, String componentName) {
+        if (url == null || url.isBlank()) {
+            return defaultUrl;
+        }
+        if (com.solaceaudio.security.SecurityFilter.isSafeUrl(url)) {
+            return url;
+        }
+        String sanitized = com.solaceaudio.security.SecurityFilter.sanitize(url.replaceAll("[\\r\\n]", ""));
+        log.warn("Blocked potentially unsafe {} URL '{}' (SSRF protection). Falling back to safe default.", componentName, sanitized);
+        return defaultUrl;
     }
 }

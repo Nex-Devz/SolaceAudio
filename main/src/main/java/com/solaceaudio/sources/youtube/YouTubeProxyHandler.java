@@ -53,7 +53,11 @@ public class YouTubeProxyHandler {
 
     private final List<VisitorSession> sessionPool = new CopyOnWriteArrayList<>();
     private final AtomicInteger sessionIndex = new AtomicInteger(0);
-    private final ScheduledExecutorService sessionWarmer = Executors.newSingleThreadScheduledExecutor();
+    private final ScheduledExecutorService sessionWarmer = Executors.newSingleThreadScheduledExecutor(r -> {
+        Thread t = new Thread(r, "SolaceAudio-YouTube-SessionWarmer");
+        t.setDaemon(true);
+        return t;
+    });
 
     public static class ClientHealth {
         private final InnerTubeClient client;

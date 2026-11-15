@@ -116,6 +116,25 @@ public class SpotifyAudioSourceManager extends MirroringSourceManager implements
         this.tokenTracker.setSpDc(spDc);
     }
 
+    private boolean nativePlaybackEnabled = false;
+    private String sidecarUrl = "http://127.0.0.1:3678";
+
+    public boolean isNativePlaybackEnabled() {
+        return this.nativePlaybackEnabled;
+    }
+
+    public void setNativePlaybackEnabled(boolean nativePlaybackEnabled) {
+        this.nativePlaybackEnabled = nativePlaybackEnabled;
+    }
+
+    public String getSidecarUrl() {
+        return this.sidecarUrl;
+    }
+
+    public void setSidecarUrl(String sidecarUrl) {
+        this.sidecarUrl = sidecarUrl;
+    }
+
     public String getCountryCode() {
         return this.countryCode;
     }

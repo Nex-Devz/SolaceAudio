@@ -23,7 +23,11 @@ public class PoTokenManager {
     private volatile String tokenUrl;
     private volatile String visitorData;
     private volatile String poToken;
-    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
+        Thread t = new Thread(r, "SolaceAudio-PoToken-Scheduler");
+        t.setDaemon(true);
+        return t;
+    });
 
     public PoTokenManager(String tokenUrl, String staticVisitorData, String staticPoToken) {
         this.tokenUrl = (tokenUrl != null && !tokenUrl.isBlank()) ? tokenUrl.trim() : null;

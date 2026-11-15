@@ -45,7 +45,7 @@ public class RecommendationController {
         this.plugin = plugin;
     }
 
-    @GetMapping("/v4/sessions/{sessionId}/players/{guildId}/recommendation")
+    @GetMapping({"/v4/sessions/{sessionId}/players/{guildId}/recommendation", "/v4/sessions/{sessionId}/players/{guildId}/recommendations"})
     public ResponseEntity<Object> getRecommendations(
             @PathVariable("sessionId") String sessionId,
             @PathVariable("guildId") String guildId,

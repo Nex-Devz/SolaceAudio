@@ -71,6 +71,9 @@ public class AmazonMusicAudioSourceManager extends MirroringSourceManager {
             if (identifier.startsWith(SEARCH_PREFIX)) {
                 return getSearch(identifier.substring(SEARCH_PREFIX.length()).trim());
             }
+            if (identifier.startsWith("amazonsearch:")) {
+                return getSearch(identifier.substring("amazonsearch:".length()).trim());
+            }
 
             Matcher matcher = AMAZON_MUSIC_URL.matcher(identifier);
             if (matcher.find()) {
