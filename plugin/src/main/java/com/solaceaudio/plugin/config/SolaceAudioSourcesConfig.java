@@ -16,6 +16,8 @@ public class SolaceAudioSourcesConfig {
     private boolean deezer = false;
     private boolean flowerytts = false;
     private boolean applemusic = false;
+    private boolean audiomack = true;
+    private boolean shazam = true;
 
     public boolean isApplemusic() {
         return applemusic;
@@ -87,5 +89,21 @@ public class SolaceAudioSourcesConfig {
 
     public void setFlowerytts(boolean flowerytts) {
         this.flowerytts = flowerytts;
+    }
+
+    public boolean isAudiomack() {
+        return audiomack;
+    }
+
+    public void setAudiomack(boolean audiomack) {
+        this.audiomack = audiomack;
+    }
+
+    public boolean isShazam() {
+        return shazam;
+    }
+
+    public void setShazam(boolean shazam) {
+        this.shazam = shazam;
     }
 }

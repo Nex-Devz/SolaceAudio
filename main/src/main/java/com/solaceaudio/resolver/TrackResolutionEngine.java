@@ -25,6 +25,8 @@ public class TrackResolutionEngine implements TrackResolutionHandler {
             "jssearch:\"" + ISRC_PATTERN + "\"",
             "jssearch:" + QUERY_PATTERN,
             "azsearch:" + QUERY_PATTERN,
+            "admsearch:" + QUERY_PATTERN,
+            "shsearch:" + QUERY_PATTERN,
             "scsearch:" + QUERY_PATTERN,
             "bcsearch:" + QUERY_PATTERN
     };
@@ -65,6 +67,12 @@ public class TrackResolutionEngine implements TrackResolutionHandler {
                     continue;
                 }
                 if ("amazonmusic".equalsIgnoreCase(sourceName) && (candidate.startsWith("azsearch:") || candidate.startsWith("amazonsearch:"))) {
+                    continue;
+                }
+                if ("audiomack".equalsIgnoreCase(sourceName) && (candidate.startsWith("admsearch:") || candidate.startsWith("audiomack:"))) {
+                    continue;
+                }
+                if ("shazam".equalsIgnoreCase(sourceName) && (candidate.startsWith("shsearch:") || candidate.startsWith("szsearch:") || candidate.startsWith("shazam:"))) {
                     continue;
                 }
                 if ("applemusic".equalsIgnoreCase(sourceName) && candidate.startsWith("amsearch:")) {

@@ -8,7 +8,7 @@ lavalink:
 
   plugins:
     # SolaceAudio Multi-Source Audio Engine (JioSaavn, Spotify, Deezer, Apple Music, Amazon, Gaana)
-    - dependency: "com.github.Nex-Devz.SolaceAudio:solaceaudio-plugin:1.0.30"
+    - dependency: "com.github.Nex-Devz.SolaceAudio:solaceaudio-plugin:1.0.31"
       repository: "https://jitpack.io"
 
     # Official YouTube source. SolaceAudio detects this plugin and layers its oEmbed metadata
@@ -88,6 +88,8 @@ plugins:
       youtube: true
       flowerytts: true
       applemusic: true
+      audiomack: true
+      shazam: true
 
     providers:
       # Resolution mirror ladder tried in order when resolving external tracks:
@@ -162,6 +164,14 @@ plugins:
     flowerytts:
       voice: "en-US-Standard-A"
       speed: 1.0
+
+    audiomack:
+      # Official public API with OAuth 1.0 HMAC-SHA1 direct CloudFront CDN streaming (Zero proxy needed!)
+      playlistLoadLimit: 50
+
+    shazam:
+      # Official Apple Music & Shazam discovery track search & recognition engine
+      searchLimit: 25
 
     youtube:
       # Lightweight oEmbed metadata resolution (bypasses datacenter bot blocks on direct track URLs)

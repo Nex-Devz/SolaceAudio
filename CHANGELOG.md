@@ -4,6 +4,15 @@ All notable changes to SolaceAudio are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.31] - 2026-11-15
+
+### Added
+
+- **Audiomack Direct Audio Source Engine**: Added native `AudiomackAudioSourceManager` backed by Audiomack's official v1 API with HMAC-SHA1 OAuth 1.0a signing. Supports `admsearch:<query>` and `audiomack:<query>` search prefixes, as well as song, album, and playlist URLs (`https://audiomack.com/...`). Directly plays high-quality signed M4A/MP3 CloudFront CDN streams without external proxy requirements.
+- **Shazam Track Discovery & Recognition Engine**: Added `ShazamAudioSourceManager` supporting `shsearch:<query>`, `szsearch:<query>`, and `shazam:<query>` search prefixes, along with `https://www.shazam.com/track/...` and `/song/...` URLs. Pulls rich track metadata (title, artist, ISRC, artwork) and delegates resolution through SolaceAudio's prioritized mirror ladder for direct playback.
+- **Expanded Providers Ladder**: Registered `admsearch:` and `shsearch:` within `TrackResolutionEngine.DEFAULT_PROVIDERS` and `YouTubeTrack.MIRROR_SOURCES` with recursion-safe self-source loop avoidance.
+- **Regression Test Coverage**: Added comprehensive test classes `AudiomackAudioSourceManagerTest` and `ShazamAudioSourceManagerTest`, expanding the test suite to 65 tests with 100% pass rate.
+
 ## [1.0.30] - 2026-11-15
 
 ### Fixed
@@ -149,6 +158,7 @@ versioned release artifacts; 1.0.23 artifacts on JitPack are unaffected.
 - Mirror fallback now warns when it is enabled but no mirror source is
   registered.
 
+[1.0.31]: https://github.com/Nex-Devz/SolaceAudio/releases/tag/1.0.31
 [1.0.30]: https://github.com/Nex-Devz/SolaceAudio/releases/tag/1.0.30
 [1.0.29]: https://github.com/Nex-Devz/SolaceAudio/releases/tag/1.0.29
 [1.0.28]: https://github.com/Nex-Devz/SolaceAudio/releases/tag/1.0.28

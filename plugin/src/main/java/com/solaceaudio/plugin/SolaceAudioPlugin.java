@@ -43,6 +43,8 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
     private com.solaceaudio.sources.deezer.DeezerAudioSourceManager deezer;
     private com.solaceaudio.sources.tts.FloweryTtsAudioSourceManager flowerytts;
     private com.solaceaudio.sources.applemusic.AppleMusicAudioSourceManager applemusic;
+    private com.solaceaudio.sources.audiomack.AudiomackAudioSourceManager audiomack;
+    private com.solaceaudio.sources.shazam.ShazamAudioSourceManager shazam;
     /** True when the built-in YouTube source must be used instead of the official plugin. */
     private boolean nativeYoutubeSource;
 
@@ -195,6 +197,14 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
                 this.applemusic.setArtistLoadLimit(appleMusicConfig.getArtistLoadLimit());
             }
         }
+
+        if (sourcesConfig.isAudiomack()) {
+            this.audiomack = new com.solaceaudio.sources.audiomack.AudiomackAudioSourceManager();
+        }
+
+        if (sourcesConfig.isShazam()) {
+            this.shazam = new com.solaceaudio.sources.shazam.ShazamAudioSourceManager(pluginConfig.getProviders(), unused -> manager);
+        }
     }
 
     private boolean hasNewYoutubeSource() {
@@ -264,6 +274,14 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
         return this.applemusic;
     }
 
+    public com.solaceaudio.sources.audiomack.AudiomackAudioSourceManager getAudiomackSource() {
+        return this.audiomack;
+    }
+
+    public com.solaceaudio.sources.shazam.ShazamAudioSourceManager getShazamSource() {
+        return this.shazam;
+    }
+
     public AudioPlayerManager getPlayerManager() {
         return this.manager;
     }
@@ -325,6 +343,14 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
         if (this.applemusic != null && this.sourcesConfig.isApplemusic()) {
             log.info("Registering Apple Music audio source manager...");
             manager.registerSourceManager(this.applemusic);
+        }
+        if (this.audiomack != null && this.sourcesConfig.isAudiomack()) {
+            log.info("Registering Audiomack audio source manager...");
+            manager.registerSourceManager(this.audiomack);
+        }
+        if (this.shazam != null && this.sourcesConfig.isShazam()) {
+            log.info("Registering Shazam audio source manager...");
+            manager.registerSourceManager(this.shazam);
         }
         // Registered here only when the official YouTube plugin is absent. When it is present
         // the built-in source replaces it later, once every plugin has registered its sources,
