@@ -4,6 +4,16 @@ All notable changes to SolaceAudio are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.33] - 2026-11-16
+
+### Added
+
+- **Qobuz Audio Source Engine**: Added native `QobuzAudioSourceManager` supporting `qbsearch:<query>` and `qobuz:<query>` search prefixes, as well as `https://www.qobuz.com/(track|album|playlist)` URLs. Powered by public Web App ID `712109809` for out-of-the-box metadata and mirror resolution, with direct Hi-Res FLAC/MP3 playback support when `userOauthToken` is configured.
+- **Tidal Audio Source Engine**: Added native `TidalAudioSourceManager` supporting `tdsearch:<query>`, `tidalsearch:<query>`, and `tidal:<query>` search prefixes, as well as `https://tidal.com/(track|album|playlist)` URLs. Supports client token `zU4XHVVkc2tDPo4t` and OAuth bearer tokens for direct streaming, with seamless fallback to SolaceAudio's ISRC mirror ladder.
+- **REST Health & Node Diagnostics Controller**: Added `/v4/solace/health`, `/v4/SolaceAudio/health`, and `/v4/solaceaudio/health` endpoints returning live node status, JVM memory metrics (used, free, total, max), active sessions/players, and registered audio sources status.
+- **Config & Mirror Integration**: Wired `qobuz` and `tidal` into `TrackResolutionEngine.DEFAULT_PROVIDERS` and `YouTubeTrack.MIRROR_SOURCES` with recursion guards, and added full Spring configuration beans (`QobuzConfig`, `TidalConfig`, and `SolaceAudioSourcesConfig`).
+- **Comprehensive Unit Test Suite**: Added `QobuzAudioSourceManagerTest` and `TidalAudioSourceManagerTest`, expanding test suite to 71 passing tests.
+
 ## [1.0.32] - 2026-11-15
 
 ### Fixed
@@ -164,6 +174,7 @@ versioned release artifacts; 1.0.23 artifacts on JitPack are unaffected.
 - Mirror fallback now warns when it is enabled but no mirror source is
   registered.
 
+[1.0.33]: https://github.com/Nex-Devz/SolaceAudio/releases/tag/1.0.33
 [1.0.32]: https://github.com/Nex-Devz/SolaceAudio/releases/tag/1.0.32
 [1.0.31]: https://github.com/Nex-Devz/SolaceAudio/releases/tag/1.0.31
 [1.0.30]: https://github.com/Nex-Devz/SolaceAudio/releases/tag/1.0.30

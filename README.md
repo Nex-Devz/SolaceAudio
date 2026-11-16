@@ -120,6 +120,10 @@ SolaceAudio is engineered from the ground up to solve upstream rate-limiting, IP
 | **JioSaavn** | Native Audio Extraction | Up to 320kbps MP4 Container | Public CDN Edge | ![Online](https://img.shields.io/badge/Online-00DF72?style=flat-square) |
 | **Gaana** | Native Chunked Stream | Master CDN HLS Transport | Public Stream Endpoint | ![Online](https://img.shields.io/badge/Online-00DF72?style=flat-square) |
 | **Amazon Music** | Metadata Cross-Resolution | High-Fidelity Mirror | Public Search Pipeline | ![Online](https://img.shields.io/badge/Online-00DF72?style=flat-square) |
+| **Audiomack** | Native CDN Streaming | Direct 320kbps MP3 / AAC | OAuth 1.0a HMAC-SHA1 Web Protocol | ![Online](https://img.shields.io/badge/Online-00DF72?style=flat-square) |
+| **Shazam** | Metadata & Track Discovery | Audio Mirror Engine | Public Discovery & Recognition API | ![Online](https://img.shields.io/badge/Online-00DF72?style=flat-square) |
+| **Qobuz** | `qbsearch:`, Direct FLAC / Mirror | Hi-Res FLAC / 320kbps MP3 | Web App ID `712109809` & Optional Token | ![Online](https://img.shields.io/badge/Online-00DF72?style=flat-square) |
+| **Tidal** | `tdsearch:`, Direct FLAC / Mirror | Hi-Fi FLAC / Mirror Ladder | Client Token `zU4XHVVkc2tDPo4t` & OAuth | ![Online](https://img.shields.io/badge/Online-00DF72?style=flat-square) |
 | **Pandora** | Direct Stream Resolution | Adaptive Bitrate AAC | None Required | ![Online](https://img.shields.io/badge/Online-00DF72?style=flat-square) |
 | **FloweryTTS** | Real-time Neural Synthesis | Uncompressed PCM Audio | Public Neural Speech API | ![Online](https://img.shields.io/badge/Online-00DF72?style=flat-square) |
 | **Last.fm** | Contextual Recommendation Graph | Algorithmic Metadata | Optional API Key | ![Online](https://img.shields.io/badge/Online-00DF72?style=flat-square) |
@@ -140,7 +144,7 @@ Add the plugin dependency to your `application.yml`:
 lavalink:
   defaultPluginSnapshotRepository: "https://maven.lavalink.dev/snapshots"
   plugins:
-    - dependency: "com.github.Nex-Devz.SolaceAudio:solaceaudio-plugin:1.0.32"
+    - dependency: "com.github.Nex-Devz.SolaceAudio:solaceaudio-plugin:1.0.33"
       repository: "https://jitpack.io"
     # Official YouTube source. SolaceAudio detects it and layers oEmbed metadata repair,
     # mirror fallback and disk caching on top of it.
@@ -168,7 +172,7 @@ repositories {
 }
 
 dependencies {
-    implementation("com.github.Nex-Devz.SolaceAudio:solaceaudio-main:1.0.32")
+    implementation("com.github.Nex-Devz.SolaceAudio:solaceaudio-main:1.0.33")
 }
 ```
 
@@ -185,7 +189,7 @@ dependencies {
   <dependency>
     <groupId>com.github.Nex-Devz.SolaceAudio</groupId>
     <artifactId>solaceaudio-main</artifactId>
-    <version>1.0.32</version>
+    <version>1.0.33</version>
   </dependency>
 </dependencies>
 ```
@@ -369,6 +373,54 @@ flowchart LR
 
 ## Management Endpoints
 
+### Health & Node Diagnostics
+
+Query the overall health of the SolaceAudio node, JVM memory, active sessions, and registered audio sources:
+
+```http
+GET /v4/solace/health
+GET /v4/SolaceAudio/health
+```
+
+Response:
+```json
+{
+  "status": "UP",
+  "plugin": "SolaceAudio",
+  "version": "1.0.33",
+  "uptimeMs": 348210,
+  "jvm": {
+    "usedMb": 184,
+    "freeMb": 328,
+    "totalMb": 512,
+    "maxMb": 2048,
+    "allocatedProcessors": 8
+  },
+  "sessions": {
+    "activeSessions": 3,
+    "activePlayers": 2
+  },
+  "sources": {
+    "amazonmusic": true,
+    "applemusic": true,
+    "audiomack": true,
+    "deezer": true,
+    "flowerytts": true,
+    "gaana": true,
+    "jiosaavn": true,
+    "pandora": true,
+    "qobuz": false,
+    "shazam": true,
+    "spotify": true,
+    "tidal": false,
+    "vkmusic": false,
+    "yandexmusic": false,
+    "youtube": true,
+    "ytdlp": false
+  }
+}
+```
+
 ### Contextual Autoplay Recommendations
 
 Query algorithmic track recommendations based on the active session player buffer:
@@ -433,7 +485,7 @@ Datacenter IP ranges are heavily monitored by YouTube. To resolve this:
 <details>
 <summary><b>Lavalink logs warn: "Release jar is named dev"</b></summary>
 <br/>
-When building locally without a Git tag, Gradle defaults the artifact version to <code>dev</code>. In production releases or CI, setting the environment variable <code>VERSION=1.0.32</code> produces <code>solaceaudio-plugin-1.0.32.jar</code>.
+When building locally without a Git tag, Gradle defaults the artifact version to <code>dev</code>. In production releases or CI, setting the environment variable <code>VERSION=1.0.33</code> produces <code>solaceaudio-plugin-1.0.33.jar</code>.
 </details>
 
 <details>
