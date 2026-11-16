@@ -1,0 +1,13 @@
+{
+  "name": "SolaceAudio",
+  "short_name": "SolaceAudio",
+  "description": "Resilient audio ingestion and playback for Lavalink v4.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#11120c",
+  "theme_color": "#11120c",
+  "icons": [
+    { "src": "/assets/img/favicon.svg", "sizes": "any", "type": "image/svg+xml" },
+    { "src": "/assets/img/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

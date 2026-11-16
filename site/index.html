@@ -1,0 +1,950 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SolaceAudio — resilient audio ingestion for Lavalink v4</title>
+  <meta name="description" content="SolaceAudio is an open-source Lavalink v4 plugin that resolves, mirrors, scores and caches audio across twelve music sources, with failover for datacenter IPs.">
+  <link rel="canonical" href="https://solaceaudio.cc.cd/">
+  <meta name="theme-color" content="#11120c">
+  <meta name="color-scheme" content="light">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="SolaceAudio">
+  <meta property="og:url" content="https://solaceaudio.cc.cd/">
+  <meta property="og:title" content="SolaceAudio — resilient audio ingestion for Lavalink v4">
+  <meta property="og:description" content="Twelve music sources, one resolver. ISRC-first mirroring, deterministic scoring and atomic disk caching for Lavalink v4.">
+  <meta property="og:image" content="https://solaceaudio.cc.cd/assets/img/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="SolaceAudio — built for nodes that keep getting blocked.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="SolaceAudio — resilient audio ingestion for Lavalink v4">
+  <meta name="twitter:description" content="Twelve music sources, one resolver. ISRC-first mirroring, deterministic scoring and atomic disk caching for Lavalink v4.">
+  <meta name="twitter:image" content="https://solaceaudio.cc.cd/assets/img/og.png">
+
+  <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
+  <link rel="preload" href="assets/fonts/bricolage-grotesque-var.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/instrument-sans-var.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preconnect" href="https://api.github.com">
+  <link rel="preconnect" href="https://raw.githubusercontent.com">
+  <link rel="dns-prefetch" href="https://raw.githubusercontent.com">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script>document.documentElement.classList.add('js');</script>
+  <script src="assets/js/main.js" defer></script>
+  <script src="assets/js/live.js" defer></script>
+</head>
+<body id="top">
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="index.html" aria-label="SolaceAudio home">
+        <svg class="brand__mark" viewBox="0 0 32 32" aria-hidden="true">
+          <rect width="32" height="32" rx="6" fill="#14150e"/>
+          <g fill="#f2efe6">
+            <rect x="8" y="13" width="2.4" height="6" rx="1.2"/>
+            <rect x="12.4" y="9.5" width="2.4" height="13" rx="1.2"/>
+            <rect x="16.8" y="6" width="2.4" height="20" rx="1.2"/>
+            <rect x="21.2" y="11" width="2.4" height="10" rx="1.2"/>
+          </g>
+          <circle cx="25.4" cy="8" r="2" fill="#ff7043"/>
+        </svg>
+        <span class="brand__name">Solace<span>Audio</span></span>
+      </a>
+
+      <nav class="main-nav" aria-label="Primary">
+        <a href="#sources">Sources</a>
+        <a href="#pipeline">Pipeline</a>
+        <a href="#releases">Releases</a>
+        <a href="changelog.html">Changelog</a>
+        <a href="docs.html">Docs</a>
+      </nav>
+
+      <div class="header-actions">
+        <span class="version-chip" data-live-version-badge title="Latest release">
+          <span class="live-dot" data-live-dot aria-hidden="true"></span>
+          <span>v<span data-live-version>1.0.32</span></span>
+        </span>
+        <a class="btn btn--small btn--outline" href="https://github.com/Nex-Devz/SolaceAudio" rel="noopener">
+          GitHub
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M4 12 12 4M6 4h6v6"/></svg>
+        </a>
+        <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-nav" data-menu-toggle aria-label="Open menu">
+          <span></span>
+          <span></span>
+        </button>
+      </div>
+    </div>
+
+    <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile" hidden>
+      <a href="#sources">Sources <span>02</span></a>
+      <a href="#pipeline">Pipeline <span>03</span></a>
+      <a href="#releases">Releases <span>06</span></a>
+      <a href="#api">Endpoints <span>07</span></a>
+      <a href="changelog.html">Changelog <span>Live</span></a>
+      <a href="docs.html">Docs <span>Reference</span></a>
+      <a href="https://github.com/Nex-Devz/SolaceAudio" rel="noopener">GitHub <span>Repository</span></a>
+      <a class="btn btn--dark" href="#install">Install the plugin
+        <span class="btn__icon" aria-hidden="true">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 8h9M8.5 3.5 13 8l-4.5 4.5"/></svg>
+        </span>
+      </a>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="container">
+        <div class="hero-grid">
+          <div class="hero-copy">
+            <div class="eyebrow-row label">
+              <span class="dot" aria-hidden="true"></span>
+              <strong>Lavalink v4 plugin</strong>
+              <span class="sep" aria-hidden="true">/</span>
+              <span>Apache-2.0</span>
+              <span class="sep" aria-hidden="true">/</span>
+              <span>v<span data-live-version>1.0.32</span></span>
+            </div>
+
+            <h1 id="hero-title">Built for nodes that keep getting <span class="accent">blocked.</span></h1>
+
+            <p class="hero-lede">
+              SolaceAudio resolves, mirrors and caches playback across twelve music sources, then fails over
+              before a bad IP turns into dead air. One plugin, inside the Lavalink node you already run.
+            </p>
+
+            <div class="hero-cta">
+              <a class="btn btn--light" href="#install">
+                Install the plugin
+                <span class="btn__icon" aria-hidden="true">
+                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 8h9M8.5 3.5 13 8l-4.5 4.5"/></svg>
+                </span>
+              </a>
+              <a class="link-arrow" href="docs.html">
+                Read the docs
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 8h9M8.5 3.5 13 8l-4.5 4.5"/></svg>
+              </a>
+            </div>
+
+            <p class="hero-meta label">
+              <span>Java 17+</span>
+              <span>Lavalink v4.x</span>
+              <span>No database</span>
+            </p>
+
+            <div class="install-strip">
+              <span class="install-strip__label label">application.yml</span>
+              <code><span class="tok">- dependency:</span> "com.github.Nex-Devz.SolaceAudio:solaceaudio-plugin:<span data-live-version>1.0.32</span>"</code>
+              <button class="copy-btn" type="button" data-copy='- dependency: "com.github.Nex-Devz.SolaceAudio:solaceaudio-plugin:1.0.32"' data-copy-template='- dependency: "com.github.Nex-Devz.SolaceAudio:solaceaudio-plugin:{version}"' data-label="Copy">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1"/><path d="M10.5 5.5v-2a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2"/></svg>
+                <span>Copy</span>
+              </button>
+            </div>
+          </div>
+
+          <aside class="route-card" aria-label="Resolution path overview">
+            <div class="route-card__head label">
+              <span class="pulse">Resolution path</span>
+              <span>Configurable</span>
+            </div>
+            <ol class="route-list">
+              <li>
+                <span class="idx">01</span>
+                <div>
+                  <div class="route-name">Request</div>
+                  <p class="route-desc">Spotify, Apple Music, YouTube, Deezer, or a direct URL.</p>
+                </div>
+              </li>
+              <li>
+                <span class="idx">02</span>
+                <div>
+                  <div class="route-name">Normalize</div>
+                  <p class="route-desc">Strip noise tags. Preserve Unicode and Indic matras.</p>
+                </div>
+              </li>
+              <li>
+                <span class="idx">03</span>
+                <div>
+                  <div class="route-name">Mirror</div>
+                  <p class="route-desc">Eleven providers, tried in order. Exact ISRC first.</p>
+                </div>
+              </li>
+              <li>
+                <span class="idx">04</span>
+                <div>
+                  <div class="route-name">Score</div>
+                  <p class="route-desc">Levenshtein, ±2s duration window, penalty vectors.</p>
+                </div>
+              </li>
+              <li class="is-final">
+                <span class="idx">05</span>
+                <div>
+                  <div class="route-name">Stream</div>
+                  <p class="route-desc">320 kbps MP3, Opus passthrough, atomic disk cache.</p>
+                </div>
+              </li>
+            </ol>
+            <div class="route-card__foot">
+              <p class="label">Default mirror ladder</p>
+              <div class="chip-row">
+                <span class="chip-dark is-hot">spsearch</span>
+                <span class="chip-dark">dzisrc</span>
+                <span class="chip-dark">ytsearch</span>
+                <span class="chip-dark">jssearch</span>
+                <span class="chip-dark">azsearch</span>
+                <span class="chip-dark">scsearch</span>
+                <span class="chip-dark">bcsearch</span>
+              </div>
+            </div>
+          </aside>
+        </div>
+
+        <dl class="spec-band">
+          <div class="spec">
+            <dt class="sr-only">Sources</dt>
+            <dd><b>12</b><span>Sources wired in</span></dd>
+          </div>
+          <div class="spec">
+            <dt class="sr-only">Tests</dt>
+            <dd><b>65</b><span>Tests passing</span></dd>
+          </div>
+          <div class="spec">
+            <dt class="sr-only">Runtime</dt>
+            <dd><b>17+</b><span>Java runtime</span></dd>
+          </div>
+          <div class="spec">
+            <dt class="sr-only">License</dt>
+            <dd><b>Apache-2.0</b><span>Open source</span></dd>
+          </div>
+        </dl>
+      </div>
+    </section>
+
+    <section class="section section--bordered" aria-labelledby="failures-title">
+      <div class="container">
+        <div class="sec-head reveal">
+          <p class="sec-label">01 / Failure modes</p>
+          <div>
+            <h2 id="failures-title">Production nodes fail in three predictable ways.</h2>
+            <p>SolaceAudio was built around those failures, not around a feature list. Each subsystem exists because a node went down without it.</p>
+          </div>
+        </div>
+
+        <div class="failure-list">
+          <article class="failure reveal">
+            <span class="failure__num">01</span>
+            <div>
+              <h3>Datacenter IPs get rejected</h3>
+              <p>YouTube challenges player requests from Hetzner, OVH and other cloud ranges. SolaceAudio computes rolling SAPISIDHASH headers, rotates InnerTube clients, and rebuilds direct-link metadata over oEmbed when the player endpoint refuses.</p>
+            </div>
+            <ul class="failure__tags" aria-label="Responses">
+              <li class="tag">SAPISIDHASH</li>
+              <li class="tag">PoToken routing</li>
+              <li class="tag">Client rotation</li>
+              <li class="tag">oEmbed repair</li>
+            </ul>
+          </article>
+
+          <article class="failure reveal">
+            <span class="failure__num">02</span>
+            <div>
+              <h3>Mass queue additions hammer upstreams</h3>
+              <p>When a hundred listeners queue at once, duplicate searches leave at the same moment. Lock-free atomic futures coalesce identical in-flight queries, so one upstream request serves the whole burst.</p>
+            </div>
+            <ul class="failure__tags" aria-label="Responses">
+              <li class="tag">Single-flight</li>
+              <li class="tag">Lock-free futures</li>
+              <li class="tag">Deduplication</li>
+            </ul>
+          </article>
+
+          <article class="failure reveal">
+            <span class="failure__num">03</span>
+            <div>
+              <h3>Mirrors pick the wrong track</h3>
+              <p>Covers, slowed edits and music-video rips all match a title. Candidates are filtered by duration, penalised for live, acoustic, cover and karaoke terms, then scored with Levenshtein distance. A shared ISRC wins outright.</p>
+            </div>
+            <ul class="failure__tags" aria-label="Responses">
+              <li class="tag">ISRC 1.0</li>
+              <li class="tag">±2s window</li>
+              <li class="tag">Penalty vectors</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section--bordered" id="sources" aria-labelledby="sources-title">
+      <div class="container">
+        <div class="sec-head reveal">
+          <p class="sec-label">02 / Source matrix</p>
+          <div>
+            <h2 id="sources-title">Twelve catalogs behind one resolver.</h2>
+            <p>Search natively or paste a track, album or playlist URL. Credentials are optional: every source boots without them, and a few unlock higher bitrates, richer metadata or personalised recommendations.</p>
+          </div>
+        </div>
+
+        <div class="table-shell reveal">
+          <div class="table-scroll" role="region" aria-label="Supported audio sources" tabindex="0">
+            <table class="source-table">
+              <caption class="sr-only">SolaceAudio sources, search prefixes, ingestion mode, stream output and required credentials.</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Source</th>
+                  <th scope="col">Prefix</th>
+                  <th scope="col">Ingestion</th>
+                  <th scope="col">Stream output</th>
+                  <th scope="col">Credentials</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row" class="source-name">Spotify</th>
+                  <td><span class="prefix-list"><code>spsearch:</code></span></td>
+                  <td>ISRC &amp; metadata mirror</td>
+                  <td>320 / 160 kbps MP3, Opus</td>
+                  <td class="muted-cell">Anonymous token</td>
+                </tr>
+                <tr>
+                  <th scope="row" class="source-name">Apple Music</th>
+                  <td><span class="prefix-list"><code>amsearch:</code></span></td>
+                  <td>Search, albums, playlists</td>
+                  <td>High-fidelity mirror</td>
+                  <td class="muted-cell">Auto-scraped bearer</td>
+                </tr>
+                <tr>
+                  <th scope="row" class="source-name">YouTube</th>
+                  <td><span class="prefix-list"><code>ytsearch:</code> <code>ytmsearch:</code></span></td>
+                  <td>InnerTube clients</td>
+                  <td>160 kbps Opus / AAC</td>
+                  <td class="muted-cell">PoToken optional</td>
+                </tr>
+                <tr>
+                  <th scope="row" class="source-name">Deezer</th>
+                  <td><span class="prefix-list"><code>dzsearch:</code> <code>dzisrc:</code></span></td>
+                  <td>Blowfish decryption</td>
+                  <td>320 kbps MP3 / FLAC</td>
+                  <td class="muted-cell">Public, ARL optional</td>
+                </tr>
+                <tr>
+                  <th scope="row" class="source-name">JioSaavn</th>
+                  <td><span class="prefix-list"><code>jssearch:</code></span></td>
+                  <td>Native extraction</td>
+                  <td>Up to 320 kbps MP4</td>
+                  <td class="muted-cell">Public CDN</td>
+                </tr>
+                <tr>
+                  <th scope="row" class="source-name">Gaana</th>
+                  <td><span class="prefix-list"><code>gnsearch:</code> <code>gaanasearch:</code></span></td>
+                  <td>Chunked HLS</td>
+                  <td>Master CDN stream</td>
+                  <td class="muted-cell">None</td>
+                </tr>
+                <tr>
+                  <th scope="row" class="source-name">Amazon Music</th>
+                  <td><span class="prefix-list"><code>azsearch:</code> <code>amazonsearch:</code></span></td>
+                  <td>MESK catalog</td>
+                  <td>High-fidelity mirror</td>
+                  <td class="muted-cell">None, proxy optional</td>
+                </tr>
+                <tr>
+                  <th scope="row" class="source-name">Audiomack</th>
+                  <td><span class="prefix-list"><code>admsearch:</code></span></td>
+                  <td>OAuth 1.0a signed API</td>
+                  <td>Signed M4A / MP3</td>
+                  <td class="muted-cell">Public API</td>
+                </tr>
+                <tr>
+                  <th scope="row" class="source-name">Pandora</th>
+                  <td><span class="prefix-list"><code>pdsearch:</code></span></td>
+                  <td>Direct resolution</td>
+                  <td>Adaptive AAC</td>
+                  <td class="muted-cell">None</td>
+                </tr>
+                <tr>
+                  <th scope="row" class="source-name">Shazam</th>
+                  <td><span class="prefix-list"><code>shsearch:</code> <code>szsearch:</code></span></td>
+                  <td>Discovery metadata</td>
+                  <td>Delegated to ladder</td>
+                  <td class="muted-cell">None</td>
+                </tr>
+                <tr>
+                  <th scope="row" class="source-name">FloweryTTS</th>
+                  <td><span class="prefix-list"><code>ftts:</code> <code>speak:</code> <code>tts:</code></span></td>
+                  <td>Neural synthesis</td>
+                  <td>Uncompressed PCM</td>
+                  <td class="muted-cell">None</td>
+                </tr>
+                <tr>
+                  <th scope="row" class="source-name">Last.fm</th>
+                  <td><span class="prefix-list"><code>—</code></span></td>
+                  <td>Recommendation graph</td>
+                  <td>Metadata only</td>
+                  <td class="muted-cell">API key optional</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="table-foot reveal">
+          <p>Lyrics and SponsorBlock sit beside the source matrix, not inside it: four lyrics providers and the official SponsorBlock API are queried through the REST endpoints below.</p>
+          <a class="link-arrow" href="docs.html#prefixes">All prefixes and URL forms
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 8h9M8.5 3.5 13 8l-4.5 4.5"/></svg>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section--dark" id="pipeline" aria-labelledby="pipeline-title">
+      <div class="container">
+        <div class="sec-head reveal">
+          <p class="sec-label">03 / Resolution</p>
+          <div>
+            <h2 id="pipeline-title">Ask once. Walk the ladder. Keep the best match.</h2>
+            <p>Every external track is resolved through an ordered provider list. The default ladder works without configuration. Reorder it in <code>application.yml</code> when your traffic knows better.</p>
+          </div>
+        </div>
+
+        <div class="pipeline-grid">
+          <ol class="ladder">
+            <li class="reveal">
+              <span class="idx">01</span>
+              <div>
+                <h3>Exact ISRC</h3>
+                <p>A shared ISRC is the strongest signal available. Catalog-exact lookups run before any free-text search.</p>
+                <div class="chip-row">
+                  <span class="chip-dark is-hot">spsearch:"{isrc}"</span>
+                  <span class="chip-dark">dzisrc:{isrc}</span>
+                  <span class="chip-dark">ytsearch:"{isrc}"</span>
+                  <span class="chip-dark">jssearch:"{isrc}"</span>
+                </div>
+              </div>
+            </li>
+            <li class="reveal">
+              <span class="idx">02</span>
+              <div>
+                <h3>Sanitized query</h3>
+                <p>Noise tags are stripped and Unicode is preserved, so a Devanagari or Cyrillic title does not collapse into an empty search string.</p>
+                <div class="chip-row">
+                  <span class="chip-dark">spsearch:{query}</span>
+                  <span class="chip-dark">dzsearch:{query}</span>
+                  <span class="chip-dark">ytsearch:{query}</span>
+                  <span class="chip-dark">jssearch:{query}</span>
+                  <span class="chip-dark">azsearch:{query}</span>
+                </div>
+              </div>
+            </li>
+            <li class="reveal">
+              <span class="idx">03</span>
+              <div>
+                <h3>Last resort</h3>
+                <p>SoundCloud and Bandcamp catch the remainder. If a provider is down, the next one is already waiting.</p>
+                <div class="chip-row">
+                  <span class="chip-dark">scsearch:{query}</span>
+                  <span class="chip-dark">bcsearch:{query}</span>
+                </div>
+              </div>
+            </li>
+            <li class="reveal">
+              <span class="idx">04</span>
+              <div>
+                <h3>When a direct URL is blocked</h3>
+                <p>Metadata is rebuilt through oEmbed, then the same ladder resolves a playable alternative. The listener sees one track; the node quietly changes where it comes from.</p>
+                <div class="chip-row">
+                  <span class="chip-dark">oembed</span>
+                  <span class="chip-dark">mirror: true</span>
+                  <span class="chip-dark">disk cache</span>
+                </div>
+              </div>
+            </li>
+          </ol>
+
+          <aside class="score-card reveal" data-delay="1" aria-label="Candidate scoring factors">
+            <div class="score-card__head label">
+              <span>Candidate scoring</span>
+              <span>Deterministic</span>
+            </div>
+            <ul class="score-list">
+              <li>
+                <span class="k">ISRC match</span>
+                <span class="v">1.00</span>
+              </li>
+              <li>
+                <span class="k">Levenshtein distance</span>
+                <span class="v">normalized</span>
+              </li>
+              <li>
+                <span class="k">Duration delta</span>
+                <span class="v">±2 seconds</span>
+              </li>
+              <li>
+                <span class="k">Penalty terms</span>
+                <span class="v">live · cover · slowed</span>
+              </li>
+              <li>
+                <span class="k">Noise tokens</span>
+                <span class="v">stripped</span>
+              </li>
+            </ul>
+            <p class="score-note">Penalties only apply when the term is absent from the source title. An acoustic recording labelled as such is not punished for saying so.</p>
+          </aside>
+        </div>
+
+        <div class="pipeline-foot reveal">
+          <p>The ladder, cache quota, pass-through mode and per-source load limits are all runtime configuration. No recompilation required.</p>
+          <a class="link-arrow link-arrow--light" href="docs.html#configuration">Configuration reference
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 8h9M8.5 3.5 13 8l-4.5 4.5"/></svg>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="subsystems-title">
+      <div class="container">
+        <div class="sec-head reveal">
+          <p class="sec-label">04 / Subsystems</p>
+          <div>
+            <h2 id="subsystems-title">The work is in the parts you never see.</h2>
+            <p>Caching, CPU and failure handling are not side features here. They are the reason the queue stays up at 3 a.m.</p>
+          </div>
+        </div>
+
+        <div class="sys-grid">
+          <article class="sys-item reveal">
+            <span class="sys-item__num">01</span>
+            <div>
+              <h3>Atomic disk cache</h3>
+              <p>Streams pass through to disk with transactional <code>.part</code> swaps. Repeat plays start instantly, and the least recently used track is evicted at the quota.</p>
+            </div>
+          </article>
+          <article class="sys-item reveal" data-delay="1">
+            <span class="sys-item__num">02</span>
+            <div>
+              <h3>Zero-transcode Opus</h3>
+              <p>With no active DSP filters, WebM Opus frames go straight to Discord. The project reports roughly 60% less CPU on that path.</p>
+            </div>
+          </article>
+          <article class="sys-item reveal">
+            <span class="sys-item__num">03</span>
+            <div>
+              <h3>Single-flight coalescing</h3>
+              <p>Identical searches already in flight share one upstream request instead of multiplying it across the thread pool.</p>
+            </div>
+          </article>
+          <article class="sys-item reveal" data-delay="1">
+            <span class="sys-item__num">04</span>
+            <div>
+              <h3>Voice ducking and silence trim</h3>
+              <p>A 32-bit float filter ramps music down during voice activity and trims lead-in dead air with an exponential moving average detector.</p>
+            </div>
+          </article>
+          <article class="sys-item reveal">
+            <span class="sys-item__num">05</span>
+            <div>
+              <h3>Synchronized lyrics</h3>
+              <p>LRCLIB, Deezer, Genius and Spotify are merged into timestamped LRC or plain text through one endpoint, with no API keys required.</p>
+            </div>
+          </article>
+          <article class="sys-item reveal" data-delay="1">
+            <span class="sys-item__num">06</span>
+            <div>
+              <h3>Native SponsorBlock</h3>
+              <p>Non-music segments are skipped using the official API, with a bounded TTL cache and per-category control through REST.</p>
+            </div>
+          </article>
+          <article class="sys-item reveal">
+            <span class="sys-item__num">07</span>
+            <div>
+              <h3>Mid-stream client rotation</h3>
+              <p>A client that returns 403 or 429 is cooled down for 60 seconds while another takes over. Playback does not stop waiting.</p>
+            </div>
+          </article>
+          <article class="sys-item reveal" data-delay="1">
+            <span class="sys-item__num">08</span>
+            <div>
+              <h3>Prometheus metrics</h3>
+              <p>Client requests, mirror resolutions, cache hits and live filter gauges are exported through Lavalink's actuator registry.</p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section--sunken" id="install" aria-labelledby="install-title">
+      <div class="container">
+        <div class="sec-head reveal">
+          <p class="sec-label">05 / Install</p>
+          <div>
+            <h2 id="install-title">One dependency, then get on with the bot.</h2>
+            <p>The plugin does not replace Lavalink. It registers sources, wraps the YouTube source, and adds the routes below. No database, sidecar or build step.</p>
+          </div>
+        </div>
+
+        <div class="install-grid">
+          <ol class="steps">
+            <li class="step reveal">
+              <span class="step__num">1</span>
+              <div>
+                <h3>Add the dependency</h3>
+                <p>Paste both entries into <code>application.yml</code>. The pinned YouTube snapshot carries InnerTube client versions that YouTube currently accepts.</p>
+              </div>
+            </li>
+            <li class="step reveal">
+              <span class="step__num">2</span>
+              <div>
+                <h3>Start the node</h3>
+                <p>SolaceAudio registers its sources during startup. Watch the log for the source list, then send a track from any source prefix.</p>
+              </div>
+            </li>
+            <li class="step reveal">
+              <span class="step__num">3</span>
+              <div>
+                <h3>Tune for your host</h3>
+                <p>On a datacenter IP, add a burner cookie and a PoToken endpoint. If your community repeats tracks, raise the disk cache quota.</p>
+              </div>
+            </li>
+          </ol>
+
+          <div class="reveal" data-delay="1">
+            <div class="code-panel" data-tabs>
+              <div class="tablist" role="tablist" aria-label="Dependency format">
+                <button class="tab" role="tab" id="tab-lavalink" aria-controls="panel-lavalink" aria-selected="true" tabindex="0" type="button">application.yml</button>
+                <button class="tab" role="tab" id="tab-gradle" aria-controls="panel-gradle" aria-selected="false" tabindex="-1" type="button">Gradle</button>
+                <button class="tab" role="tab" id="tab-maven" aria-controls="panel-maven" aria-selected="false" tabindex="-1" type="button">Maven</button>
+              </div>
+
+              <div class="code-body" id="panel-lavalink" role="tabpanel" aria-labelledby="tab-lavalink">
+                <button class="copy-btn" type="button" data-copy="target" data-copy-target="#code-lavalink" data-label="Copy">Copy</button>
+                <pre><code id="code-lavalink"><span class="tok-c"># lavalink/application.yml</span>
+<span class="tok-k">lavalink</span>:
+  <span class="tok-k">defaultPluginSnapshotRepository</span>: <span class="tok-s">"https://maven.lavalink.dev/snapshots"</span>
+  <span class="tok-k">plugins</span>:
+    - <span class="tok-k">dependency</span>: <span class="tok-s">"com.github.Nex-Devz.SolaceAudio:solaceaudio-plugin:<span data-live-version>1.0.32</span>"</span>
+      <span class="tok-k">repository</span>: <span class="tok-s">"https://jitpack.io"</span>
+
+    <span class="tok-c"># Official YouTube source. SolaceAudio layers oEmbed repair,</span>
+    <span class="tok-c"># mirror fallback and disk caching on top of it.</span>
+    - <span class="tok-k">dependency</span>: <span class="tok-s">"dev.lavalink.youtube:youtube-plugin:2be8e542d3f6f178e048dca565892684c2e40177"</span>
+      <span class="tok-k">snapshot</span>: <span class="tok-v">true</span></code></pre>
+              </div>
+
+              <div class="code-body" id="panel-gradle" role="tabpanel" aria-labelledby="tab-gradle" hidden>
+                <button class="copy-btn" type="button" data-copy="target" data-copy-target="#code-gradle" data-label="Copy">Copy</button>
+                <pre><code id="code-gradle"><span class="tok-c">// build.gradle.kts</span>
+<span class="tok-k">repositories</span> {
+    mavenCentral()
+    maven(<span class="tok-s">"https://jitpack.io"</span>)
+    maven(<span class="tok-s">"https://maven.lavalink.dev/releases"</span>)
+}
+
+<span class="tok-k">dependencies</span> {
+    implementation(<span class="tok-s">"com.github.Nex-Devz.SolaceAudio:solaceaudio-main:<span data-live-version>1.0.32</span>"</span>)
+}</code></pre>
+              </div>
+
+              <div class="code-body" id="panel-maven" role="tabpanel" aria-labelledby="tab-maven" hidden>
+                <button class="copy-btn" type="button" data-copy="target" data-copy-target="#code-maven" data-label="Copy">Copy</button>
+                <pre><code id="code-maven"><span class="tok-c">&lt;!-- pom.xml --&gt;</span>
+&lt;<span class="tok-k">repository</span>&gt;
+  &lt;id&gt;jitpack.io&lt;/id&gt;
+  &lt;url&gt;https://jitpack.io&lt;/url&gt;
+&lt;/<span class="tok-k">repository</span>&gt;
+
+&lt;<span class="tok-k">dependency</span>&gt;
+  &lt;groupId&gt;com.github.Nex-Devz.SolaceAudio&lt;/groupId&gt;
+  &lt;artifactId&gt;solaceaudio-main&lt;/artifactId&gt;
+  &lt;version&gt;<span data-live-version>1.0.32</span>&lt;/version&gt;
+&lt;/<span class="tok-k">dependency</span>&gt;</code></pre>
+              </div>
+            </div>
+
+            <div class="code-note">
+              <p><strong>On the YouTube snapshot:</strong> the 1.18.x release line still ships client versions YouTube rejects with HTTP 400. Pin the snapshot you trust, or set <code>youtube.nativeSource: true</code> to use the built-in source instead.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section--bordered" id="releases" aria-labelledby="releases-title">
+      <div class="container">
+        <div class="sec-head reveal">
+          <p class="sec-label">06 / Releases</p>
+          <div>
+            <h2 id="releases-title">Shipped today, read from GitHub.</h2>
+            <p>The version in the header and the notes below are fetched from the repository when this page loads. If GitHub is unreachable, the bundled notes stay in place.</p>
+          </div>
+        </div>
+
+        <div class="release-shell reveal">
+          <div class="release-primary">
+            <div class="release-primary__id">
+              <p class="live-label label">
+                <span class="live-dot" data-live-dot aria-hidden="true"></span>
+                <span data-live-status>Bundled notes</span>
+              </p>
+              <p class="release-version">v<span data-live-version>1.0.32</span></p>
+              <p class="release-meta">
+                <span>Published <span class="release-meta__value" data-live-date>15 Nov 2026</span></span>
+                <span class="meta-sep" aria-hidden="true"></span>
+                <span><span class="release-meta__value" data-live-jar-size>349 KB</span> jar</span>
+              </p>
+            </div>
+            <div class="release-actions">
+              <a class="btn btn--small btn--dark" data-live-download href="https://github.com/Nex-Devz/SolaceAudio/releases/download/1.0.32/solaceaudio-plugin-1.0.32.jar" aria-label="Download SolaceAudio 1.0.32 jar">
+                <span data-live-download-label>Download jar</span>
+                <span class="btn__icon" aria-hidden="true">
+                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 2.5v9M3.5 8 8 12.5 12.5 8M3 14h10"/></svg>
+                </span>
+              </a>
+              <a class="link-arrow" href="changelog.html">Full changelog
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 8h9M8.5 3.5 13 8l-4.5 4.5"/></svg>
+              </a>
+            </div>
+          </div>
+
+          <div class="release-preview" data-live-preview>
+            <p class="release-preview__label label">Latest changes</p>
+            <ul class="release-notes">
+              <li><span class="release-tag">1.0.32</span><span>LavaLyrics route collision: <code>/v4/lyrics</code> yields when <code>lavalyrics-plugin</code> is installed.</span></li>
+              <li><span class="release-tag">1.0.31</span><span>Audiomack source with signed CloudFront streams.</span></li>
+              <li><span class="release-tag">1.0.31</span><span>Shazam discovery and track recognition.</span></li>
+              <li><span class="release-tag">1.0.31</span><span>Provider ladder extended with <code>admsearch</code> and <code>shsearch</code>.</span></li>
+            </ul>
+          </div>
+
+          <div class="release-foot">
+            <p>Release notes and asset sizes are fetched from GitHub. Cached for ten minutes. <span data-live-synced>Bundled fallback</span>.</p>
+            <a class="link-arrow" href="changelog.html">Release history
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 8h9M8.5 3.5 13 8l-4.5 4.5"/></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section--bordered" id="api" aria-labelledby="api-title">
+      <div class="container">
+        <div class="sec-head reveal">
+          <p class="sec-label">07 / Control surface</p>
+          <div>
+            <h2 id="api-title">Endpoints for the parts Discord does not show.</h2>
+            <p>Recommendations, lyrics and SponsorBlock are exposed over Lavalink's REST server and inherit its authorization. The routes below are current for v<span data-live-version>1.0.32</span>.</p>
+          </div>
+        </div>
+
+        <div class="endpoint-list reveal">
+          <div class="endpoint">
+            <span class="method method--get">GET</span>
+            <code>/v4/lyrics?track={title}&amp;artist={artist}&amp;duration={ms}</code>
+            <span class="endpoint__desc">Metadata lookup with timestamp alignment.</span>
+          </div>
+          <div class="endpoint">
+            <span class="method method--get">GET</span>
+            <code>/v4/lyrics/search?query={query}</code>
+            <span class="endpoint__desc">Fuzzy search across all four lyrics providers.</span>
+          </div>
+          <div class="endpoint">
+            <span class="method method--get">GET</span>
+            <code>/v4/sessions/{sessionId}/players/{guildId}/lyrics</code>
+            <span class="endpoint__desc">Lyrics for the track currently in a guild player.</span>
+          </div>
+          <div class="endpoint">
+            <span class="method method--get">GET</span>
+            <code>/v4/sessions/{sessionId}/players/{guildId}/recommendation?limit=10</code>
+            <span class="endpoint__desc">Contextual autoplay from the active player buffer.</span>
+          </div>
+          <div class="endpoint">
+            <span class="method method--get">GET</span>
+            <code>/v4/sessions/{sessionId}/players/{guildId}/sponsorblock</code>
+            <span class="endpoint__desc">Segments for the current YouTube track.</span>
+          </div>
+          <div class="endpoint">
+            <span class="method method--patch">POST</span>
+            <code>/v4/sessions/{sessionId}/players/{guildId}/sponsorblock</code>
+            <span class="endpoint__desc">Update enabled categories for the guild.</span>
+          </div>
+          <div class="endpoint">
+            <span class="method method--patch">PATCH</span>
+            <code>/v4/SolaceAudio/config</code>
+            <span class="endpoint__desc">Live source limits, JioSaavn quality and YouTube cache settings.</span>
+          </div>
+          <div class="endpoint">
+            <span class="method method--get">GET</span>
+            <code>/v4/SolaceAudio/youtube/suggest?query={query}</code>
+            <span class="endpoint__desc">YouTube search suggestions for command autocomplete.</span>
+          </div>
+        </div>
+
+        <div class="api-foot reveal">
+          <a class="link-arrow" href="docs.html#api">Request bodies and curl examples
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 8h9M8.5 3.5 13 8l-4.5 4.5"/></svg>
+          </a>
+          <p class="label">Aliases /recommendations and /sponsorBlock are kept for client libraries.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="faq-title">
+      <div class="container">
+        <div class="sec-head reveal">
+          <p class="sec-label">08 / Questions</p>
+          <div>
+            <h2 id="faq-title">The things people ask after the first 403.</h2>
+            <p>Operational answers, not marketing ones. If your case is not here, the issue tracker is the next stop.</p>
+          </div>
+        </div>
+
+        <div class="faq reveal">
+          <details>
+            <summary>YouTube returns 403 or 429. Where do I start?</summary>
+            <div class="faq-answer">
+              <p>Datacenter ranges are monitored aggressively. Add a burner cookie file to the Lavalink working directory and set <code>cookieFile</code>, enable <code>potokenUrl</code>, and keep <code>mirror: true</code> so SolaceAudio can resolve alternative streams when direct playback is restricted. A residential proxy is the fallback, not the first move.</p>
+            </div>
+          </details>
+          <details>
+            <summary>Do I need Spotify or Deezer credentials?</summary>
+            <div class="faq-answer">
+              <p>No. Spotify negotiates an anonymous token and Deezer streams publicly at 128 kbps without an ARL. Optional credentials raise the ceiling: a Deezer ARL unlocks 320 kbps and FLAC, and a Spotify <code>sp_dc</code> cookie adds Canvas, synchronized lyrics and personalised playlists.</p>
+            </div>
+          </details>
+          <details>
+            <summary>Will this run on a small VPS?</summary>
+            <div class="faq-answer">
+              <p>It runs inside the Lavalink process you already pay for, so the added memory is modest. The real local cost is the disk cache. Cap it with <code>maxDiskCacheMb</code>, or disable <code>localDiskCache</code> when storage is tight. Mirroring adds outbound bandwidth, not CPU.</p>
+            </div>
+          </details>
+          <details>
+            <summary>Which Lavalink and Java versions are supported?</summary>
+            <div class="faq-answer">
+              <p>Java 17 or newer, and Lavalink v4.0 and later, including v4.2.x server distributions. The plugin is compiled against the v4 API and does not pull Micrometer into the runtime, so stock Lavalink distributions load it without actuator dependencies.</p>
+            </div>
+          </details>
+          <details>
+            <summary>Is a database required?</summary>
+            <div class="faq-answer">
+              <p>No. The disk cache is a directory of files with transactional <code>.part</code> swaps. Memory caches are bounded and TTL-driven. Nothing to migrate, back up or vacuum.</p>
+            </div>
+          </details>
+          <details>
+            <summary>How do updates work?</summary>
+            <div class="faq-answer">
+              <p>Bump the dependency version in <code>application.yml</code> and restart. JitPack builds each tagged release, and the GitHub releases page carries the versioned plugin jar. There is no client SDK to update alongside it.</p>
+            </div>
+          </details>
+          <details>
+            <summary>Can I use the built-in YouTube source instead of the official plugin?</summary>
+            <div class="faq-answer">
+              <p>Yes. Set <code>youtube.nativeSource: true</code> under <code>plugins.solaceaudio</code>. SolaceAudio then registers its own YouTube source. If you keep the official plugin, SolaceAudio detects it at startup and layers oEmbed repair, mirror fallback and disk caching on top.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta" aria-labelledby="cta-title">
+      <div class="container">
+        <div class="cta-grid">
+          <div class="reveal">
+            <p class="sec-label sec-label--dark">09 / Ship it</p>
+            <h2 id="cta-title">Point the node at SolaceAudio.</h2>
+            <p>Version <span data-live-version>1.0.32</span> is on JitPack. Copy the dependency, restart Lavalink, and let the ladder do its job.</p>
+            <div class="cta-actions">
+              <a class="btn btn--light" href="docs.html#install">
+                Start the setup
+                <span class="btn__icon" aria-hidden="true">
+                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 8h9M8.5 3.5 13 8l-4.5 4.5"/></svg>
+                </span>
+              </a>
+              <a class="link-arrow link-arrow--light" href="https://github.com/Nex-Devz/SolaceAudio/releases" rel="noopener">
+                Latest release
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 12 12 4M6 4h6v6"/></svg>
+              </a>
+            </div>
+          </div>
+
+          <div class="cta-side reveal" data-delay="1">
+            <p class="label">Direct links</p>
+            <div class="cta-meta">
+              <a href="https://github.com/Nex-Devz/SolaceAudio" rel="noopener">Repository <span>GitHub</span></a>
+              <a href="https://jitpack.io/#Nex-Devz/SolaceAudio" rel="noopener">Artifacts <span>JitPack</span></a>
+              <a href="https://discord.gg/devz" rel="noopener">Community support <span>Discord</span></a>
+              <a href="https://github.com/Nex-Devz/SolaceAudio/issues" rel="noopener">Bug reports <span>Issues</span></a>
+            </div>
+          </div>
+        </div>
+
+        <div class="wave-divider" aria-hidden="true">
+          <svg viewBox="0 0 1440 80" preserveAspectRatio="none">
+            <path d="M0 38.9 L4 39.0 L8 39.1 L12 38.7 L16 38.4 L20 38.6 L24 39.3 L28 39.5 L32 38.6 L36 37.5 L40 37.3 L44 38.2 L48 39.2 L52 39.6 L56 40.0 L60 41.3 L64 43.1 L68 44.2 L72 43.7 L76 42.3 L80 41.5 L84 41.6 L88 41.7 L92 40.9 L96 40.0 L100 40.0 L104 41.1 L108 41.6 L112 40.3 L116 37.8 L120 36.1 L124 35.8 L128 35.8 L132 35.1 L136 34.5 L140 35.5 L144 38.5 L148 41.3 L152 42.2 L156 41.4 L160 41.0 L164 42.0 L168 43.0 L172 42.6 L176 41.5 L180 41.9 L184 44.5 L188 47.1 L192 47.1 L196 44.7 L200 42.2 L204 41.0 L208 39.9 L212 37.0 L216 33.2 L220 31.5 L224 33.2 L228 36.3 L232 37.4 L236 36.4 L240 35.6 L244 36.7 L248 38.3 L252 37.7 L256 35.6 L260 35.5 L264 39.4 L268 45.1 L272 48.6 L276 49.0 L280 48.8 L284 50.0 L288 50.8 L292 48.2 L296 42.5 L300 37.8 L304 37.4 L308 39.8 L312 40.5 L316 38.3 L320 35.9 L324 36.1 L328 37.1 L332 34.8 L336 29.1 L340 24.6 L344 25.6 L348 31.0 L352 35.8 L356 37.9 L360 40.1 L364 45.3 L368 51.3 L372 53.0 L376 49.1 L380 44.2 L384 43.7 L388 47.1 L392 49.4 L396 48.1 L400 46.2 L404 47.5 L408 50.4 L412 48.8 L416 40.6 L420 30.5 L424 25.2 L428 25.4 L432 26.1 L436 24.4 L440 23.5 L444 28.1 L448 36.7 L452 42.2 L456 40.5 L460 35.8 L464 35.0 L468 39.6 L472 44.1 L476 44.8 L480 45.1 L484 50.3 L488 59.7 L492 65.5 L496 62.1 L500 53.0 L504 46.0 L508 43.4 L512 40.6 L516 33.6 L520 26.2 L524 25.4 L528 31.7 L532 37.3 L536 35.5 L540 28.4 L544 23.9 L548 25.2 L552 27.4 L556 25.5 L560 22.8 L564 27.3 L568 40.3 L572 53.9 L576 59.6 L580 57.9 L584 56.4 L588 58.6 L592 59.5 L596 53.6 L600 44.0 L604 39.9 L608 44.6 L612 51.4 L616 51.3 L620 44.0 L624 37.0 L628 34.8 L632 32.7 L636 24.6 L640 13.0 L644 7.8 L648 14.0 L652 25.8 L656 33.5 L660 35.2 L664 37.6 L668 44.8 L672 51.9 L676 51.2 L680 44.0 L684 39.8 L688 45.2 L692 55.7 L696 61.6 L700 60.2 L704 58.0 L708 59.7 L712 61.0 L716 53.8 L720 38.4 L724 24.5 L728 20.5 L732 23.9 L736 25.8 L740 23.2 L744 22.0 L748 27.4 L752 35.2 L756 36.4 L760 29.1 L764 22.1 L768 24.0 L772 33.4 L776 41.6 L780 44.9 L784 48.3 L788 57.3 L792 68.2 L796 71.2 L800 63.2 L804 51.6 L808 45.7 L812 45.9 L816 44.8 L820 39.0 L824 33.7 L828 35.2 L832 41.3 L836 42.6 L840 34.4 L844 23.0 L848 17.5 L852 19.0 L856 21.3 L860 20.3 L864 20.5 L868 28.4 L872 42.4 L876 53.1 L880 54.3 L884 50.0 L888 48.5 L892 51.5 L896 53.2 L900 49.7 L904 45.2 L908 46.8 L912 54.2 L916 59.5 L920 56.1 L924 46.8 L928 39.3 L932 36.2 L936 32.8 L940 25.3 L944 17.6 L948 16.8 L952 24.3 L956 32.9 L960 35.7 L964 33.9 L968 33.7 L972 37.4 L976 40.7 L980 39.2 L984 35.7 L988 37.0 L992 45.2 L996 54.5 L1000 58.3 L1004 56.5 L1008 54.5 L1012 54.9 L1016 54.0 L1020 47.6 L1024 37.9 L1028 31.9 L1032 32.7 L1036 36.4 L1040 37.1 L1044 34.2 L1048 32.2 L1052 33.6 L1056 35.2 L1060 32.7 L1064 27.1 L1068 24.4 L1072 28.1 L1076 35.2 L1080 40.4 L1084 42.4 L1088 44.7 L1092 49.4 L1096 53.6 L1100 53.1 L1104 48.0 L1108 43.3 L1112 42.9 L1116 45.2 L1120 45.9 L1124 43.9 L1128 42.1 L1132 42.9 L1136 44.3 L1140 42.1 L1144 36.1 L1148 30.3 L1152 28.6 L1156 30.1 L1160 31.5 L1164 31.4 L1168 32.2 L1172 36.1 L1176 41.1 L1180 43.5 L1184 42.1 L1188 39.8 L1192 39.9 L1196 42.2 L1200 43.8 L1204 43.6 L1208 43.4 L1212 45.5 L1216 48.5 L1220 49.4 L1224 46.6 L1228 42.5 L1232 39.8 L1236 38.9 L1240 37.8 L1244 35.6 L1248 33.8 L1252 34.5 L1256 37.1 L1260 38.9 L1264 38.2 L1268 36.5 L1272 35.9 L1276 36.9 L1280 37.8 L1284 37.5 L1288 37.3 L1292 39.0 L1296 42.3 L1300 45.0 L1304 45.5 L1308 44.5 L1312 43.8 L1316 43.8 L1320 43.4 L1324 41.7 L1328 39.7 L1332 39.1 L1336 40.1 L1340 41.1 L1344 40.8 L1348 39.4 L1352 38.4 L1356 38.3 L1360 38.1 L1364 37.0 L1368 35.7 L1372 35.7 L1376 37.2 L1380 39.1 L1384 40.1 L1388 40.3 L1392 40.7 L1396 41.5 L1400 42.1 L1404 41.7 L1408 40.7 L1412 40.3 L1416 40.9 L1420 41.8 L1424 42.1 L1428 41.7 L1432 41.3 L1436 41.3 L1440 41.2" fill="none" stroke="currentColor" stroke-width="1.2" vector-effect="non-scaling-stroke"/>
+            <line x1="720" y1="4" x2="720" y2="76" stroke="#ff7043" stroke-width="1" opacity="0.9" vector-effect="non-scaling-stroke"/>
+          </svg>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a class="brand" href="index.html" aria-label="SolaceAudio home">
+            <svg class="brand__mark" viewBox="0 0 32 32" aria-hidden="true">
+              <rect width="32" height="32" rx="6" fill="#171811"/>
+              <g fill="#f2efe6">
+                <rect x="8" y="13" width="2.4" height="6" rx="1.2"/>
+                <rect x="12.4" y="9.5" width="2.4" height="13" rx="1.2"/>
+                <rect x="16.8" y="6" width="2.4" height="20" rx="1.2"/>
+                <rect x="21.2" y="11" width="2.4" height="10" rx="1.2"/>
+              </g>
+              <circle cx="25.4" cy="8" r="2" fill="#ff7043"/>
+            </svg>
+            <span class="brand__name">Solace<span>Audio</span></span>
+          </a>
+          <p>High-throughput audio ingestion and playback for Lavalink v4. Open source, Apache-2.0, maintained by Nex-Devz.</p>
+        </div>
+
+        <div class="footer-col">
+          <h4>Product</h4>
+          <ul>
+            <li><a href="#sources">Sources</a></li>
+            <li><a href="#pipeline">Pipeline</a></li>
+            <li><a href="#install">Install</a></li>
+            <li><a href="#api">Endpoints</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Reference</h4>
+          <ul>
+            <li><a href="docs.html">Documentation</a></li>
+            <li><a href="changelog.html">Changelog</a></li>
+            <li><a href="docs.html#configuration">Configuration</a></li>
+            <li><a href="docs.html#api">REST API</a></li>
+            <li><a href="docs.html#troubleshooting">Troubleshooting</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Project</h4>
+          <ul>
+            <li><a href="https://github.com/Nex-Devz/SolaceAudio" rel="noopener">GitHub</a></li>
+            <li><a href="https://github.com/Nex-Devz/SolaceAudio/releases" rel="noopener">Releases</a></li>
+            <li><a href="https://github.com/Nex-Devz/SolaceAudio/issues" rel="noopener">Issues</a></li>
+            <li><a href="https://discord.gg/devz" rel="noopener">Discord</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>© <span data-year>2026</span> SolaceAudio. Licensed under Apache-2.0. Derived from SlugYZeon by xylen-py; original notices retained.</p>
+        <p class="domain">solaceaudio.cc.cd</p>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

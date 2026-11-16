@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Documentation — SolaceAudio</title>
+  <meta name="description" content="Install and configure SolaceAudio on Lavalink v4: full plugin configuration, source prefixes, REST endpoints, build instructions and troubleshooting.">
+  <link rel="canonical" href="https://solaceaudio.cc.cd/docs.html">
+  <meta name="theme-color" content="#11120c">
+  <meta name="color-scheme" content="light">
+
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="SolaceAudio">
+  <meta property="og:url" content="https://solaceaudio.cc.cd/docs.html">
+  <meta property="og:title" content="SolaceAudio documentation">
+  <meta property="og:description" content="Install, configure and query SolaceAudio on a Lavalink v4 node.">
+  <meta property="og:image" content="https://solaceaudio.cc.cd/assets/img/og.png">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
+  <link rel="preload" href="assets/fonts/bricolage-grotesque-var.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/instrument-sans-var.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preconnect" href="https://api.github.com">
+  <link rel="preconnect" href="https://raw.githubusercontent.com">
+  <link rel="dns-prefetch" href="https://raw.githubusercontent.com">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script>document.documentElement.classList.add('js');</script>
+  <script src="assets/js/main.js" defer></script>
+  <script src="assets/js/live.js" defer></script>
+</head>
+<body id="top">
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="index.html" aria-label="SolaceAudio home">
+        <svg class="brand__mark" viewBox="0 0 32 32" aria-hidden="true">
+          <rect width="32" height="32" rx="6" fill="#14150e"/>
+          <g fill="#f2efe6">
+            <rect x="8" y="13" width="2.4" height="6" rx="1.2"/>
+            <rect x="12.4" y="9.5" width="2.4" height="13" rx="1.2"/>
+            <rect x="16.8" y="6" width="2.4" height="20" rx="1.2"/>
+            <rect x="21.2" y="11" width="2.4" height="10" rx="1.2"/>
+          </g>
+          <circle cx="25.4" cy="8" r="2" fill="#ff7043"/>
+        </svg>
+        <span class="brand__name">Solace<span>Audio</span></span>
+      </a>
+
+      <nav class="main-nav" aria-label="Primary">
+        <a href="index.html#sources">Sources</a>
+        <a href="index.html#pipeline">Pipeline</a>
+        <a href="changelog.html">Changelog</a>
+        <a href="docs.html" aria-current="page">Docs</a>
+      </nav>
+
+      <div class="header-actions">
+        <span class="version-chip" data-live-version-badge title="Latest release">
+          <span class="live-dot" data-live-dot aria-hidden="true"></span>
+          <span>v<span data-live-version>1.0.32</span></span>
+        </span>
+        <a class="btn btn--small btn--outline" href="https://github.com/Nex-Devz/SolaceAudio" rel="noopener">
+          GitHub
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M4 12 12 4M6 4h6v6"/></svg>
+        </a>
+        <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-nav" data-menu-toggle aria-label="Open menu">
+          <span></span>
+          <span></span>
+        </button>
+      </div>
+    </div>
+
+    <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile" hidden>
+      <a href="index.html#sources">Sources <span>02</span></a>
+      <a href="index.html#pipeline">Pipeline <span>03</span></a>
+      <a href="index.html#releases">Releases <span>06</span></a>
+      <a href="changelog.html">Changelog <span>Live</span></a>
+      <a href="docs.html">Docs <span>Reference</span></a>
+      <a href="https://github.com/Nex-Devz/SolaceAudio" rel="noopener">GitHub <span>Repository</span></a>
+    </nav>
+  </header>
+
+  <main id="main">
+    <div class="docs-hero">
+      <div class="container">
+        <p class="sec-label">Documentation / v<span data-live-version>1.0.32</span></p>
+        <h1>Configuration, endpoints, and the parts that bite.</h1>
+        <p>Everything on this page describes version <span data-live-version>1.0.32</span> of the plugin and assumes a Lavalink v4 node with a writable working directory.</p>
+      </div>
+    </div>
+
+    <div class="container docs-layout">
+      <aside class="toc" aria-label="On this page">
+        <h2>On this page</h2>
+        <ol>
+          <li><a href="#requirements">Requirements</a></li>
+          <li><a href="#install">Install</a></li>
+          <li><a href="#youtube">YouTube &amp; datacenter IPs</a></li>
+          <li><a href="#configuration">Configuration</a></li>
+          <li><a href="#prefixes">Search prefixes</a></li>
+          <li><a href="#api">REST API</a></li>
+          <li><a href="#build">Build from source</a></li>
+          <li><a href="#troubleshooting">Troubleshooting</a></li>
+        </ol>
+        <p class="toc-foot">Maintained at <a href="https://github.com/Nex-Devz/SolaceAudio" rel="noopener">Nex-Devz/SolaceAudio</a>. Licensed Apache-2.0.</p>
+      </aside>
+
+      <article class="docs-content">
+        <section id="requirements">
+          <h2>Requirements</h2>
+          <ul>
+            <li><strong>Java 17</strong> or newer. The build targets Java 17 bytecode.</li>
+            <li><strong>Lavalink v4.0</strong> or later. v4.2.x server distributions are supported.</li>
+            <li>A writable working directory if you enable the local disk cache.</li>
+            <li>Outbound HTTPS to the source APIs you enable, plus JitPack on the first boot that resolves the plugin.</li>
+            <li>No database, sidecar process or native audio tooling.</li>
+          </ul>
+          <div class="callout">
+            <p><strong>Upgrading from 1.0.25 or earlier?</strong> Those builds required Micrometer on the classpath and could fail with <code>NoClassDefFoundError: io/micrometer/core/instrument/MeterRegistry</code>. From 1.0.26 the plugin binds to Lavalink's actuator registry only when it is present.</p>
+          </div>
+        </section>
+
+        <section id="install">
+          <h2>Install</h2>
+          <p>Add the plugin and the official YouTube source to <code>application.yml</code>. SolaceAudio detects the official source at startup and layers its metadata repair, mirror fallback and disk cache on top.</p>
+
+          <div class="code-head">
+            <span>application.yml</span>
+            <button class="copy-btn" type="button" data-copy="target" data-copy-target="#docs-yaml-install" data-label="Copy">Copy</button>
+          </div>
+          <pre><code id="docs-yaml-install"><span class="tok-k">lavalink</span>:
+  <span class="tok-k">defaultPluginSnapshotRepository</span>: <span class="tok-s">"https://maven.lavalink.dev/snapshots"</span>
+  <span class="tok-k">plugins</span>:
+    - <span class="tok-k">dependency</span>: <span class="tok-s">"com.github.Nex-Devz.SolaceAudio:solaceaudio-plugin:<span data-live-version>1.0.32</span>"</span>
+      <span class="tok-k">repository</span>: <span class="tok-s">"https://jitpack.io"</span>
+
+    <span class="tok-c"># The official YouTube source. SolaceAudio wraps and enhances it.</span>
+    - <span class="tok-k">dependency</span>: <span class="tok-s">"dev.lavalink.youtube:youtube-plugin:2be8e542d3f6f178e048dca565892684c2e40177"</span>
+      <span class="tok-k">snapshot</span>: <span class="tok-v">true</span></code></pre>
+
+          <p>Start the node the same way you always have. SolaceAudio registers its managers during startup and logs the sources it adds.</p>
+
+          <div class="code-head">
+            <span>Start and verify</span>
+            <button class="copy-btn" type="button" data-copy="target" data-copy-target="#docs-start" data-label="Copy">Copy</button>
+          </div>
+          <pre><code id="docs-start"><span class="tok-c"># start Lavalink</span>
+java -jar Lavalink.jar
+
+<span class="tok-c"># load a track through the v4 loader</span>
+curl -G <span class="tok-s">"http://localhost:2333/v4/loadtracks"</span> \
+  --data-urlencode <span class="tok-s">"identifier=spsearch:Bohemian Rhapsody"</span> \
+  -H <span class="tok-s">"Authorization: youshallnotpass"</span></code></pre>
+
+          <div class="callout">
+            <p><strong>About the YouTube snapshot.</strong> The 1.18.x release line of the official plugin still ships InnerTube client versions that YouTube rejects with HTTP 400. The pinned snapshot above carries current client versions. Replace it with the release you trust, or set <code>youtube.nativeSource: true</code> to run SolaceAudio's own YouTube source instead.</p>
+          </div>
+        </section>
+
+        <section id="youtube">
+          <h2>YouTube &amp; datacenter IPs</h2>
+          <p>Cloud IP ranges are watched more closely than residential ones. Four settings do most of the work on a hosted node: a burner cookie, a PoToken endpoint, mirroring, and the local cache.</p>
+
+          <div class="code-head">
+            <span>plugins.solaceaudio.youtube</span>
+            <button class="copy-btn" type="button" data-copy="target" data-copy-target="#docs-youtube" data-label="Copy">Copy</button>
+          </div>
+          <pre><code id="docs-youtube"><span class="tok-k">youtube</span>:
+  <span class="tok-k">oembed</span>: <span class="tok-v">true</span>
+  <span class="tok-k">mirror</span>: <span class="tok-v">true</span>
+  <span class="tok-k">mirrorProviders</span>: []          <span class="tok-c"># empty uses the built-in cross-service list</span>
+  <span class="tok-k">nativeSource</span>: <span class="tok-v">false</span>       <span class="tok-c"># true runs SolaceAudio's own YouTube source</span>
+  <span class="tok-k">localDiskCache</span>: <span class="tok-v">true</span>
+  <span class="tok-k">diskCachePath</span>: <span class="tok-s">"youtube-cache"</span>
+  <span class="tok-k">maxDiskCacheMb</span>: <span class="tok-v">10240</span>
+  <span class="tok-k">cipherUrl</span>: <span class="tok-s">"https://cipher.kikkia.dev"</span>
+  <span class="tok-k">cookieFile</span>: <span class="tok-s">"ytburner.txt"</span>
+  <span class="tok-k">potokenUrl</span>: <span class="tok-s">"https://potoken-generator.vercel.app/token"</span></code></pre>
+
+          <h3>Burner cookie</h3>
+          <p>Place a Netscape-format cookie file in the Lavalink working directory and name it in <code>cookieFile</code>. SolaceAudio uses it to compute rolling <code>SAPISIDHASH</code> authorization headers in memory for <code>WEB_REMIX</code> requests.</p>
+
+          <h3>PoToken</h3>
+          <p>A Proof-of-Origin token lifts bot checks on requests that would otherwise return 403. Point <code>potokenUrl</code> at the managed generator, or deploy an isolated generator to your own infrastructure from the <a href="https://github.com/Nex-Devz/potoken-generator" rel="noopener">potoken-generator</a> template.</p>
+
+          <h3>Mirroring and the cache</h3>
+          <p>With <code>mirror: true</code>, a blocked direct stream triggers a resolution pass across the mirror ladder. <code>mirrorProviders</code> is empty by default, which uses the built-in cross-service list: Spotify, Deezer, JioSaavn, Apple Music and Amazon Music.</p>
+          <p>The disk cache streams audio to disk through transactional <code>.part</code> files and evicts least-recently-used entries at the quota. Ten gigabytes is a reasonable starting point for a busy public bot. Lower it, or set <code>localDiskCache: false</code>, when storage is tight.</p>
+
+          <h3>Mid-stream failures</h3>
+          <p>When a stream URL expires or starts returning 403, 429 or 401, the producing client is cooled down for 60 seconds and another client in the pool resolves a fresh stream. The cache entry is invalidated rather than replayed.</p>
+
+          <div class="callout">
+            <p><strong>Security note.</strong> Runtime <code>cipherUrl</code> updates are validated against loopback, private subnets and cloud metadata addresses before they are applied. Cache paths are normalised and checked against their parent directory.</p>
+          </div>
+        </section>
+
+        <section id="configuration">
+          <h2>Configuration</h2>
+          <p>The full plugin block. Every key below is read at startup; a subset can be changed at runtime through <a href="#api">PATCH /v4/SolaceAudio/config</a>.</p>
+
+          <h3>Sources and the ladder</h3>
+          <div class="code-head">
+            <span>plugins.solaceaudio</span>
+            <button class="copy-btn" type="button" data-copy="target" data-copy-target="#docs-config-a" data-label="Copy">Copy</button>
+          </div>
+          <pre><code id="docs-config-a"><span class="tok-k">plugins</span>:
+  <span class="tok-k">solaceaudio</span>:
+    <span class="tok-c"># Skip PCM conversion when no DSP filters are active.</span>
+    <span class="tok-k">passthrough</span>: <span class="tok-v">false</span>
+
+    <span class="tok-k">sources</span>:
+      <span class="tok-k">spotify</span>: <span class="tok-v">true</span>
+      <span class="tok-k">applemusic</span>: <span class="tok-v">true</span>
+      <span class="tok-k">youtube</span>: <span class="tok-v">true</span>
+      <span class="tok-k">deezer</span>: <span class="tok-v">true</span>
+      <span class="tok-k">jiosaavn</span>: <span class="tok-v">true</span>
+      <span class="tok-k">gaana</span>: <span class="tok-v">true</span>
+      <span class="tok-k">amazonmusic</span>: <span class="tok-v">true</span>
+      <span class="tok-k">pandora</span>: <span class="tok-v">true</span>
+      <span class="tok-k">audiomack</span>: <span class="tok-v">true</span>
+      <span class="tok-k">shazam</span>: <span class="tok-v">true</span>
+      <span class="tok-k">flowerytts</span>: <span class="tok-v">true</span>
+
+    <span class="tok-c"># Tried in order. Reorder, remove or extend freely.</span>
+    <span class="tok-k">providers</span>:
+      - <span class="tok-s">"spsearch:\"{isrc}\""</span>
+      - <span class="tok-s">"spsearch:{query}"</span>
+      - <span class="tok-s">"dzisrc:{isrc}"</span>
+      - <span class="tok-s">"dzsearch:{query}"</span>
+      - <span class="tok-s">"ytsearch:\"{isrc}\""</span>
+      - <span class="tok-s">"ytsearch:{query}"</span>
+      - <span class="tok-s">"jssearch:\"{isrc}\""</span>
+      - <span class="tok-s">"jssearch:{query}"</span>
+      - <span class="tok-s">"azsearch:{query}"</span>
+      - <span class="tok-s">"scsearch:{query}"</span>
+      - <span class="tok-s">"bcsearch:{query}"</span></code></pre>
+
+          <h3>Per-source settings</h3>
+          <div class="code-head">
+            <span>plugins.solaceaudio · sources</span>
+            <button class="copy-btn" type="button" data-copy="target" data-copy-target="#docs-config-b" data-label="Copy">Copy</button>
+          </div>
+          <pre><code id="docs-config-b"><span class="tok-k">spotify</span>:
+  <span class="tok-k">countryCode</span>: <span class="tok-s">"US"</span>
+  <span class="tok-k">playlistLoadLimit</span>: <span class="tok-v">100</span>
+  <span class="tok-k">albumLoadLimit</span>: <span class="tok-v">50</span>
+  <span class="tok-k">resolveArtistsInSearch</span>: <span class="tok-v">true</span>
+  <span class="tok-k">spDc</span>: <span class="tok-s">""</span>                    <span class="tok-c"># optional web-player cookie</span>
+
+<span class="tok-k">applemusic</span>:
+  <span class="tok-k">countryCode</span>: <span class="tok-s">"us"</span>
+  <span class="tok-k">playlistLoadLimit</span>: <span class="tok-v">100</span>
+  <span class="tok-k">albumLoadLimit</span>: <span class="tok-v">50</span>
+  <span class="tok-k">artistLoadLimit</span>: <span class="tok-v">50</span>
+
+<span class="tok-k">jiosaavn</span>:
+  <span class="tok-k">apiUrl</span>: <span class="tok-s">"https://www.jiosaavn.com/api.php"</span>
+  <span class="tok-k">playlistLoadLimit</span>: <span class="tok-v">100</span>
+  <span class="tok-k">quality</span>: <span class="tok-s">"320kbps"</span>         <span class="tok-c"># 320 / 160 / 96 / 48</span>
+
+<span class="tok-k">deezer</span>:
+  <span class="tok-k">apiUrl</span>: <span class="tok-s">"https://api.deezer.com"</span>
+  <span class="tok-k">arl</span>: <span class="tok-s">""</span>                    <span class="tok-c"># optional, unlocks 320 kbps and FLAC</span>
+  <span class="tok-k">masterKey</span>: <span class="tok-s">"g4el58wc0zvf9na1"</span>
+  <span class="tok-k">playlistLoadLimit</span>: <span class="tok-v">100</span>
+
+<span class="tok-k">gaana</span>:
+  <span class="tok-k">apiUrl</span>: <span class="tok-s">"https://gaana-plugin-api.vercel.app/api"</span>
+  <span class="tok-k">playlistLoadLimit</span>: <span class="tok-v">100</span>
+  <span class="tok-k">searchLimit</span>: <span class="tok-v">50</span>
+
+<span class="tok-k">amazonmusic</span>:
+  <span class="tok-k">apiUrl</span>: <span class="tok-s">"https://amazon-music-api-dun.vercel.app/api"</span>
+  <span class="tok-k">playlistLoadLimit</span>: <span class="tok-v">100</span>
+
+<span class="tok-k">pandora</span>:
+  <span class="tok-k">csrfToken</span>: <span class="tok-s">""</span>
+  <span class="tok-k">searchLimit</span>: <span class="tok-v">25</span>
+
+<span class="tok-k">flowerytts</span>:
+  <span class="tok-k">voice</span>: <span class="tok-s">"en-US-Standard-A"</span>
+  <span class="tok-k">speed</span>: <span class="tok-v">1.0</span>
+
+<span class="tok-k">audiomack</span>:
+  <span class="tok-k">playlistLoadLimit</span>: <span class="tok-v">50</span>
+
+<span class="tok-k">shazam</span>:
+  <span class="tok-k">searchLimit</span>: <span class="tok-v">25</span>
+
+<span class="tok-k">lastfm</span>:
+  <span class="tok-k">apiKey</span>: <span class="tok-s">""</span>                <span class="tok-c"># optional, scrobbling and recommendations</span></code></pre>
+
+          <h3>YouTube, lyrics and SponsorBlock</h3>
+          <div class="code-head">
+            <span>plugins.solaceaudio · services</span>
+            <button class="copy-btn" type="button" data-copy="target" data-copy-target="#docs-config-c" data-label="Copy">Copy</button>
+          </div>
+          <pre><code id="docs-config-c"><span class="tok-k">youtube</span>:
+  <span class="tok-k">oembed</span>: <span class="tok-v">true</span>
+  <span class="tok-k">mirror</span>: <span class="tok-v">true</span>
+  <span class="tok-k">mirrorProviders</span>: []
+  <span class="tok-k">nativeSource</span>: <span class="tok-v">false</span>
+  <span class="tok-k">localDiskCache</span>: <span class="tok-v">true</span>
+  <span class="tok-k">diskCachePath</span>: <span class="tok-s">"youtube-cache"</span>
+  <span class="tok-k">maxDiskCacheMb</span>: <span class="tok-v">10240</span>
+  <span class="tok-k">cipherUrl</span>: <span class="tok-s">"https://cipher.kikkia.dev"</span>
+  <span class="tok-k">cookieFile</span>: <span class="tok-s">"ytburner.txt"</span>
+  <span class="tok-k">potokenUrl</span>: <span class="tok-s">"https://potoken-generator.vercel.app/token"</span>
+
+<span class="tok-k">lyrics</span>:
+  <span class="tok-k">enabled</span>: <span class="tok-v">true</span>
+  <span class="tok-k">sources</span>:
+    - <span class="tok-s">"lrclib"</span>
+    - <span class="tok-s">"deezer"</span>
+    - <span class="tok-s">"genius"</span>
+    - <span class="tok-s">"spotify"</span>
+
+<span class="tok-k">sponsorblock</span>:
+  <span class="tok-k">enabled</span>: <span class="tok-v">true</span>
+  <span class="tok-k">categories</span>:
+    - <span class="tok-s">"sponsor"</span>
+    - <span class="tok-s">"selfpromo"</span>
+    - <span class="tok-s">"interaction"</span>
+    - <span class="tok-s">"intro"</span>
+    - <span class="tok-s">"outro"</span></code></pre>
+
+          <h3>Keys worth changing first</h3>
+          <table>
+            <thead>
+              <tr><th scope="col">Key</th><th scope="col">Default</th><th scope="col">Effect</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>providers</code></td><td>ISRC-first ladder</td><td>Order in which mirrors are attempted. Remove a provider your host cannot reach.</td></tr>
+              <tr><td><code>jiosaavn.quality</code></td><td><code>320kbps</code></td><td>Drop to <code>160kbps</code> to halve node bandwidth with little perceived loss.</td></tr>
+              <tr><td><code>maxDiskCacheMb</code></td><td><code>10240</code></td><td>Disk cache quota. LRU entries are evicted when the limit is reached.</td></tr>
+              <tr><td><code>passthrough</code></td><td><code>false</code></td><td>Deliver raw Opus frames when no DSP filter is active. Lower CPU, no transcoding.</td></tr>
+              <tr><td><code>mirror</code></td><td><code>true</code></td><td>Resolve an alternative source when direct YouTube playback is refused.</td></tr>
+              <tr><td><code>lyrics.enabled</code></td><td><code>true</code></td><td>Enable the four-provider lyrics routes and the per-player lyrics endpoint.</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="prefixes">
+          <h2>Search prefixes</h2>
+          <p>Prefixes are the portable form: they work from any Lavalink client, and the same string can sit in the mirror ladder. Native share URLs are also accepted by the source handlers.</p>
+          <table>
+            <thead>
+              <tr><th scope="col">Source</th><th scope="col">Prefix</th><th scope="col">Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Spotify</td><td><code>spsearch:</code></td><td>ISRC queries with <code>spsearch:"{isrc}"</code> resolve precisely.</td></tr>
+              <tr><td>Apple Music</td><td><code>amsearch:</code></td><td>Falls back to the public iTunes Store API when the storefront token fails.</td></tr>
+              <tr><td>YouTube</td><td><code>ytsearch:</code> <code>ytmsearch:</code></td><td>Search only. Video and playlist IDs load directly.</td></tr>
+              <tr><td>Deezer</td><td><code>dzsearch:</code> <code>dzisrc:</code></td><td><code>dzisrc:</code> performs an exact ISRC lookup.</td></tr>
+              <tr><td>JioSaavn</td><td><code>jssearch:</code></td><td>Bitrate follows <code>jiosaavn.quality</code>.</td></tr>
+              <tr><td>Gaana</td><td><code>gnsearch:</code> <code>gaanasearch:</code></td><td>Both spellings are registered.</td></tr>
+              <tr><td>Amazon Music</td><td><code>azsearch:</code> <code>amazonsearch:</code></td><td>Native MESK catalog with proxy fallback.</td></tr>
+              <tr><td>Audiomack</td><td><code>admsearch:</code></td><td>Songs, albums and playlists through the signed API.</td></tr>
+              <tr><td>Pandora</td><td><code>pdsearch:</code></td><td>Adaptive AAC streams.</td></tr>
+              <tr><td>Shazam</td><td><code>shsearch:</code> <code>szsearch:</code></td><td>Discovery metadata, then resolution through the ladder.</td></tr>
+              <tr><td>FloweryTTS</td><td><code>ftts:</code> <code>speak:</code> <code>tts:</code></td><td>Text-to-speech through the public neural endpoint.</td></tr>
+              <tr><td>SoundCloud / Bandcamp</td><td><code>scsearch:</code> <code>bcsearch:</code></td><td>Provided by Lavalink's built-in sources, not SolaceAudio.</td></tr>
+            </tbody>
+          </table>
+          <p>Load a track with any prefix through the standard loader:</p>
+          <pre><code>GET /v4/loadtracks?identifier=jssearch:Kesariya</code></pre>
+        </section>
+
+        <section id="api">
+          <h2>REST API</h2>
+          <p>All routes inherit the Lavalink server's authorization. Send the same password you use for the rest of the v4 API.</p>
+
+          <h3>Endpoints</h3>
+          <table>
+            <thead>
+              <tr><th scope="col">Method</th><th scope="col">Route</th><th scope="col">Purpose</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>GET</code></td><td><code>/v4/lyrics</code></td><td>Lyrics by <code>track</code>, <code>artist</code> and optional <code>duration</code>.</td></tr>
+              <tr><td><code>GET</code></td><td><code>/v4/lyrics/search</code></td><td>Fuzzy multi-provider search with <code>query</code>.</td></tr>
+              <tr><td><code>GET</code></td><td><code>/v4/sessions/{sessionId}/players/{guildId}/lyrics</code></td><td>Lyrics for the active track in a guild player.</td></tr>
+              <tr><td><code>GET</code></td><td><code>/v4/sessions/{sessionId}/players/{guildId}/recommendation</code></td><td>Recommendations from the active player. Optional <code>limit</code>.</td></tr>
+              <tr><td><code>GET</code></td><td><code>/v4/sessions/{sessionId}/players/{guildId}/sponsorblock</code></td><td>Known SponsorBlock segments for the current track.</td></tr>
+              <tr><td><code>POST</code></td><td><code>/v4/sessions/{sessionId}/players/{guildId}/sponsorblock</code></td><td>Update enabled categories for the guild.</td></tr>
+              <tr><td><code>PATCH</code></td><td><code>/v4/SolaceAudio/config</code></td><td>Runtime updates for supported configuration keys.</td></tr>
+              <tr><td><code>GET</code></td><td><code>/v4/SolaceAudio/youtube/suggest</code></td><td>Search suggestions with <code>query</code> or <code>q</code>.</td></tr>
+            </tbody>
+          </table>
+          <p>Client-library compatibility aliases are registered for <code>/recommendations</code> and <code>/sponsorBlock</code>, and both casings of <code>/v4/SolaceAudio</code> resolve.</p>
+
+          <div class="callout">
+            <p><strong>Running LavaLyrics alongside SolaceAudio?</strong> Since 1.0.32, <code>LyricsController</code> and <code>SolaceLyricsManager</code> carry <code>@ConditionalOnMissingClass</code> and <code>@ConditionalOnProperty</code>. When <code>lavalyrics-plugin</code> is present, SolaceAudio yields the <code>/v4/lyrics</code> routes to it instead of throwing a Spring <code>Ambiguous mapping</code> error, and keeps feeding its providers — LRCLIB, Deezer, Genius and Spotify — into LavaLyrics.</p>
+          </div>
+
+          <h3>Lyrics lookup</h3>
+          <pre><code>curl -G <span class="tok-s">"http://localhost:2333/v4/lyrics"</span> \
+  --data-urlencode <span class="tok-s">"track=Kesariya"</span> \
+  --data-urlencode <span class="tok-s">"artist=Arijit Singh"</span> \
+  --data-urlencode <span class="tok-s">"duration=268000"</span> \
+  -H <span class="tok-s">"Authorization: youshallnotpass"</span></code></pre>
+
+          <h3>SponsorBlock categories</h3>
+          <pre><code>POST /v4/sessions/{sessionId}/players/{guildId}/sponsorblock
+Content-Type: application/json
+
+{
+  <span class="tok-s">"enabled"</span>: <span class="tok-v">true</span>,
+  <span class="tok-s">"categories"</span>: [<span class="tok-s">"sponsor"</span>, <span class="tok-s">"selfpromo"</span>, <span class="tok-s">"intro"</span>, <span class="tok-s">"outro"</span>]
+}</code></pre>
+
+          <h3>Runtime configuration</h3>
+          <p>Only the keys below are applied live. Everything else requires a restart.</p>
+          <pre><code>PATCH /v4/SolaceAudio/config
+Content-Type: application/json
+
+{
+  <span class="tok-s">"jiosaavn"</span>: { <span class="tok-s">"quality"</span>: <span class="tok-s">"160kbps"</span> },
+  <span class="tok-s">"youtube"</span>: {
+    <span class="tok-s">"mirror"</span>: <span class="tok-v">true</span>,
+    <span class="tok-s">"maxDiskCacheMb"</span>: <span class="tok-v">5120</span>
+  },
+  <span class="tok-s">"passthrough"</span>: <span class="tok-v">true</span>
+}</code></pre>
+        </section>
+
+        <section id="build">
+          <h2>Build from source</h2>
+          <p>JDK 17 is required. The project is a multi-module Gradle build: <code>solaceaudio-main</code> carries the source managers and <code>solaceaudio-plugin</code> adds the Lavalink wiring and REST controllers.</p>
+
+          <div class="code-head">
+            <span>shell</span>
+            <button class="copy-btn" type="button" data-copy="target" data-copy-target="#docs-build" data-label="Copy">Copy</button>
+          </div>
+          <pre><code id="docs-build">git clone https://github.com/Nex-Devz/SolaceAudio.git
+cd SolaceAudio
+
+<span class="tok-c"># Windows</span>
+gradlew.bat build
+
+<span class="tok-c"># Linux / macOS</span>
+./gradlew build</code></pre>
+
+          <p>The jar lands in <code>plugin/build/libs/</code>. When the <code>VERSION</code> environment variable is set, it is named <code>solaceaudio-plugin-&lt;version&gt;.jar</code>. Without it, Gradle falls back to <code>dev</code>, which is expected for local builds.</p>
+          <p>Run the suite with <code>./gradlew test</code>. The v1.0.32 tree carries 65 unit and integration tests, including the Audiomack and Shazam source managers.</p>
+        </section>
+
+        <section id="troubleshooting">
+          <h2>Troubleshooting</h2>
+
+          <h3>YouTube returns 403 or 429</h3>
+          <ol>
+            <li>Place a burner cookie file in the Lavalink root and set <code>cookieFile</code>.</li>
+            <li>Enable <code>potokenUrl</code> so requests carry a fresh Proof-of-Origin token.</li>
+            <li>Keep <code>mirror: true</code> so playback can resolve from another source.</li>
+            <li>If the node is on a heavily flagged range, route YouTube traffic through a residential proxy.</li>
+          </ol>
+
+          <h3>The disk cache is growing too large</h3>
+          <p>Lower <code>maxDiskCacheMb</code> under <code>plugins.solaceaudio.youtube</code>. SolaceAudio evicts least-recently-used entries once the quota is reached. Setting <code>localDiskCache: false</code> disables the cache entirely.</p>
+
+          <h3>The release jar is named <code>solaceaudio-plugin-dev.jar</code></h3>
+          <p>Gradle uses <code>dev</code> when no <code>VERSION</code> is set. The release workflow derives the version from the pushed tag. For a custom build, export <code>VERSION=1.0.32</code> before building.</p>
+
+          <h3>A source prefix returns nothing</h3>
+          <p>Confirm the source is enabled under <code>plugins.solaceaudio.sources</code>, then try the prefix directly through <code>/v4/loadtracks</code>. Some sources depend on public endpoints that can rate-limit or change; the mirror ladder exists so one failure does not stop the queue.</p>
+
+          <h3>Lyrics come back empty</h3>
+          <p>Check <code>lyrics.enabled</code> and the route you are calling. The endpoint returns 404 when no provider has a match, which is normal for obscure or unreleased tracks. The per-player route resolves from the active track metadata instead of a text query.</p>
+
+          <h3>Still stuck?</h3>
+          <p>Open an issue with the plugin version, Lavalink version, Java version, host provider, the source prefix that failed, and the relevant log lines. Redact cookies, ARL values and tokens before posting. See <a href="https://github.com/Nex-Devz/SolaceAudio/issues" rel="noopener">the issue tracker</a> or <a href="https://discord.gg/devz" rel="noopener">the Discord</a>.</p>
+        </section>
+      </article>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a class="brand" href="index.html" aria-label="SolaceAudio home">
+            <svg class="brand__mark" viewBox="0 0 32 32" aria-hidden="true">
+              <rect width="32" height="32" rx="6" fill="#171811"/>
+              <g fill="#f2efe6">
+                <rect x="8" y="13" width="2.4" height="6" rx="1.2"/>
+                <rect x="12.4" y="9.5" width="2.4" height="13" rx="1.2"/>
+                <rect x="16.8" y="6" width="2.4" height="20" rx="1.2"/>
+                <rect x="21.2" y="11" width="2.4" height="10" rx="1.2"/>
+              </g>
+              <circle cx="25.4" cy="8" r="2" fill="#ff7043"/>
+            </svg>
+            <span class="brand__name">Solace<span>Audio</span></span>
+          </a>
+          <p>High-throughput audio ingestion and playback for Lavalink v4. Open source, Apache-2.0, maintained by Nex-Devz.</p>
+        </div>
+
+        <div class="footer-col">
+          <h4>Documentation</h4>
+          <ul>
+            <li><a href="#requirements">Requirements</a></li>
+            <li><a href="#install">Install</a></li>
+            <li><a href="#configuration">Configuration</a></li>
+            <li><a href="#api">REST API</a></li>
+            <li><a href="changelog.html">Changelog</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Product</h4>
+          <ul>
+            <li><a href="index.html#sources">Sources</a></li>
+            <li><a href="index.html#pipeline">Pipeline</a></li>
+            <li><a href="index.html#install">Install summary</a></li>
+            <li><a href="index.html#api">Endpoints</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Project</h4>
+          <ul>
+            <li><a href="https://github.com/Nex-Devz/SolaceAudio" rel="noopener">GitHub</a></li>
+            <li><a href="https://github.com/Nex-Devz/SolaceAudio/releases" rel="noopener">Releases</a></li>
+            <li><a href="https://github.com/Nex-Devz/SolaceAudio/issues" rel="noopener">Issues</a></li>
+            <li><a href="https://discord.gg/devz" rel="noopener">Discord</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>© <span data-year>2026</span> SolaceAudio. Licensed under Apache-2.0. Derived from SlugYZeon by xylen-py; original notices retained.</p>
+        <p class="domain">solaceaudio.cc.cd</p>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
