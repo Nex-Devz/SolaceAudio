@@ -18,6 +18,11 @@ public class SolaceAudioSourcesConfig {
     private boolean applemusic = false;
     private boolean audiomack = true;
     private boolean shazam = true;
+    private boolean qobuz = false;
+    private boolean tidal = false;
+    private boolean vkmusic = false;
+    private boolean yandexmusic = false;
+    private boolean ytdlp = false;
 
     public boolean isApplemusic() {
         return applemusic;
@@ -105,5 +110,45 @@ public class SolaceAudioSourcesConfig {
 
     public void setShazam(boolean shazam) {
         this.shazam = shazam;
+    }
+
+    public boolean isQobuz() {
+        return qobuz;
+    }
+
+    public void setQobuz(boolean qobuz) {
+        this.qobuz = qobuz;
+    }
+
+    public boolean isTidal() {
+        return tidal;
+    }
+
+    public void setTidal(boolean tidal) {
+        this.tidal = tidal;
+    }
+
+    public boolean isVkmusic() {
+        return vkmusic;
+    }
+
+    public void setVkmusic(boolean vkmusic) {
+        this.vkmusic = vkmusic;
+    }
+
+    public boolean isYandexmusic() {
+        return yandexmusic;
+    }
+
+    public void setYandexmusic(boolean yandexmusic) {
+        this.yandexmusic = yandexmusic;
+    }
+
+    public boolean isYtdlp() {
+        return ytdlp;
+    }
+
+    public void setYtdlp(boolean ytdlp) {
+        this.ytdlp = ytdlp;
     }
 }

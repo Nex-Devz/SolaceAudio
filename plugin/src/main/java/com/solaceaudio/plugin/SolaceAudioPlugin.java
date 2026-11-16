@@ -45,6 +45,8 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
     private com.solaceaudio.sources.applemusic.AppleMusicAudioSourceManager applemusic;
     private com.solaceaudio.sources.audiomack.AudiomackAudioSourceManager audiomack;
     private com.solaceaudio.sources.shazam.ShazamAudioSourceManager shazam;
+    private com.solaceaudio.sources.qobuz.QobuzAudioSourceManager qobuz;
+    private com.solaceaudio.sources.tidal.TidalAudioSourceManager tidal;
     /** True when the built-in YouTube source must be used instead of the official plugin. */
     private boolean nativeYoutubeSource;
 
@@ -60,7 +62,9 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
         LastFmConfig lastFmConfig,
         com.solaceaudio.plugin.config.DeezerConfig deezerConfig,
         com.solaceaudio.plugin.config.FloweryTtsConfig floweryTtsConfig,
-        com.solaceaudio.plugin.config.AppleMusicConfig appleMusicConfig
+        com.solaceaudio.plugin.config.AppleMusicConfig appleMusicConfig,
+        com.solaceaudio.plugin.config.QobuzConfig qobuzConfig,
+        com.solaceaudio.plugin.config.TidalConfig tidalConfig
     ) {
         log.info("Loading SolaceAudio plugin...");
         this.pluginConfig = pluginConfig;
@@ -205,6 +209,36 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
         if (sourcesConfig.isShazam()) {
             this.shazam = new com.solaceaudio.sources.shazam.ShazamAudioSourceManager(pluginConfig.getProviders(), unused -> manager);
         }
+
+        if (sourcesConfig.isQobuz()) {
+            this.qobuz = new com.solaceaudio.sources.qobuz.QobuzAudioSourceManager(
+                pluginConfig.getProviders(),
+                qobuzConfig.getAppId(),
+                qobuzConfig.getUserOauthToken(),
+                unused -> manager
+            );
+            if (qobuzConfig.getPlaylistLoadLimit() > 0) {
+                this.qobuz.setPlaylistLoadLimit(qobuzConfig.getPlaylistLoadLimit());
+            }
+            if (qobuzConfig.getAlbumLoadLimit() > 0) {
+                this.qobuz.setAlbumLoadLimit(qobuzConfig.getAlbumLoadLimit());
+            }
+        }
+
+        if (sourcesConfig.isTidal()) {
+            this.tidal = new com.solaceaudio.sources.tidal.TidalAudioSourceManager(
+                pluginConfig.getProviders(),
+                tidalConfig.getToken(),
+                tidalConfig.getCountryCode(),
+                unused -> manager
+            );
+            if (tidalConfig.getPlaylistLoadLimit() > 0) {
+                this.tidal.setPlaylistLoadLimit(tidalConfig.getPlaylistLoadLimit());
+            }
+            if (tidalConfig.getAlbumLoadLimit() > 0) {
+                this.tidal.setAlbumLoadLimit(tidalConfig.getAlbumLoadLimit());
+            }
+        }
     }
 
     private boolean hasNewYoutubeSource() {
@@ -282,6 +316,22 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
         return this.shazam;
     }
 
+    public com.solaceaudio.sources.qobuz.QobuzAudioSourceManager getQobuzSource() {
+        return this.qobuz;
+    }
+
+    public com.solaceaudio.sources.tidal.TidalAudioSourceManager getTidalSource() {
+        return this.tidal;
+    }
+
+    public SolaceAudioSourcesConfig getSourcesConfig() {
+        return this.sourcesConfig;
+    }
+
+    public SolaceAudioConfig getPluginConfig() {
+        return this.pluginConfig;
+    }
+
     public AudioPlayerManager getPlayerManager() {
         return this.manager;
     }
@@ -352,6 +402,14 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
         if (this.shazam != null && this.sourcesConfig.isShazam()) {
             log.info("Registering Shazam audio source manager...");
             manager.registerSourceManager(this.shazam);
+        }
+        if (this.qobuz != null && this.sourcesConfig.isQobuz()) {
+            log.info("Registering Qobuz audio source manager...");
+            manager.registerSourceManager(this.qobuz);
+        }
+        if (this.tidal != null && this.sourcesConfig.isTidal()) {
+            log.info("Registering Tidal audio source manager...");
+            manager.registerSourceManager(this.tidal);
         }
         // Registered here only when the official YouTube plugin is absent. When it is present
         // the built-in source replaces it later, once every plugin has registered its sources,

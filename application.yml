@@ -8,7 +8,7 @@ lavalink:
 
   plugins:
     # SolaceAudio Multi-Source Audio Engine (JioSaavn, Spotify, Deezer, Apple Music, Amazon, Gaana)
-    - dependency: "com.github.Nex-Devz.SolaceAudio:solaceaudio-plugin:1.0.32"
+    - dependency: "com.github.Nex-Devz.SolaceAudio:solaceaudio-plugin:1.0.33"
       repository: "https://jitpack.io"
 
     # Official YouTube source. SolaceAudio detects this plugin and layers its oEmbed metadata
@@ -79,17 +79,22 @@ plugins:
     passthrough: false
 
     sources:
-      spotify: true
-      jiosaavn: true
-      gaana: true
       amazonmusic: true
-      deezer: true
-      pandora: true
-      youtube: true
-      flowerytts: true
       applemusic: true
       audiomack: true
+      deezer: true
+      flowerytts: true
+      gaana: true
+      jiosaavn: true
+      pandora: true
+      qobuz: false
       shazam: true
+      spotify: true
+      tidal: false
+      vkmusic: false
+      yandexmusic: false
+      youtube: true
+      ytdlp: false
 
     providers:
       # Resolution mirror ladder tried in order when resolving external tracks:
@@ -102,6 +107,10 @@ plugins:
       - "jssearch:\"{isrc}\""
       - "jssearch:{query}"
       - "azsearch:{query}"
+      - "admsearch:{query}"
+      - "shsearch:{query}"
+      - "qbsearch:{query}"
+      - "tdsearch:{query}"
       - "scsearch:{query}"
       - "bcsearch:{query}"
 
@@ -172,6 +181,22 @@ plugins:
     shazam:
       # Official Apple Music & Shazam discovery track search & recognition engine
       searchLimit: 25
+
+    qobuz:
+      # Public Web App ID 712109809 (preconfigured). Works out-of-the-box for metadata and mirror playback!
+      appId: "712109809"
+      # OPTIONAL: Qobuz user auth token (X-User-Auth-Token) for direct Hi-Res FLAC/MP3 streaming.
+      userOauthToken: ""
+      playlistLoadLimit: 50
+      albumLoadLimit: 50
+
+    tidal:
+      # OPTIONAL: Tidal OAuth token or client token.
+      # SolaceAudio works out-of-the-box for metadata & mirror playback without credentials!
+      token: ""
+      countryCode: "US"
+      playlistLoadLimit: 50
+      albumLoadLimit: 50
 
     youtube:
       # Lightweight oEmbed metadata resolution (bypasses datacenter bot blocks on direct track URLs)
