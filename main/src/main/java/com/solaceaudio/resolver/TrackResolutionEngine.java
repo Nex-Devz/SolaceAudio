@@ -27,6 +27,8 @@ public class TrackResolutionEngine implements TrackResolutionHandler {
             "azsearch:" + QUERY_PATTERN,
             "admsearch:" + QUERY_PATTERN,
             "shsearch:" + QUERY_PATTERN,
+            "qbsearch:" + QUERY_PATTERN,
+            "tdsearch:" + QUERY_PATTERN,
             "scsearch:" + QUERY_PATTERN,
             "bcsearch:" + QUERY_PATTERN
     };
@@ -73,6 +75,12 @@ public class TrackResolutionEngine implements TrackResolutionHandler {
                     continue;
                 }
                 if ("shazam".equalsIgnoreCase(sourceName) && (candidate.startsWith("shsearch:") || candidate.startsWith("szsearch:") || candidate.startsWith("shazam:"))) {
+                    continue;
+                }
+                if ("qobuz".equalsIgnoreCase(sourceName) && (candidate.startsWith("qbsearch:") || candidate.startsWith("qobuz:"))) {
+                    continue;
+                }
+                if ("tidal".equalsIgnoreCase(sourceName) && (candidate.startsWith("tdsearch:") || candidate.startsWith("tidalsearch:") || candidate.startsWith("tidal:"))) {
                     continue;
                 }
                 if ("applemusic".equalsIgnoreCase(sourceName) && candidate.startsWith("amsearch:")) {

@@ -48,6 +48,8 @@ public class YouTubeTrack extends DelegatedAudioTrack {
         MIRROR_SOURCES.put("amazon", "azsearch:");
         MIRROR_SOURCES.put("audiomack", "admsearch:");
         MIRROR_SOURCES.put("shazam", "shsearch:");
+        MIRROR_SOURCES.put("qobuz", "qbsearch:");
+        MIRROR_SOURCES.put("tidal", "tdsearch:");
     }
 
     private final YouTubeSourceManager sourceManager;
