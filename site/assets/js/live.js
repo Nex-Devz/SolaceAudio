@@ -247,7 +247,7 @@
 
   const fallbackVersion = () => {
     const node = document.querySelector("[data-live-version]");
-    return (node && node.textContent.trim()) || "1.0.32";
+    return (node && node.textContent.trim()) || "1.0.34";
   };
 
   const updateCopyTemplates = (version) => {

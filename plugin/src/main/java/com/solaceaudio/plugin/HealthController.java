@@ -28,7 +28,7 @@ public class HealthController {
         Map<String, Object> health = new LinkedHashMap<>();
         health.put("status", "UP");
         health.put("plugin", "SolaceAudio");
-        health.put("version", "1.0.33");
+        health.put("version", "1.0.34");
         health.put("timestamp", System.currentTimeMillis());
 
         long uptime = ManagementFactory.getRuntimeMXBean().getUptime();

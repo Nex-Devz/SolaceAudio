@@ -8,7 +8,7 @@ lavalink:
 
   plugins:
     # SolaceAudio Multi-Source Audio Engine (JioSaavn, Spotify, Deezer, Apple Music, Amazon, Gaana)
-    - dependency: "com.github.Nex-Devz.SolaceAudio:solaceaudio-plugin:1.0.33"
+    - dependency: "com.github.Nex-Devz.SolaceAudio:solaceaudio-plugin:1.0.34"
       repository: "https://jitpack.io"
 
     # Official YouTube source. SolaceAudio detects this plugin and layers its oEmbed metadata

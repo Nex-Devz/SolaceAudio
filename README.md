@@ -144,7 +144,7 @@ Add the plugin dependency to your `application.yml`:
 lavalink:
   defaultPluginSnapshotRepository: "https://maven.lavalink.dev/snapshots"
   plugins:
-    - dependency: "com.github.Nex-Devz.SolaceAudio:solaceaudio-plugin:1.0.33"
+    - dependency: "com.github.Nex-Devz.SolaceAudio:solaceaudio-plugin:1.0.34"
       repository: "https://jitpack.io"
     # Official YouTube source. SolaceAudio detects it and layers oEmbed metadata repair,
     # mirror fallback and disk caching on top of it.
@@ -172,7 +172,7 @@ repositories {
 }
 
 dependencies {
-    implementation("com.github.Nex-Devz.SolaceAudio:solaceaudio-main:1.0.33")
+    implementation("com.github.Nex-Devz.SolaceAudio:solaceaudio-main:1.0.34")
 }
 ```
 
@@ -189,7 +189,7 @@ dependencies {
   <dependency>
     <groupId>com.github.Nex-Devz.SolaceAudio</groupId>
     <artifactId>solaceaudio-main</artifactId>
-    <version>1.0.33</version>
+    <version>1.0.34</version>
   </dependency>
 </dependencies>
 ```
@@ -387,7 +387,7 @@ Response:
 {
   "status": "UP",
   "plugin": "SolaceAudio",
-  "version": "1.0.33",
+  "version": "1.0.34",
   "uptimeMs": 348210,
   "jvm": {
     "usedMb": 184,
@@ -485,7 +485,7 @@ Datacenter IP ranges are heavily monitored by YouTube. To resolve this:
 <details>
 <summary><b>Lavalink logs warn: "Release jar is named dev"</b></summary>
 <br/>
-When building locally without a Git tag, Gradle defaults the artifact version to <code>dev</code>. In production releases or CI, setting the environment variable <code>VERSION=1.0.33</code> produces <code>solaceaudio-plugin-1.0.33.jar</code>.
+When building locally without a Git tag, Gradle defaults the artifact version to <code>dev</code>. In production releases or CI, setting the environment variable <code>VERSION=1.0.34</code> produces <code>solaceaudio-plugin-1.0.34.jar</code>.
 </details>
 
 <details>

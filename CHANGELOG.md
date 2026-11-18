@@ -4,6 +4,15 @@ All notable changes to SolaceAudio are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.34] - 2026-11-18
+
+### Fixed
+
+- **Security Hardening & CodeQL Remediation**: Resolved all High and Medium CodeQL security vulnerabilities across the codebase (100% pass):
+  - **Path Traversal Protection (CWE-22)**: Enforced strict application directory boundaries and traversal blocking (`..`, `\0`) on YouTube cookie file and disk cache paths in `YtMusicCookieAuth`, `YouTubeSourceManager`, and `SolaceAudioPlugin`.
+  - **Log Injection Elimination (CWE-117)**: Neutralized log injection across `SolaceAudioPlugin`, `YtMusicCookieAuth`, `LrcLibLyricsManager`, `GeniusLyricsManager`, and `DeezerLyricsManager` by replacing unsanitized user query interpolation with clean audit events.
+  - **Sensitive Log Sanitization (CWE-532)**: Sanitized JioSaavn non-200 endpoint logging to eliminate reflection of URL slugs and parameters.
+
 ## [1.0.33] - 2026-11-16
 
 ### Added
@@ -174,6 +183,7 @@ versioned release artifacts; 1.0.23 artifacts on JitPack are unaffected.
 - Mirror fallback now warns when it is enabled but no mirror source is
   registered.
 
+[1.0.34]: https://github.com/Nex-Devz/SolaceAudio/releases/tag/1.0.34
 [1.0.33]: https://github.com/Nex-Devz/SolaceAudio/releases/tag/1.0.33
 [1.0.32]: https://github.com/Nex-Devz/SolaceAudio/releases/tag/1.0.32
 [1.0.31]: https://github.com/Nex-Devz/SolaceAudio/releases/tag/1.0.31
