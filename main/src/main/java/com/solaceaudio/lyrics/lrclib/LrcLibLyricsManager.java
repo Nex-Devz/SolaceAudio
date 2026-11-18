@@ -93,9 +93,7 @@ public class LrcLibLyricsManager implements AudioLyricsManager {
                     return lyrics;
                 }
             } catch (Exception e) {
-                String safeTitle = cleanedTitle != null ? cleanedTitle.replaceAll("[\\r\\n]", "") : "";
-                String safeAuthor = cleanedAuthor != null ? cleanedAuthor.replaceAll("[\\r\\n]", "") : "";
-                log.debug("Direct LRCLIB exact match miss for '{} - {}': {}", safeTitle, safeAuthor, e.getMessage());
+                log.debug("Direct LRCLIB exact match miss: {}", e.getMessage());
             }
         }
 
@@ -106,8 +104,7 @@ public class LrcLibLyricsManager implements AudioLyricsManager {
                     : cleanedTitle;
             return querySearch(query.trim(), cleanedTitle, cleanedAuthor);
         } catch (Exception e) {
-            String safeQuery = title != null ? title.replaceAll("[\\r\\n]", "") : "";
-            log.warn("Failed to fetch lyrics from LRCLIB for query '{}': {}", safeQuery, e.getMessage());
+            log.warn("Failed to fetch lyrics from LRCLIB: {}", e.getMessage());
             return null;
         }
     }

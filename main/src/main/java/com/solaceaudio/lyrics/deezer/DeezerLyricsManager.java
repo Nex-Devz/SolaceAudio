@@ -171,7 +171,7 @@ public class DeezerLyricsManager implements AudioLyricsManager {
                 }
             }
         } catch (Exception e) {
-            log.warn("Failed to retrieve Deezer lyrics for track id '{}': {}", trackId, e.getMessage());
+            log.warn("Failed to retrieve Deezer lyrics: {}", e.getMessage());
         }
 
         return null;
@@ -204,7 +204,7 @@ public class DeezerLyricsManager implements AudioLyricsManager {
                 }
             }
         } catch (Exception e) {
-            log.debug("Deezer lyrics search resolution failed for '{}': {}", title, e.getMessage());
+            log.debug("Deezer lyrics search resolution failed: {}", e.getMessage());
         }
 
         return null;

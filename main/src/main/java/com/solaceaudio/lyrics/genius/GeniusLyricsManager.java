@@ -112,8 +112,7 @@ public class GeniusLyricsManager implements AudioLyricsManager {
 
             return scrapeSongLyrics(songUrl, displayTitle);
         } catch (Exception e) {
-            String safeQuery = query != null ? query.replaceAll("[\\r\\n]", "") : "";
-            log.debug("Genius lyrics fetch failed for query '{}': {}", safeQuery, e.getMessage());
+            log.debug("Genius lyrics fetch failed: {}", e.getMessage());
             return null;
         }
     }

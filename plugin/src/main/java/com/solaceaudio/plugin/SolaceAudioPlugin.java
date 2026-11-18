@@ -281,15 +281,15 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
         if (versions == null || versions.isEmpty()) {
             return;
         }
+        int applied = 0;
         for (java.util.Map.Entry<String, String> entry : versions.entrySet()) {
             if (entry.getKey() == null || entry.getValue() == null) {
                 continue;
             }
             com.solaceaudio.sources.youtube.clients.InnerTubeClient.setVersionOverride(entry.getKey(), entry.getValue());
-            String safeKey = entry.getKey().replaceAll("[\\r\\n]", "");
-            String safeVal = entry.getValue().replaceAll("[\\r\\n]", "");
-            log.info("YouTube client version override applied: {} -> {}", safeKey, safeVal);
+            applied++;
         }
+        log.info("YouTube client version overrides applied for {} clients", applied);
     }
 
     public SpotifyAudioSourceManager getSpotifySource() {
@@ -564,16 +564,14 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
                 if (com.solaceaudio.security.SecurityFilter.isSafePath(ytConfig.getDiskCachePath())) {
                     this.youtube.setDiskCachePath(ytConfig.getDiskCachePath());
                 } else {
-                    String safePath = com.solaceaudio.security.SecurityFilter.sanitize(ytConfig.getDiskCachePath().replaceAll("[\\r\\n]", ""));
-                    log.warn("Blocked potentially unsafe diskCachePath update (Path Traversal protection): {}", safePath);
+                    log.warn("Blocked potentially unsafe diskCachePath update (Path Traversal protection)");
                 }
             }
             if (ytConfig.getCipherUrl() != null && !ytConfig.getCipherUrl().isEmpty()) {
                 if (com.solaceaudio.security.SecurityFilter.isSafeUrl(ytConfig.getCipherUrl())) {
                     this.youtube.setCipherUrl(ytConfig.getCipherUrl());
                 } else {
-                    String safeUrl = com.solaceaudio.security.SecurityFilter.sanitize(ytConfig.getCipherUrl().replaceAll("[\\r\\n]", ""));
-                    log.warn("Blocked potentially unsafe cipherUrl update (SSRF protection): {}", safeUrl);
+                    log.warn("Blocked potentially unsafe cipherUrl update (SSRF protection)");
                 }
             }
             if (ytConfig.getClientVersions() != null && !ytConfig.getClientVersions().isEmpty()) {
@@ -585,8 +583,7 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
             if ((ytConfig.getCookie() != null || ytConfig.getCookieFile() != null) && this.youtube.getProxyHandler() != null) {
                 String safeCookieFile = ytConfig.getCookieFile();
                 if (safeCookieFile != null && !com.solaceaudio.security.SecurityFilter.isSafePath(safeCookieFile)) {
-                    log.warn("Blocked potentially unsafe cookieFile update (Path Traversal protection): {}",
-                            com.solaceaudio.security.SecurityFilter.sanitize(safeCookieFile.replaceAll("[\\r\\n]", "")));
+                    log.warn("Blocked potentially unsafe cookieFile update (Path Traversal protection)");
                     safeCookieFile = null;
                 }
                 this.youtube.getProxyHandler().getYtMusicCookieAuth().loadCookie(ytConfig.getCookie(), safeCookieFile);
