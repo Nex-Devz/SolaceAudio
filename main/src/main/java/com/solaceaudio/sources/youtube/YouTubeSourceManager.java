@@ -15,6 +15,8 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -114,11 +116,18 @@ public class YouTubeSourceManager implements AudioSourceManager {
 
     private static File getSafeCacheDirectory(String path) {
         String cleanPath = (path != null && !path.isBlank()) ? path : "youtube-cache";
-        File dir = new File(cleanPath).getAbsoluteFile();
+        if (cleanPath.contains("..") || cleanPath.contains("\0")) {
+            cleanPath = "youtube-cache";
+        }
         try {
-            return dir.getCanonicalFile();
-        } catch (IOException e) {
-            return dir;
+            Path basePath = Paths.get(".").toAbsolutePath().normalize();
+            Path targetPath = basePath.resolve(cleanPath).normalize().toAbsolutePath();
+            if (!targetPath.startsWith(basePath)) {
+                targetPath = basePath.resolve("youtube-cache").normalize().toAbsolutePath();
+            }
+            return targetPath.toFile();
+        } catch (Exception e) {
+            return new File("youtube-cache").getAbsoluteFile();
         }
     }
 

@@ -561,7 +561,12 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
                 this.youtube.setLocalDiskCache(ytConfig.getLocalDiskCache());
             }
             if (ytConfig.getDiskCachePath() != null && !ytConfig.getDiskCachePath().isEmpty()) {
-                this.youtube.setDiskCachePath(ytConfig.getDiskCachePath());
+                if (com.solaceaudio.security.SecurityFilter.isSafePath(ytConfig.getDiskCachePath())) {
+                    this.youtube.setDiskCachePath(ytConfig.getDiskCachePath());
+                } else {
+                    String safePath = com.solaceaudio.security.SecurityFilter.sanitize(ytConfig.getDiskCachePath().replaceAll("[\\r\\n]", ""));
+                    log.warn("Blocked potentially unsafe diskCachePath update (Path Traversal protection): {}", safePath);
+                }
             }
             if (ytConfig.getCipherUrl() != null && !ytConfig.getCipherUrl().isEmpty()) {
                 if (com.solaceaudio.security.SecurityFilter.isSafeUrl(ytConfig.getCipherUrl())) {
@@ -578,7 +583,13 @@ public class SolaceAudioPlugin implements AudioPlayerManagerConfiguration {
                 this.youtube.setMaxDiskCacheMb(ytConfig.getMaxDiskCacheMb());
             }
             if ((ytConfig.getCookie() != null || ytConfig.getCookieFile() != null) && this.youtube.getProxyHandler() != null) {
-                this.youtube.getProxyHandler().getYtMusicCookieAuth().loadCookie(ytConfig.getCookie(), ytConfig.getCookieFile());
+                String safeCookieFile = ytConfig.getCookieFile();
+                if (safeCookieFile != null && !com.solaceaudio.security.SecurityFilter.isSafePath(safeCookieFile)) {
+                    log.warn("Blocked potentially unsafe cookieFile update (Path Traversal protection): {}",
+                            com.solaceaudio.security.SecurityFilter.sanitize(safeCookieFile.replaceAll("[\\r\\n]", "")));
+                    safeCookieFile = null;
+                }
+                this.youtube.getProxyHandler().getYtMusicCookieAuth().loadCookie(ytConfig.getCookie(), safeCookieFile);
             }
         }
 

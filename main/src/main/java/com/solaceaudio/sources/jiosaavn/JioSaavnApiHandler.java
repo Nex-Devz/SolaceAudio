@@ -74,8 +74,8 @@ public class JioSaavnApiHandler {
     public JsonNode getSongDetails(String idOrUrl) throws IOException {
         if (isOfficialApi) {
             if (idOrUrl.startsWith("http")) {
-                String token = extractPermaToken(idOrUrl);
-                return fetchJson("?__call=webapi.get&api_version=4&_format=json&_marker=0&ctx=web6dot0&token=" + enc(token) + "&type=song");
+                String slug = extractPermaUrlSlug(idOrUrl);
+                return fetchJson("?__call=webapi.get&api_version=4&_format=json&_marker=0&ctx=web6dot0&token=" + enc(slug) + "&type=song");
             }
             return fetchJson("?__call=song.getDetails&api_version=4&_format=json&_marker=0&ctx=web6dot0&pids=" + enc(idOrUrl));
         }
@@ -87,8 +87,8 @@ public class JioSaavnApiHandler {
 
     public JsonNode getAlbumDetails(String idOrUrl) throws IOException {
         if (isOfficialApi) {
-            String token = extractPermaToken(idOrUrl);
-            return fetchJson("?__call=webapi.get&api_version=4&_format=json&_marker=0&ctx=web6dot0&token=" + enc(token) + "&type=album");
+            String slug = extractPermaUrlSlug(idOrUrl);
+            return fetchJson("?__call=webapi.get&api_version=4&_format=json&_marker=0&ctx=web6dot0&token=" + enc(slug) + "&type=album");
         }
         if (idOrUrl.startsWith("http")) {
             return fetchJson("/api/albums?link=" + enc(idOrUrl));
@@ -98,8 +98,8 @@ public class JioSaavnApiHandler {
 
     public JsonNode getPlaylistDetails(String idOrUrl, int limit) throws IOException {
         if (isOfficialApi) {
-            String token = extractPermaToken(idOrUrl);
-            return fetchJson("?__call=webapi.get&api_version=4&_format=json&_marker=0&ctx=web6dot0&token=" + enc(token) + "&type=playlist&n=" + limit);
+            String slug = extractPermaUrlSlug(idOrUrl);
+            return fetchJson("?__call=webapi.get&api_version=4&_format=json&_marker=0&ctx=web6dot0&token=" + enc(slug) + "&type=playlist&n=" + limit);
         }
         if (idOrUrl.startsWith("http")) {
             return fetchJson("/api/playlists?link=" + enc(idOrUrl) + "&limit=" + limit);
@@ -109,8 +109,8 @@ public class JioSaavnApiHandler {
 
     public JsonNode getArtistDetails(String idOrUrl) throws IOException {
         if (isOfficialApi) {
-            String token = extractPermaToken(idOrUrl);
-            return fetchJson("?__call=webapi.get&api_version=4&_format=json&_marker=0&ctx=web6dot0&token=" + enc(token) + "&type=artist&n_song=50");
+            String slug = extractPermaUrlSlug(idOrUrl);
+            return fetchJson("?__call=webapi.get&api_version=4&_format=json&_marker=0&ctx=web6dot0&token=" + enc(slug) + "&type=artist&n_song=50");
         }
         if (idOrUrl.startsWith("http")) {
             return fetchJson("/api/artists?link=" + enc(idOrUrl));
@@ -125,7 +125,7 @@ public class JioSaavnApiHandler {
         return fetchJson("/api/songs/" + enc(songId) + "/suggestions?limit=" + limit);
     }
 
-    private static String extractPermaToken(String urlOrId) {
+    private static String extractPermaUrlSlug(String urlOrId) {
         if (!urlOrId.startsWith("http")) return urlOrId;
         int lastSlash = urlOrId.lastIndexOf('/');
         if (lastSlash != -1 && lastSlash < urlOrId.length() - 1) {
@@ -176,9 +176,7 @@ public class JioSaavnApiHandler {
             if (response.statusCode() >= 200 && response.statusCode() < 300) {
                 return objectMapper.readTree(response.body());
             } else {
-                URI u = URI.create(fullUrl);
-                String safePath = u.getPath() != null ? u.getPath() : "/";
-                log.warn("JioSaavn API non-200 response [{}] for endpoint: {}", response.statusCode(), safePath);
+                log.warn("JioSaavn API non-200 response [{}]", response.statusCode());
                 return null;
             }
         } catch (InterruptedException e) {

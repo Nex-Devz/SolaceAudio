@@ -47,4 +47,23 @@ public class SecurityFilterTest {
         assertTrue(SecurityFilter.isSafeUrl("https://cipher.kikkia.dev"));
         assertTrue(SecurityFilter.isSafeUrl("https://google.com"));
     }
+
+    @Test
+    public void testIsSafePathRejectsTraversal() {
+        assertFalse(SecurityFilter.isSafePath("../../etc/passwd"));
+        assertFalse(SecurityFilter.isSafePath("..\\..\\windows\\system32"));
+        assertFalse(SecurityFilter.isSafePath("cookies/../../etc/shadow"));
+        assertFalse(SecurityFilter.isSafePath("yt_cookie.txt\0.png"));
+        assertFalse(SecurityFilter.isSafePath("/etc/passwd"));
+        assertFalse(SecurityFilter.isSafePath(null));
+        assertFalse(SecurityFilter.isSafePath(""));
+        assertFalse(SecurityFilter.isSafePath("   "));
+    }
+
+    @Test
+    public void testIsSafePathAllowsLocalPaths() {
+        assertTrue(SecurityFilter.isSafePath("ytburner.txt"));
+        assertTrue(SecurityFilter.isSafePath("cookies/ytburner.txt"));
+        assertTrue(SecurityFilter.isSafePath("./cookies/ytburner.txt"));
+    }
 }

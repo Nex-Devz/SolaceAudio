@@ -2,6 +2,8 @@ package com.solaceaudio.security;
 
 import java.net.URI;
 import java.net.InetAddress;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.regex.Pattern;
 
 public final class SecurityFilter {
@@ -52,6 +54,22 @@ public final class SecurityFilter {
             }
 
             return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public static boolean isSafePath(String pathStr) {
+        if (pathStr == null || pathStr.isBlank()) {
+            return false;
+        }
+        if (pathStr.contains("\0") || pathStr.contains("..")) {
+            return false;
+        }
+        try {
+            Path basePath = Paths.get(".").toAbsolutePath().normalize();
+            Path targetPath = basePath.resolve(pathStr).normalize().toAbsolutePath();
+            return targetPath.startsWith(basePath);
         } catch (Exception e) {
             return false;
         }

@@ -49,12 +49,18 @@ public class YtMusicCookieAuth {
 
         if (loaded == null && customFilePath != null && !customFilePath.isBlank()) {
             try {
-                Path p = Paths.get(customFilePath).normalize().toAbsolutePath();
-                File f = p.toFile();
-                if (f.exists() && f.isFile()) {
-                    loaded = sanitizeCookieString(Files.readString(p, StandardCharsets.UTF_8));
-                    String safeName = f.getName().replaceAll("[\\r\\n]", "");
-                    log.info("[YtMusicCookieAuth] Loaded YouTube cookie from: {}", safeName);
+                Path basePath = Paths.get(".").toAbsolutePath().normalize();
+                Path p = basePath.resolve(customFilePath).normalize().toAbsolutePath();
+                if (!p.startsWith(basePath) || customFilePath.contains("..") || customFilePath.contains("\0")) {
+                    log.warn("[YtMusicCookieAuth] Blocked unsafe cookie file path (path traversal): {}",
+                            customFilePath.replaceAll("[\\r\\n]", ""));
+                } else {
+                    File f = p.toFile();
+                    if (f.exists() && f.isFile()) {
+                        loaded = sanitizeCookieString(Files.readString(p, StandardCharsets.UTF_8));
+                        String safeName = f.getName().replaceAll("[\\r\\n]", "");
+                        log.info("[YtMusicCookieAuth] Loaded YouTube cookie from: {}", safeName);
+                    }
                 }
             } catch (Exception e) {
                 log.warn("[YtMusicCookieAuth] Failed to read cookie file: {}", e.getMessage());
