@@ -88,7 +88,9 @@
     const flushItem = () => {
       if (release && group && item) {
         const trimmed = item.trim();
-        if (trimmed) group.items.push(trimmed);
+        // A bullet ending in ":" introduces a nested list. Drop the wrapper so
+        // the child bullets become the readable entries instead of a stub line.
+        if (trimmed && !trimmed.endsWith(":")) group.items.push(trimmed);
       }
       item = null;
     };
@@ -458,75 +460,85 @@
     running = true;
     setMode("syncing");
 
+    document.documentElement.classList.add("is-live-loading");
+    const busyRegions = els(
+      "[data-live-preview], [data-live-changelog], .latest-card, .release-shell, .changelog-rail"
+    );
+    busyRegions.forEach((node) => node.setAttribute("aria-busy", "true"));
+
     const refreshButtons = els("[data-live-refresh]");
     refreshButtons.forEach((button) => {
       button.disabled = true;
       button.dataset.busy = "true";
     });
 
-    const [changelogResult, releasesResult, repoResult] = await Promise.allSettled([
-      fetchText(CHANGELOG_URL),
-      fetchJSON(API_RELEASES),
-      fetchJSON(API_REPO),
-    ]);
+    try {
+      const [changelogResult, releasesResult, repoResult] = await Promise.allSettled([
+        fetchText(CHANGELOG_URL),
+        fetchJSON(API_RELEASES),
+        fetchJSON(API_REPO),
+      ]);
 
-    let changelog = null;
-    let apiReleases = null;
-    let repo = null;
-    let failures = 0;
+      let changelog = null;
+      let apiReleases = null;
+      let repo = null;
+      let failures = 0;
 
-    if (changelogResult.status === "fulfilled") {
-      try {
-        changelog = parseChangelog(changelogResult.value);
-      } catch (error) {
+      if (changelogResult.status === "fulfilled") {
+        try {
+          changelog = parseChangelog(changelogResult.value);
+        } catch (error) {
+          failures += 1;
+        }
+      } else {
         failures += 1;
       }
-    } else {
-      failures += 1;
-    }
 
-    if (releasesResult.status === "fulfilled" && Array.isArray(releasesResult.value)) {
-      apiReleases = releasesResult.value;
-    } else {
-      failures += 1;
-    }
+      if (releasesResult.status === "fulfilled" && Array.isArray(releasesResult.value)) {
+        apiReleases = releasesResult.value;
+      } else {
+        failures += 1;
+      }
 
-    if (repoResult.status === "fulfilled") {
-      repo = repoResult.value;
-    }
+      if (repoResult.status === "fulfilled") {
+        repo = repoResult.value;
+      }
 
-    const cached = readCache();
-    const merged = mergeReleases(changelog, apiReleases);
+      const cached = readCache();
+      const merged = mergeReleases(changelog, apiReleases);
 
-    if (merged.length) {
-      const data = {
-        savedAt: Date.now(),
-        releases: merged,
-        repo: repo || (cached && cached.repo) || null,
-      };
-      writeCache(data);
-      applyData(data, "live");
-    } else if (cached) {
-      applyData(cached, "cache");
-    } else {
-      setMode("offline");
-    }
+      if (merged.length) {
+        const data = {
+          savedAt: Date.now(),
+          releases: merged,
+          repo: repo || (cached && cached.repo) || null,
+        };
+        writeCache(data);
+        applyData(data, "live");
+      } else if (cached) {
+        applyData(cached, "cache");
+      } else {
+        setMode("offline");
+      }
 
-    if (failures === 3) {
-      setMode(cached ? "cache" : "offline", cached ? cached.savedAt : undefined);
-      const error = document.querySelector("[data-live-error]");
-      if (error) error.hidden = false;
-    }
+      if (failures === 3) {
+        setMode(cached ? "cache" : "offline", cached ? cached.savedAt : undefined);
+        const error = document.querySelector("[data-live-error]");
+        if (error) error.hidden = false;
+      }
 
-    refreshButtons.forEach((button) => {
-      button.disabled = false;
-      delete button.dataset.busy;
-    });
-    running = false;
-
-    if (force) {
-      const status = document.querySelector("[data-live-status]");
-      if (status) status.textContent = merged.length ? "Live from GitHub" : "Bundled notes";
+      if (force) {
+        const status = document.querySelector("[data-live-status]");
+        if (status) status.textContent = merged.length ? "Live from GitHub" : "Bundled notes";
+      }
+    } finally {
+      document.documentElement.classList.remove("is-live-loading");
+      busyRegions.forEach((node) => node.removeAttribute("aria-busy"));
+      refreshButtons.forEach((button) => {
+        button.disabled = false;
+        delete button.dataset.busy;
+      });
+      running = false;
     }
   };
 

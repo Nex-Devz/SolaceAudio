@@ -2966,6 +2966,329 @@ html:focus-within {
   font-size: 0.875rem;
 }
 
+/* --- Interaction layer ---------------------------------------------------- */
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+.btn:disabled,
+.btn[data-busy] {
+  cursor: progress;
+}
+
+.btn[data-busy] {
+  opacity: 0.84;
+}
+
+.version-chip {
+  transition: color 160ms var(--ease), border-color 160ms var(--ease);
+}
+
+.version-chip:hover {
+  color: var(--ink-2);
+  border-color: var(--muted);
+}
+
+.chip-dark {
+  transition:
+    color 160ms var(--ease),
+    border-color 160ms var(--ease),
+    background-color 160ms var(--ease),
+    transform 200ms var(--ease-spring);
+}
+
+.chip-dark:hover {
+  transform: translateY(-1px);
+  color: var(--dark-text);
+  border-color: rgba(242, 239, 230, 0.42);
+}
+
+.chip-dark.is-hot:hover {
+  color: var(--dark);
+  border-color: var(--accent-on-dark);
+}
+
+.table-shell,
+.route-card,
+.score-card,
+.code-panel {
+  transition: border-color 220ms var(--ease);
+}
+
+.table-shell:hover,
+.route-card:hover,
+.code-panel:hover {
+  border-color: var(--line-strong);
+}
+
+.latest-card {
+  transition: border-color 220ms var(--ease), transform 260ms var(--ease-spring);
+}
+
+.latest-card:hover {
+  border-color: var(--line-strong);
+  transform: translateY(-2px);
+}
+
+.source-name {
+  transition: color 160ms var(--ease);
+}
+
+.source-table tbody tr:hover .source-name {
+  color: var(--accent-strong);
+}
+
+.source-table code {
+  transition: border-color 160ms var(--ease), background-color 160ms var(--ease);
+}
+
+.source-table tbody tr:hover code {
+  border-color: var(--line-strong);
+}
+
+.endpoint {
+  transition: background-color 160ms var(--ease), box-shadow 160ms var(--ease);
+}
+
+.endpoint:hover {
+  background: rgba(233, 229, 215, 0.42);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+.endpoint code {
+  transition: color 160ms var(--ease);
+}
+
+.endpoint:hover code {
+  color: var(--accent-strong);
+}
+
+.sys-item {
+  transition: background-color 180ms var(--ease), box-shadow 180ms var(--ease);
+}
+
+.sys-item:hover {
+  background: rgba(250, 248, 242, 0.6);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+.step__num {
+  transition:
+    transform 240ms var(--ease-spring),
+    border-color 180ms var(--ease),
+    color 180ms var(--ease);
+}
+
+.step:hover .step__num {
+  transform: scale(1.06);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.faq details {
+  transition: background-color 180ms var(--ease);
+}
+
+.faq details:hover {
+  background: rgba(250, 248, 242, 0.5);
+}
+
+.docs-content tbody tr {
+  transition: background-color 160ms var(--ease);
+}
+
+.docs-content tbody tr:hover {
+  background: rgba(233, 229, 215, 0.42);
+}
+
+[data-live-repo]:not([hidden]) {
+  animation: entry-in 380ms var(--ease) both;
+}
+
+.toc ol a,
+.release-index a {
+  transition:
+    color 150ms var(--ease),
+    border-color 150ms var(--ease),
+    padding-left 180ms var(--ease);
+}
+
+.toc ol a:hover {
+  padding-left: 17px;
+}
+
+/* Loading feedback --------------------------------------------------------- */
+
+html.is-live-loading [data-live-version],
+html.is-live-loading [data-live-date],
+html.is-live-loading [data-live-jar-size] {
+  animation: live-breathe 1.5s var(--ease) infinite;
+}
+
+html.is-live-loading .live-bar::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  animation: live-sweep 1.4s var(--ease) infinite;
+}
+
+.live-bar {
+  position: relative;
+}
+
+html.is-live-loading body::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  z-index: 130;
+  background: var(--accent);
+  transform-origin: left;
+  pointer-events: none;
+  animation: live-sweep 1.4s var(--ease) infinite;
+}
+
+@keyframes live-breathe {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@keyframes live-sweep {
+  0% {
+    transform: scaleX(0);
+    opacity: 0.9;
+  }
+  60% {
+    transform: scaleX(1);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scaleX(1);
+    opacity: 0;
+  }
+}
+
+/* Scroll progress ---------------------------------------------------------- */
+
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  z-index: 120;
+  pointer-events: none;
+}
+
+.scroll-progress span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  will-change: transform;
+}
+
+/* Entry motion ------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero-copy > *,
+  .docs-hero .container > *,
+  .changelog-hero__grid > div > * {
+    animation: rise-in 560ms var(--ease) both;
+  }
+
+  .hero-copy > :nth-child(2),
+  .docs-hero .container > :nth-child(2),
+  .changelog-hero__grid > div > :nth-child(2) {
+    animation-delay: 60ms;
+  }
+
+  .hero-copy > :nth-child(3),
+  .docs-hero .container > :nth-child(3),
+  .changelog-hero__grid > div > :nth-child(3) {
+    animation-delay: 120ms;
+  }
+
+  .hero-copy > :nth-child(4),
+  .changelog-hero__grid > div > :nth-child(4) {
+    animation-delay: 180ms;
+  }
+
+  .hero-copy > :nth-child(5),
+  .changelog-hero__grid > div > :nth-child(5) {
+    animation-delay: 240ms;
+  }
+
+  .hero-copy > :nth-child(6) {
+    animation-delay: 300ms;
+  }
+
+  [data-live-changelog] > .release-entry {
+    animation: entry-in 420ms var(--ease) both;
+  }
+
+  [data-live-changelog] > .release-entry:nth-child(2) {
+    animation-delay: 60ms;
+  }
+
+  [data-live-changelog] > .release-entry:nth-child(3) {
+    animation-delay: 120ms;
+  }
+
+  .release-notes li {
+    animation: entry-in 360ms var(--ease) both;
+  }
+
+  .release-notes li:nth-child(2) {
+    animation-delay: 50ms;
+  }
+
+  .release-notes li:nth-child(3) {
+    animation-delay: 100ms;
+  }
+
+  .release-notes li:nth-child(4) {
+    animation-delay: 150ms;
+  }
+
+  @keyframes rise-in {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes entry-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
 /* --- Motion --------------------------------------------------------------- */
 
 @media (prefers-reduced-motion: no-preference) {

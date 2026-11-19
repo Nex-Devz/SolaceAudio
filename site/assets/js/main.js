@@ -290,6 +290,33 @@
     window.setTimeout(initReleaseSpy, 80);
   });
 
+  /* ------------------------------------------------------------- scroll bar */
+  const progress = document.createElement("div");
+  progress.className = "scroll-progress";
+  progress.setAttribute("aria-hidden", "true");
+  progress.innerHTML = "<span></span>";
+  document.body.prepend(progress);
+
+  const progressBar = progress.firstElementChild;
+  let progressTicking = false;
+
+  const paintProgress = () => {
+    const scrollable = document.documentElement.scrollHeight - window.innerHeight;
+    const ratio = scrollable > 0 ? Math.min(1, Math.max(0, window.scrollY / scrollable)) : 0;
+    progressBar.style.transform = "scaleX(" + ratio + ")";
+    progressTicking = false;
+  };
+
+  const requestProgress = () => {
+    if (progressTicking) return;
+    progressTicking = true;
+    window.requestAnimationFrame(paintProgress);
+  };
+
+  window.addEventListener("scroll", requestProgress, { passive: true });
+  window.addEventListener("resize", requestProgress);
+  paintProgress();
+
   /* --------------------------------------------------- current year (footer) */
   document.querySelectorAll("[data-year]").forEach((node) => {
     node.textContent = String(new Date().getFullYear());

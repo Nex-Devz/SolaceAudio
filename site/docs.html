@@ -59,7 +59,7 @@
       <div class="header-actions">
         <span class="version-chip" data-live-version-badge title="Latest release">
           <span class="live-dot" data-live-dot aria-hidden="true"></span>
-          <span>v<span data-live-version>1.0.32</span></span>
+          <span>v<span data-live-version>1.0.34</span></span>
         </span>
         <a class="btn btn--small btn--outline" href="https://github.com/Nex-Devz/SolaceAudio" rel="noopener">
           GitHub
@@ -85,9 +85,9 @@
   <main id="main">
     <div class="docs-hero">
       <div class="container">
-        <p class="sec-label">Documentation / v<span data-live-version>1.0.32</span></p>
+        <p class="sec-label">Documentation / v<span data-live-version>1.0.34</span></p>
         <h1>Configuration, endpoints, and the parts that bite.</h1>
-        <p>Everything on this page describes version <span data-live-version>1.0.32</span> of the plugin and assumes a Lavalink v4 node with a writable working directory.</p>
+        <p>Everything on this page describes version <span data-live-version>1.0.34</span> of the plugin and assumes a Lavalink v4 node with a writable working directory.</p>
       </div>
     </div>
 
@@ -133,7 +133,7 @@
           <pre><code id="docs-yaml-install"><span class="tok-k">lavalink</span>:
   <span class="tok-k">defaultPluginSnapshotRepository</span>: <span class="tok-s">"https://maven.lavalink.dev/snapshots"</span>
   <span class="tok-k">plugins</span>:
-    - <span class="tok-k">dependency</span>: <span class="tok-s">"com.github.Nex-Devz.SolaceAudio:solaceaudio-plugin:<span data-live-version>1.0.32</span>"</span>
+    - <span class="tok-k">dependency</span>: <span class="tok-s">"com.github.Nex-Devz.SolaceAudio:solaceaudio-plugin:<span data-live-version>1.0.34</span>"</span>
       <span class="tok-k">repository</span>: <span class="tok-s">"https://jitpack.io"</span>
 
     <span class="tok-c"># The official YouTube source. SolaceAudio wraps and enhances it.</span>
@@ -193,7 +193,7 @@ curl -G <span class="tok-s">"http://localhost:2333/v4/loadtracks"</span> \
           <p>When a stream URL expires or starts returning 403, 429 or 401, the producing client is cooled down for 60 seconds and another client in the pool resolves a fresh stream. The cache entry is invalidated rather than replayed.</p>
 
           <div class="callout">
-            <p><strong>Security note.</strong> Runtime <code>cipherUrl</code> updates are validated against loopback, private subnets and cloud metadata addresses before they are applied. Cache paths are normalised and checked against their parent directory.</p>
+            <p><strong>Security note.</strong> Runtime <code>cipherUrl</code> updates are validated against loopback, private subnets and cloud metadata addresses before they are applied. Cookie and cache paths are resolved against the application directory and reject traversal sequences. Since 1.0.34, log lines emit clean audit events instead of interpolating raw user queries, and JioSaavn endpoint errors no longer reflect URL slugs or parameters.</p>
           </div>
         </section>
 
@@ -223,6 +223,9 @@ curl -G <span class="tok-s">"http://localhost:2333/v4/loadtracks"</span> \
       <span class="tok-k">audiomack</span>: <span class="tok-v">true</span>
       <span class="tok-k">shazam</span>: <span class="tok-v">true</span>
       <span class="tok-k">flowerytts</span>: <span class="tok-v">true</span>
+      <span class="tok-c"># Opt-in. Both ship disabled in application.yml.</span>
+      <span class="tok-k">qobuz</span>: <span class="tok-v">false</span>
+      <span class="tok-k">tidal</span>: <span class="tok-v">false</span>
 
     <span class="tok-c"># Tried in order. Reorder, remove or extend freely.</span>
     <span class="tok-k">providers</span>:
@@ -235,6 +238,10 @@ curl -G <span class="tok-s">"http://localhost:2333/v4/loadtracks"</span> \
       - <span class="tok-s">"jssearch:\"{isrc}\""</span>
       - <span class="tok-s">"jssearch:{query}"</span>
       - <span class="tok-s">"azsearch:{query}"</span>
+      - <span class="tok-s">"admsearch:{query}"</span>
+      - <span class="tok-s">"shsearch:{query}"</span>
+      - <span class="tok-s">"qbsearch:{query}"</span>
+      - <span class="tok-s">"tdsearch:{query}"</span>
       - <span class="tok-s">"scsearch:{query}"</span>
       - <span class="tok-s">"bcsearch:{query}"</span></code></pre>
 
@@ -266,6 +273,18 @@ curl -G <span class="tok-s">"http://localhost:2333/v4/loadtracks"</span> \
   <span class="tok-k">arl</span>: <span class="tok-s">""</span>                    <span class="tok-c"># optional, unlocks 320 kbps and FLAC</span>
   <span class="tok-k">masterKey</span>: <span class="tok-s">"g4el58wc0zvf9na1"</span>
   <span class="tok-k">playlistLoadLimit</span>: <span class="tok-v">100</span>
+
+<span class="tok-k">qobuz</span>:
+  <span class="tok-k">appId</span>: <span class="tok-s">"712109809"</span>            <span class="tok-c"># public web app ID</span>
+  <span class="tok-k">userOauthToken</span>: <span class="tok-s">""</span>            <span class="tok-c"># optional, unlocks direct Hi-Res FLAC</span>
+  <span class="tok-k">playlistLoadLimit</span>: <span class="tok-v">50</span>
+  <span class="tok-k">albumLoadLimit</span>: <span class="tok-v">50</span>
+
+<span class="tok-k">tidal</span>:
+  <span class="tok-k">token</span>: <span class="tok-s">""</span>                    <span class="tok-c"># optional OAuth bearer or client token</span>
+  <span class="tok-k">countryCode</span>: <span class="tok-s">"US"</span>
+  <span class="tok-k">playlistLoadLimit</span>: <span class="tok-v">50</span>
+  <span class="tok-k">albumLoadLimit</span>: <span class="tok-v">50</span>
 
 <span class="tok-k">gaana</span>:
   <span class="tok-k">apiUrl</span>: <span class="tok-s">"https://gaana-plugin-api.vercel.app/api"</span>
@@ -361,6 +380,8 @@ curl -G <span class="tok-s">"http://localhost:2333/v4/loadtracks"</span> \
               <tr><td>Audiomack</td><td><code>admsearch:</code></td><td>Songs, albums and playlists through the signed API.</td></tr>
               <tr><td>Pandora</td><td><code>pdsearch:</code></td><td>Adaptive AAC streams.</td></tr>
               <tr><td>Shazam</td><td><code>shsearch:</code> <code>szsearch:</code></td><td>Discovery metadata, then resolution through the ladder.</td></tr>
+              <tr><td>Qobuz</td><td><code>qbsearch:</code> <code>qobuz:</code></td><td>Track, album and playlist URLs are accepted. Direct Hi-Res FLAC with a user token, mirror playback without one.</td></tr>
+              <tr><td>Tidal</td><td><code>tdsearch:</code> <code>tidalsearch:</code> <code>tidal:</code></td><td>Track, album and playlist URLs are accepted. Direct streaming with OAuth, otherwise the ISRC mirror ladder.</td></tr>
               <tr><td>FloweryTTS</td><td><code>ftts:</code> <code>speak:</code> <code>tts:</code></td><td>Text-to-speech through the public neural endpoint.</td></tr>
               <tr><td>SoundCloud / Bandcamp</td><td><code>scsearch:</code> <code>bcsearch:</code></td><td>Provided by Lavalink's built-in sources, not SolaceAudio.</td></tr>
             </tbody>
@@ -386,10 +407,11 @@ curl -G <span class="tok-s">"http://localhost:2333/v4/loadtracks"</span> \
               <tr><td><code>GET</code></td><td><code>/v4/sessions/{sessionId}/players/{guildId}/sponsorblock</code></td><td>Known SponsorBlock segments for the current track.</td></tr>
               <tr><td><code>POST</code></td><td><code>/v4/sessions/{sessionId}/players/{guildId}/sponsorblock</code></td><td>Update enabled categories for the guild.</td></tr>
               <tr><td><code>PATCH</code></td><td><code>/v4/SolaceAudio/config</code></td><td>Runtime updates for supported configuration keys.</td></tr>
+              <tr><td><code>GET</code></td><td><code>/v4/solace/health</code></td><td>Node diagnostics: uptime, JVM memory, active sessions and source flags.</td></tr>
               <tr><td><code>GET</code></td><td><code>/v4/SolaceAudio/youtube/suggest</code></td><td>Search suggestions with <code>query</code> or <code>q</code>.</td></tr>
             </tbody>
           </table>
-          <p>Client-library compatibility aliases are registered for <code>/recommendations</code> and <code>/sponsorBlock</code>, and both casings of <code>/v4/SolaceAudio</code> resolve.</p>
+          <p>Client-library compatibility aliases are registered for <code>/recommendations</code> and <code>/sponsorBlock</code>, and both casings of <code>/v4/SolaceAudio</code> resolve. The health route answers on <code>/v4/solace/health</code>, <code>/v4/SolaceAudio/health</code> and <code>/v4/solaceaudio/health</code>.</p>
 
           <div class="callout">
             <p><strong>Running LavaLyrics alongside SolaceAudio?</strong> Since 1.0.32, <code>LyricsController</code> and <code>SolaceLyricsManager</code> carry <code>@ConditionalOnMissingClass</code> and <code>@ConditionalOnProperty</code>. When <code>lavalyrics-plugin</code> is present, SolaceAudio yields the <code>/v4/lyrics</code> routes to it instead of throwing a Spring <code>Ambiguous mapping</code> error, and keeps feeding its providers — LRCLIB, Deezer, Genius and Spotify — into LavaLyrics.</p>
@@ -424,6 +446,34 @@ Content-Type: application/json
   },
   <span class="tok-s">"passthrough"</span>: <span class="tok-v">true</span>
 }</code></pre>
+
+          <h3>Health and diagnostics</h3>
+          <p>The health route reports process uptime, JVM memory, active sessions and players, and the enabled state of every configured source. It is read-only and inherits the server's authorization.</p>
+          <pre><code>GET /v4/solace/health</code></pre>
+          <pre><code>{
+  <span class="tok-s">"status"</span>: <span class="tok-s">"UP"</span>,
+  <span class="tok-s">"plugin"</span>: <span class="tok-s">"SolaceAudio"</span>,
+  <span class="tok-s">"version"</span>: <span class="tok-s">"1.0.34"</span>,
+  <span class="tok-s">"timestamp"</span>: 1763472000000,
+  <span class="tok-s">"uptimeMs"</span>: 348210,
+  <span class="tok-s">"jvm"</span>: {
+    <span class="tok-s">"usedMb"</span>: 184,
+    <span class="tok-s">"freeMb"</span>: 328,
+    <span class="tok-s">"totalMb"</span>: 512,
+    <span class="tok-s">"maxMb"</span>: 2048,
+    <span class="tok-s">"availableProcessors"</span>: 8
+  },
+  <span class="tok-s">"sessions"</span>: {
+    <span class="tok-s">"activeSessions"</span>: 3,
+    <span class="tok-s">"activePlayers"</span>: 2
+  },
+  <span class="tok-s">"sources"</span>: {
+    <span class="tok-s">"qobuz"</span>: <span class="tok-v">false</span>,
+    <span class="tok-s">"tidal"</span>: <span class="tok-v">false</span>,
+    <span class="tok-s">"youtube"</span>: <span class="tok-v">true</span>
+  }
+}</code></pre>
+          <p>The <code>sources</code> object always includes all sixteen configuration flags, including the disabled <code>vkmusic</code>, <code>yandexmusic</code> and <code>ytdlp</code> entries. The excerpt above is shortened.</p>
         </section>
 
         <section id="build">
@@ -444,7 +494,7 @@ gradlew.bat build
 ./gradlew build</code></pre>
 
           <p>The jar lands in <code>plugin/build/libs/</code>. When the <code>VERSION</code> environment variable is set, it is named <code>solaceaudio-plugin-&lt;version&gt;.jar</code>. Without it, Gradle falls back to <code>dev</code>, which is expected for local builds.</p>
-          <p>Run the suite with <code>./gradlew test</code>. The v1.0.32 tree carries 65 unit and integration tests, including the Audiomack and Shazam source managers.</p>
+          <p>Run the suite with <code>./gradlew test</code>. The v1.0.34 tree carries 73 tests, including the Qobuz, Tidal, Audiomack and Shazam source managers.</p>
         </section>
 
         <section id="troubleshooting">
@@ -462,7 +512,7 @@ gradlew.bat build
           <p>Lower <code>maxDiskCacheMb</code> under <code>plugins.solaceaudio.youtube</code>. SolaceAudio evicts least-recently-used entries once the quota is reached. Setting <code>localDiskCache: false</code> disables the cache entirely.</p>
 
           <h3>The release jar is named <code>solaceaudio-plugin-dev.jar</code></h3>
-          <p>Gradle uses <code>dev</code> when no <code>VERSION</code> is set. The release workflow derives the version from the pushed tag. For a custom build, export <code>VERSION=1.0.32</code> before building.</p>
+          <p>Gradle uses <code>dev</code> when no <code>VERSION</code> is set. The release workflow derives the version from the pushed tag. For a custom build, export <code>VERSION=1.0.34</code> before building.</p>
 
           <h3>A source prefix returns nothing</h3>
           <p>Confirm the source is enabled under <code>plugins.solaceaudio.sources</code>, then try the prefix directly through <code>/v4/loadtracks</code>. Some sources depend on public endpoints that can rate-limit or change; the mirror ladder exists so one failure does not stop the queue.</p>

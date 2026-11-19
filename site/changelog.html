@@ -59,7 +59,7 @@
       <div class="header-actions">
         <span class="version-chip" data-live-version-badge title="Latest release">
           <span class="live-dot" data-live-dot aria-hidden="true"></span>
-          <span>v<span data-live-version>1.0.32</span></span>
+          <span>v<span data-live-version>1.0.34</span></span>
         </span>
         <a class="btn btn--small btn--outline" href="https://github.com/Nex-Devz/SolaceAudio" rel="noopener">
           GitHub
@@ -116,13 +116,13 @@
               <p class="label">Latest release</p>
               <span class="live-dot" data-live-dot aria-hidden="true"></span>
             </div>
-            <p class="latest-card__version">v<span data-live-version>1.0.32</span></p>
+            <p class="latest-card__version">v<span data-live-version>1.0.34</span></p>
             <dl class="latest-card__meta">
-              <div><dt>Published</dt><dd data-live-date>15 Nov 2026</dd></div>
-              <div><dt>Plugin jar</dt><dd data-live-jar-size>349 KB</dd></div>
+              <div><dt>Published</dt><dd data-live-date>18 Nov 2026</dd></div>
+              <div><dt>Plugin jar</dt><dd data-live-jar-size>376 KB</dd></div>
               <div><dt>License</dt><dd>Apache-2.0</dd></div>
             </dl>
-            <a class="btn btn--dark btn--small" data-live-download href="https://github.com/Nex-Devz/SolaceAudio/releases/download/1.0.32/solaceaudio-plugin-1.0.32.jar" aria-label="Download SolaceAudio 1.0.32 jar">
+            <a class="btn btn--dark btn--small" data-live-download href="https://github.com/Nex-Devz/SolaceAudio/releases/download/1.0.34/solaceaudio-plugin-1.0.34.jar" aria-label="Download SolaceAudio 1.0.34 jar">
               <span data-live-download-label>Download jar</span>
               <span class="btn__icon" aria-hidden="true">
                 <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 2.5v9M3.5 8 8 12.5 12.5 8M3 14h10"/></svg>
@@ -138,7 +138,9 @@
       <aside class="changelog-rail" aria-label="Release index">
         <h2>Releases</h2>
         <ol class="release-index" data-live-index>
-          <li><a href="#v1-0-32"><span>1.0.32</span><em>Latest</em></a></li>
+          <li><a href="#v1-0-34"><span>1.0.34</span><em>Latest</em></a></li>
+          <li><a href="#v1-0-33"><span>1.0.33</span><em>16 Nov 2026</em></a></li>
+          <li><a href="#v1-0-32"><span>1.0.32</span><em>15 Nov 2026</em></a></li>
           <li><a href="#v1-0-31"><span>1.0.31</span><em>15 Nov 2026</em></a></li>
           <li><a href="#v1-0-30"><span>1.0.30</span><em>15 Nov 2026</em></a></li>
           <li><a href="#v1-0-29"><span>1.0.29</span><em>13 Nov 2026</em></a></li>
@@ -165,12 +167,76 @@
         </p>
 
         <div class="release-timeline" data-live-changelog>
+          <article class="release-entry" id="v1-0-34">
+            <header class="release-entry__head">
+              <div class="release-entry__id">
+                <h2>
+                  <a class="release-entry__anchor" href="#v1-0-34" aria-label="Permalink to SolaceAudio 1.0.34">1.0.34</a>
+                  <span class="badge-latest">Latest</span>
+                </h2>
+                <p class="release-entry__meta">
+                  <span>18 Nov 2026</span>
+                  <span class="meta-sep" aria-hidden="true"></span>
+                  <span>3 changes</span>
+                </p>
+              </div>
+              <div class="release-entry__actions">
+                <a class="chip-asset" href="https://github.com/Nex-Devz/SolaceAudio/releases/download/1.0.34/solaceaudio-plugin-1.0.34.jar" rel="noopener">jar · 376 KB</a>
+                <a class="link-arrow" href="https://github.com/Nex-Devz/SolaceAudio/releases/tag/1.0.34" rel="noopener">Release on GitHub
+                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 12 12 4M6 4h6v6"/></svg>
+                </a>
+              </div>
+            </header>
+            <div class="release-entry__body">
+              <section class="release-group release-group--fixed">
+                <h3><span class="release-group__dot" aria-hidden="true"></span>Fixed<span class="release-group__count">3</span></h3>
+                <ul>
+                  <li><strong>Path traversal protection (CWE-22).</strong> Enforced strict application directory boundaries and traversal blocking for <code>..</code> and null bytes on YouTube cookie-file and disk-cache paths in <code>YtMusicCookieAuth</code>, <code>YouTubeSourceManager</code> and <code>SolaceAudioPlugin</code>.</li>
+                  <li><strong>Log injection elimination (CWE-117).</strong> Replaced unsanitized user-query interpolation with clean audit events in <code>SolaceAudioPlugin</code>, <code>YtMusicCookieAuth</code>, <code>LrcLibLyricsManager</code>, <code>GeniusLyricsManager</code> and <code>DeezerLyricsManager</code>.</li>
+                  <li><strong>Sensitive log sanitization (CWE-532).</strong> Sanitized JioSaavn non-200 endpoint logging so URL slugs and parameters are no longer reflected.</li>
+                </ul>
+              </section>
+            </div>
+          </article>
+
+          <article class="release-entry" id="v1-0-33">
+            <header class="release-entry__head">
+              <div class="release-entry__id">
+                <h2>
+                  <a class="release-entry__anchor" href="#v1-0-33" aria-label="Permalink to SolaceAudio 1.0.33">1.0.33</a>
+                </h2>
+                <p class="release-entry__meta">
+                  <span>16 Nov 2026</span>
+                  <span class="meta-sep" aria-hidden="true"></span>
+                  <span>5 changes</span>
+                </p>
+              </div>
+              <div class="release-entry__actions">
+                <a class="chip-asset" href="https://github.com/Nex-Devz/SolaceAudio/releases/download/1.0.33/solaceaudio-plugin-1.0.33.jar" rel="noopener">jar · 376 KB</a>
+                <a class="link-arrow" href="https://github.com/Nex-Devz/SolaceAudio/releases/tag/1.0.33" rel="noopener">Release on GitHub
+                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 12 12 4M6 4h6v6"/></svg>
+                </a>
+              </div>
+            </header>
+            <div class="release-entry__body">
+              <section class="release-group release-group--added">
+                <h3><span class="release-group__dot" aria-hidden="true"></span>Added<span class="release-group__count">5</span></h3>
+                <ul>
+                  <li><strong>Qobuz audio source engine.</strong> A native <code>QobuzAudioSourceManager</code> for <code>qbsearch:</code> and <code>qobuz:</code> queries plus track, album and playlist URLs. The public web app ID <code>712109809</code> covers metadata and mirror resolution out of the box; a <code>userOauthToken</code> unlocks direct Hi-Res FLAC and MP3 playback.</li>
+                  <li><strong>Tidal audio source engine.</strong> A native <code>TidalAudioSourceManager</code> for <code>tdsearch:</code>, <code>tidalsearch:</code> and <code>tidal:</code> queries plus track, album and playlist URLs. It uses the client token <code>zU4XHVVkc2tDPo4t</code> or an OAuth bearer token for direct streaming, and falls back to the ISRC mirror ladder.</li>
+                  <li><strong>REST health and node diagnostics.</strong> <code>/v4/solace/health</code>, <code>/v4/SolaceAudio/health</code> and <code>/v4/solaceaudio/health</code> return node status, JVM memory metrics, active sessions and players, and the state of every registered source.</li>
+                  <li><strong>Config and mirror integration.</strong> <code>qobuz</code> and <code>tidal</code> are wired into <code>TrackResolutionEngine.DEFAULT_PROVIDERS</code> and <code>YouTubeTrack.MIRROR_SOURCES</code> with recursion guards, plus <code>QobuzConfig</code>, <code>TidalConfig</code> and <code>SolaceAudioSourcesConfig</code> Spring beans.</li>
+                  <li><strong>Expanded test suite.</strong> <code>QobuzAudioSourceManagerTest</code> and <code>TidalAudioSourceManagerTest</code> bring the suite to 71 passing tests at release.</li>
+                </ul>
+              </section>
+            </div>
+          </article>
+
           <article class="release-entry" id="v1-0-32">
             <header class="release-entry__head">
               <div class="release-entry__id">
                 <h2>
                   <a class="release-entry__anchor" href="#v1-0-32" aria-label="Permalink to SolaceAudio 1.0.32">1.0.32</a>
-                  <span class="badge-latest">Latest</span>
                 </h2>
                 <p class="release-entry__meta">
                   <span>15 Nov 2026</span>
